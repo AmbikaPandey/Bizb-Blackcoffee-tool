@@ -1,0 +1,84 @@
+@use "../variables" as *;
+@use "../mixins" as *;
+
+.toast-container {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+
+    @include mobile {
+        left: 16px;
+        right: 16px;
+    }
+}
+
+.toast {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: var(--color-card-bg);
+    border: 1px solid var(--color-border);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    font-size: 0.875rem;
+    color: var(--color-text);
+    pointer-events: auto;
+    animation: toastSlideIn 0.25s ease-out;
+    min-width: 280px;
+
+    @include mobile {
+        min-width: auto;
+        width: 100%;
+    }
+
+    &--success {
+        border-left: 3px solid $success;
+
+        svg:first-child {
+            color: $success;
+        }
+    }
+
+    &--error {
+        border-left: 3px solid $danger;
+
+        svg:first-child {
+            color: $danger;
+        }
+    }
+
+    &__message {
+        flex: 1;
+    }
+
+    &__close {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--color-text-secondary);
+        padding: 2px;
+        display: flex;
+        border-radius: 4px;
+
+        &:hover {
+            background: var(--color-bg-hover);
+        }
+    }
+}
+
+@keyframes toastSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}

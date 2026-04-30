@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none">
+  <rect width="48" height="48" rx="12" fill="#3c2415"/>
+  <rect x="2" y="2" width="44" height="44" rx="10" fill="url(#g)"/>
+  <text x="24" y="32" text-anchor="middle" font-family="system-ui,-apple-system,sans-serif" font-weight="700" font-size="20" fill="#fff">BC</text>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="48" y2="48">
+      <stop offset="0%" stop-color="#c8956c"/>
+      <stop offset="100%" stop-color="#5c3a28"/>
+    </linearGradient>
+  </defs>
+</svg>

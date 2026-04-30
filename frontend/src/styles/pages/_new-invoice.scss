@@ -1,0 +1,494 @@
+@use "../variables" as *;
+@use "../mixins" as *;
+
+.new-invoice {
+    max-width: 1400px;
+
+    // ===========================
+    // HEADER
+    // ===========================
+    &__header {
+        display: flex;
+        align-items: center;
+        gap: $space-4;
+        margin-bottom: $space-6;
+
+        h1 {
+            font-family: $font-heading;
+            font-size: $font-2xl;
+            font-weight: $weight-bold;
+            color: var(--color-text-heading);
+            margin: 0;
+        }
+    }
+
+    &__back {
+        display: flex;
+        align-items: center;
+        gap: $space-2;
+        padding: $space-2 $space-3;
+        font-size: $font-sm;
+        font-weight: $weight-medium;
+        color: var(--color-text-secondary);
+        border-radius: $radius-lg;
+        transition: all $transition-fast;
+
+        &:hover {
+            background: var(--color-surface-alt);
+            color: var(--color-text-heading);
+        }
+    }
+
+    // ===========================
+    // ERROR
+    // ===========================
+    &__error {
+        background: $danger-bg;
+        color: $danger;
+        padding: $space-3 $space-4;
+        border-radius: $radius-lg;
+        font-size: $font-sm;
+        margin-bottom: $space-4;
+        border: 1px solid rgba($danger, 0.15);
+    }
+
+    // ===========================
+    // CARDS
+    // ===========================
+    &__card {
+        background: var(--color-card-bg);
+        border: 1px solid var(--color-card-border);
+        border-radius: $radius-xl;
+        padding: $space-6;
+        transition:
+            background-color 300ms ease,
+            border-color 300ms ease;
+
+        @include mobile {
+            padding: $space-4;
+        }
+
+        h2 {
+            font-family: $font-heading;
+            font-size: $font-lg;
+            font-weight: $weight-semibold;
+            color: var(--color-text-heading);
+            margin: 0 0 $space-5;
+        }
+
+        &--details {
+            flex: 2;
+        }
+
+        &--transport {
+            flex: 1;
+        }
+
+        &--items {
+            margin-top: $space-5;
+        }
+
+        &--notes {
+            flex: 1;
+        }
+
+        &--summary {
+            flex: 1;
+        }
+    }
+
+    &__card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: $space-4;
+
+        h2 {
+            margin-bottom: 0;
+        }
+    }
+
+    // ===========================
+    // TOP SECTION (Details + Transport)
+    // ===========================
+    &__top {
+        display: flex;
+        gap: $space-5;
+
+        @include tablet {
+            flex-direction: column;
+        }
+    }
+
+    // ===========================
+    // FORM FIELDS
+    // ===========================
+    &__grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: $space-4;
+        margin-bottom: $space-4;
+
+        @include mobile {
+            grid-template-columns: 1fr;
+        }
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+    }
+
+    &__field {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: $space-4;
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            font-size: $font-sm;
+            font-weight: $weight-semibold;
+            color: var(--color-text-heading);
+            margin-bottom: $space-2;
+        }
+
+        input,
+        select,
+        textarea {
+            padding: $space-3 $space-4;
+            border: 1px solid var(--color-input-border);
+            border-radius: $radius-lg;
+            font-size: $font-sm;
+            font-family: $font-body;
+            color: var(--color-input-text);
+            background: var(--color-input-bg);
+            outline: none;
+            transition:
+                border-color $transition-fast,
+                box-shadow $transition-fast,
+                background-color 300ms ease;
+
+            &::placeholder {
+                color: var(--color-input-placeholder);
+            }
+
+            &:focus {
+                border-color: $primary;
+                box-shadow: 0 0 0 3px rgba($primary, 0.08);
+            }
+        }
+
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right $space-3 center;
+            padding-right: $space-8;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 90px;
+        }
+    }
+
+    &__hint {
+        font-size: $font-xs;
+        color: $accent;
+        margin-top: $space-1;
+
+        &--error {
+            color: $danger;
+            font-weight: $weight-medium;
+        }
+    }
+
+    // ===========================
+    // ADD ITEM BUTTON
+    // ===========================
+    &__add-btn {
+        display: flex;
+        align-items: center;
+        gap: $space-2;
+        padding: $space-2 $space-4;
+        border: 1px solid var(--color-border);
+        border-radius: $radius-lg;
+        font-size: $font-sm;
+        font-weight: $weight-medium;
+        color: var(--color-text-secondary);
+        background: var(--color-surface);
+        cursor: pointer;
+        transition: all $transition-fast;
+
+        &:hover {
+            background: var(--color-surface-hover);
+            border-color: var(--color-border);
+        }
+    }
+
+    // ===========================
+    // ITEMS TABLE
+    // ===========================
+    &__items-table {
+        overflow-x: auto;
+    }
+
+    &__items-head {
+        display: grid;
+        grid-template-columns: 40px 2fr 100px 70px 80px 100px 70px 70px 110px 40px;
+        gap: $space-2;
+        padding: $space-3 $space-2;
+        border-bottom: 1px solid var(--color-border-light);
+        min-width: 780px;
+
+        span {
+            font-size: $font-xs;
+            font-weight: $weight-medium;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+    }
+
+    &__item-row {
+        border-bottom: 1px solid var(--color-border-subtle);
+        padding: $space-3 0;
+
+        &:last-child {
+            border-bottom: none;
+        }
+    }
+
+    &__item-main {
+        display: grid;
+        grid-template-columns: 40px 2fr 100px 70px 80px 100px 70px 70px 110px 40px;
+        gap: $space-2;
+        align-items: center;
+        padding: 0 $space-2;
+        min-width: 780px;
+
+        .col-num {
+            font-size: $font-sm;
+            color: var(--color-text-muted);
+            text-align: center;
+        }
+
+        .col-amount {
+            font-size: $font-sm;
+            font-weight: $weight-medium;
+            color: var(--color-text-primary);
+            text-align: right;
+            font-family: $font-body;
+        }
+
+        input,
+        select {
+            padding: $space-2 $space-3;
+            border: 1px solid var(--color-input-border);
+            border-radius: $radius-md;
+            font-size: $font-sm;
+            font-family: $font-body;
+            color: var(--color-input-text);
+            background: var(--color-input-bg);
+            outline: none;
+            width: 100%;
+            transition:
+                border-color $transition-fast,
+                background-color 300ms ease;
+
+            &:focus {
+                border-color: $primary;
+            }
+        }
+
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right $space-2 center;
+            padding-right: $space-6;
+        }
+
+        input[type="number"] {
+            text-align: center;
+            -moz-appearance: textfield;
+
+            &::-webkit-outer-spin-button,
+            &::-webkit-inner-spin-button {
+                -webkit-appearance: none;
+                margin: 0;
+            }
+        }
+    }
+
+    &__item-extra {
+        display: flex;
+        flex-direction: column;
+        gap: $space-2;
+        padding: $space-2 $space-2 0;
+        margin-left: 40px;
+        max-width: 420px;
+
+        @include mobile {
+            margin-left: 0;
+            max-width: 100%;
+        }
+
+        input {
+            padding: $space-2 $space-3;
+            border: 1px solid var(--color-border-light);
+            border-radius: $radius-md;
+            font-size: $font-sm;
+            font-family: $font-body;
+            color: var(--color-input-text);
+            background: var(--color-surface-hover);
+            outline: none;
+            transition:
+                border-color $transition-fast,
+                background-color 300ms ease;
+
+            &::placeholder {
+                color: var(--color-input-placeholder);
+            }
+
+            &:focus {
+                border-color: $primary;
+                background: var(--color-input-bg);
+            }
+        }
+    }
+
+    &__delete-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: $space-1;
+        color: var(--color-text-faint);
+        border-radius: $radius-sm;
+        cursor: pointer;
+        transition: all $transition-fast;
+
+        &:hover:not(:disabled) {
+            color: $danger;
+            background: $danger-bg;
+        }
+
+        &:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+    }
+
+    // ===========================
+    // BOTTOM SECTION (Notes + Summary)
+    // ===========================
+    &__bottom {
+        display: flex;
+        gap: $space-5;
+        margin-top: $space-5;
+
+        @include tablet {
+            flex-direction: column;
+        }
+    }
+
+    // ===========================
+    // INVOICE SUMMARY
+    // ===========================
+    &__summary-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: $space-3 0;
+
+        &--total {
+            border-top: 2px solid var(--color-border-light);
+            margin-top: $space-2;
+            padding-top: $space-4;
+
+            .new-invoice__summary-label {
+                font-size: $font-base;
+                font-weight: $weight-bold;
+                color: var(--color-text-heading);
+            }
+
+            .new-invoice__summary-value {
+                font-size: $font-xl;
+                font-weight: $weight-bold;
+                color: var(--color-text-heading);
+            }
+        }
+    }
+
+    &__summary-label {
+        font-size: $font-sm;
+        color: var(--color-text-muted);
+    }
+
+    &__summary-value {
+        font-size: $font-sm;
+        font-weight: $weight-medium;
+        color: var(--color-text-primary);
+        font-family: $font-body;
+    }
+
+    // ===========================
+    // FOOTER ACTIONS
+    // ===========================
+    &__footer {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: $space-3;
+        margin-top: $space-6;
+        padding-top: $space-5;
+
+        @include mobile {
+            flex-direction: column-reverse;
+
+            .new-invoice__cancel-btn,
+            .new-invoice__submit-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    }
+
+    &__cancel-btn {
+        @include btn-secondary;
+    }
+
+    &__submit-btn {
+        display: flex;
+        align-items: center;
+        gap: $space-2;
+        padding: $space-3 $space-6;
+        background: $primary-dark;
+        color: $white;
+        border: none;
+        border-radius: $radius-lg;
+        font-size: $font-sm;
+        font-weight: $weight-medium;
+        cursor: pointer;
+        transition: all $transition-fast;
+
+        &:hover:not(:disabled) {
+            background: $primary;
+            box-shadow: $shadow-md;
+            transform: translateY(-1px);
+        }
+
+        &:active {
+            transform: translateY(0);
+        }
+
+        &:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    }
+}

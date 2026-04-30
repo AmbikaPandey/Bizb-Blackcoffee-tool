@@ -1,0 +1,198 @@
+@use "../variables" as *;
+@use "../mixins" as *;
+
+// ===========================
+// SHARED PAGE STYLES
+// ===========================
+.page-card {
+    @include card;
+    padding: 0;
+
+    &__toolbar {
+        @include flex(row, center, flex-start, $space-4);
+        padding: $space-4;
+        border-bottom: 1px solid var(--color-border-light);
+
+        @include mobile {
+            flex-direction: column;
+            align-items: stretch;
+            gap: $space-3;
+        }
+    }
+
+    &__table {
+        @include table-base;
+        overflow-x: auto;
+    }
+}
+
+.stats-grid {
+    display: grid;
+    gap: $space-4;
+    margin-bottom: $space-6;
+
+    &--3 {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    &--4 {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    &--2 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.tabs {
+    @include flex(row, center, flex-start, $space-1);
+    margin-bottom: $space-4;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+
+    @include mobile {
+        gap: 0;
+    }
+
+    &__btn {
+        @include flex(row, center, flex-start, $space-2);
+        padding: $space-2 $space-4;
+        border-radius: $radius-lg;
+        font-size: $font-sm;
+        font-weight: $weight-medium;
+        color: var(--color-text-muted);
+        transition: all $transition-fast;
+
+        &:hover {
+            color: var(--color-text-secondary);
+        }
+
+        &--active {
+            background: $accent-light;
+            border: 1px solid $coffee-200;
+            color: $primary;
+            box-shadow: var(--shadow-sm);
+        }
+    }
+}
+
+.form-group {
+    margin-bottom: $space-4;
+
+    &__label {
+        display: block;
+        font-size: $font-sm;
+        font-weight: $weight-medium;
+        color: var(--color-text-secondary);
+        margin-bottom: $space-2;
+    }
+
+    &__input {
+        @include input-base;
+    }
+
+    &__textarea {
+        @include input-base;
+        resize: none;
+    }
+
+    &__select {
+        @include input-base;
+        cursor: pointer;
+    }
+}
+
+.form-row {
+    display: grid;
+    gap: $space-4;
+
+    &--2 {
+        grid-template-columns: 1fr 1fr;
+
+        @include mobile {
+            grid-template-columns: 1fr;
+        }
+    }
+    &--3 {
+        grid-template-columns: 1fr 1fr 1fr;
+
+        @include tablet {
+            grid-template-columns: 1fr 1fr;
+        }
+        @include mobile {
+            grid-template-columns: 1fr;
+        }
+    }
+}
+
+.form-actions {
+    @include flex(row, center, flex-end, $space-3);
+    padding-top: $space-4;
+    border-top: 1px solid var(--color-border-light);
+
+    @include mobile {
+        flex-direction: column-reverse;
+        gap: $space-2;
+
+        .btn-cancel,
+        .btn-save {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    .btn-cancel {
+        @include btn-secondary;
+    }
+    .btn-save {
+        @include btn-primary;
+    }
+}
+
+.category-badge {
+    display: inline-block;
+    padding: 3px $space-2;
+    border-radius: 999px;
+    font-size: $font-xs;
+    font-weight: $weight-medium;
+
+    &--travel {
+        background: $info-bg;
+        color: $info;
+    }
+    &--office {
+        background: $purple-bg;
+        color: $purple;
+    }
+    &--food {
+        background: $orange-bg;
+        color: $orange;
+    }
+    &--utilities {
+        background: $teal-bg;
+        color: $teal;
+    }
+}
+
+.action-btns {
+    @include flex(row, center, flex-start, $space-1);
+
+    button {
+        padding: $space-1;
+        border-radius: $radius-sm;
+        color: var(--color-text-faint);
+        transition: all $transition-fast;
+
+        &:hover {
+            background: var(--color-surface-alt);
+            color: var(--color-text-secondary);
+        }
+
+        &.delete:hover {
+            background: $danger-bg;
+            color: $danger;
+        }
+    }
+}

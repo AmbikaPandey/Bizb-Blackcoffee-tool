@@ -1,0 +1,159 @@
+@use "../variables" as *;
+@use "../mixins" as *;
+
+.header {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    height: $header-height;
+    background: var(--color-header-bg);
+    border-bottom: 1px solid var(--color-header-border);
+    @include flex(row, center, flex-end);
+    padding: 0 $space-6;
+    transition:
+        background-color 300ms ease,
+        border-color 300ms ease;
+
+    @include mobile {
+        padding: 0 $space-3;
+        justify-content: space-between;
+    }
+
+    &__hamburger {
+        display: none;
+        padding: $space-2;
+        border-radius: $radius-lg;
+        color: var(--color-text-secondary);
+        background: none;
+        border: none;
+        cursor: pointer;
+        transition: background $transition-fast;
+
+        &:hover {
+            background: var(--color-surface-alt);
+        }
+
+        @include mobile {
+            display: flex;
+        }
+    }
+
+    &__actions {
+        @include flex(row, center, flex-start, $space-4);
+    }
+
+    &__theme-toggle {
+        position: relative;
+        padding: $space-2;
+        border-radius: $radius-lg;
+        transition:
+            background $transition-fast,
+            color $transition-fast;
+        color: var(--color-text-muted);
+
+        &:hover {
+            background: var(--color-surface-alt);
+            color: var(--color-text-primary);
+        }
+    }
+
+    &__profile {
+        position: relative;
+    }
+
+    &__profile-btn {
+        @include flex(row, center, flex-start, $space-2);
+        padding: $space-2 $space-3;
+        border-radius: $radius-lg;
+        cursor: pointer;
+        transition: background $transition-fast;
+
+        &:hover {
+            background: var(--color-surface-hover);
+        }
+    }
+
+    &__avatar {
+        @include icon-circle($coffee-100, $coffee-600, 34px);
+    }
+
+    &__name {
+        font-size: $font-sm;
+        font-weight: $weight-medium;
+        color: var(--color-text-secondary);
+
+        @include mobile {
+            display: none;
+        }
+    }
+
+    &__chevron {
+        color: var(--color-text-faint);
+
+        @include mobile {
+            display: none;
+        }
+    }
+
+    &__dropdown {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        margin-top: $space-1;
+        background: var(--color-dropdown-bg);
+        border: 1px solid var(--color-border);
+        border-radius: $radius-lg;
+        box-shadow: var(--shadow-lg);
+        min-width: 220px;
+        z-index: 100;
+        overflow: hidden;
+
+        &-info {
+            padding: $space-3 $space-4;
+            border-bottom: 1px solid var(--color-border-light);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+
+            strong {
+                font-size: $font-sm;
+                font-weight: $weight-semibold;
+                color: var(--color-text-heading);
+            }
+
+            span {
+                font-size: $font-xs;
+                color: var(--color-text-muted);
+            }
+        }
+
+        &-role {
+            display: inline-block;
+            margin-top: $space-1;
+            padding: 1px $space-2;
+            background: $accent-light;
+            color: $primary;
+            font-size: $font-xs;
+            font-weight: $weight-medium;
+            border-radius: 999px;
+            width: fit-content;
+        }
+
+        &-item {
+            display: flex;
+            align-items: center;
+            gap: $space-2;
+            width: 100%;
+            padding: $space-3 $space-4;
+            font-size: $font-sm;
+            color: var(--color-text-secondary);
+            transition: all $transition-fast;
+            cursor: pointer;
+
+            &:hover {
+                background: $danger-bg;
+                color: $danger;
+            }
+        }
+    }
+}

@@ -1,0 +1,37 @@
+// ===========================
+// MAIN SCSS ENTRY POINT
+// ===========================
+// This is the single entry point for all styles.
+// Import order matters: variables/mixins first, then base, layout, components, pages, utilities.
+
+// 1. Base
+@use "base/reset";
+@use "base/themes";
+
+// 2. Layout
+@use "layout/layout";
+@use "layout/sidebar";
+@use "layout/header";
+
+// 3. Components
+@use "components/page-header";
+@use "components/search-bar";
+@use "components/filter-dropdown";
+@use "components/stat-card";
+@use "components/status-badge";
+@use "components/modal";
+@use "components/invoice-actions";
+@use "components/toast";
+@use "components/confirm-dialog";
+@use "components/loader";
+
+// 4. Pages
+@use "pages/pages";
+@use "pages/dashboard";
+@use "pages/login";
+@use "pages/other-pages";
+@use "pages/new-invoice";
+@use "pages/view-invoice";
+
+// 5. Utilities
+@use "utilities/helpers";

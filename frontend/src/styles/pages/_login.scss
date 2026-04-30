@@ -1,0 +1,190 @@
+@use "../variables" as *;
+@use "../mixins" as *;
+
+.login {
+    min-height: 100vh;
+    background: var(--color-body-bg);
+    @include flex-center;
+    padding: $space-4;
+    position: relative;
+
+    &__theme-toggle {
+        position: absolute;
+        top: $space-4;
+        right: $space-4;
+        padding: $space-2;
+        border-radius: $radius-lg;
+        color: var(--color-text-muted);
+        transition:
+            background $transition-fast,
+            color $transition-fast;
+
+        &:hover {
+            background: var(--color-surface-alt);
+            color: var(--color-text-primary);
+        }
+    }
+
+    &__container {
+        width: 100%;
+        max-width: 420px;
+    }
+
+    &__brand {
+        text-align: center;
+        margin-bottom: $space-8;
+
+        @include mobile {
+            margin-bottom: $space-5;
+        }
+
+        &-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, $accent, $primary-light);
+            border-radius: $radius-xl;
+            @include flex-center;
+            color: $white;
+            font-weight: $weight-bold;
+            font-size: $font-xl;
+            margin: 0 auto $space-4;
+            box-shadow: 0 4px 14px rgba($accent, 0.3);
+
+            @include mobile-sm {
+                width: 48px;
+                height: 48px;
+                font-size: $font-lg;
+            }
+        }
+
+        h1 {
+            font-size: $font-2xl;
+            color: var(--color-text-heading);
+            margin-bottom: $space-1;
+
+            @include mobile {
+                font-size: $font-xl;
+            }
+        }
+
+        p {
+            color: var(--color-text-muted);
+            font-size: $font-sm;
+        }
+    }
+
+    &__card {
+        background: var(--color-card-bg);
+        border-radius: $radius-xl;
+        box-shadow: var(--shadow-lg);
+        border: 1px solid var(--color-card-border);
+        padding: $space-8;
+
+        @include mobile {
+            padding: $space-5;
+        }
+
+        @include mobile-sm {
+            padding: $space-4;
+        }
+    }
+
+    &__title {
+        font-size: $font-xl;
+        font-weight: $weight-semibold;
+        color: var(--color-text-heading);
+        margin-bottom: $space-1;
+    }
+
+    &__subtitle {
+        font-size: $font-sm;
+        color: var(--color-text-muted);
+        margin-bottom: $space-6;
+    }
+
+    &__form {
+        display: flex;
+        flex-direction: column;
+        gap: $space-4;
+    }
+
+    &__error {
+        background: $danger-bg;
+        color: $danger;
+        padding: $space-3 $space-4;
+        border-radius: $radius-lg;
+        font-size: $font-sm;
+        border: 1px solid rgba($danger, 0.15);
+    }
+
+    &__field {
+        label {
+            display: block;
+            font-size: $font-sm;
+            font-weight: $weight-medium;
+            color: var(--color-text-secondary);
+            margin-bottom: $space-2;
+        }
+    }
+
+    &__input-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+
+        > svg:first-child {
+            position: absolute;
+            left: $space-3;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--color-text-faint);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        input {
+            @include input-base;
+            padding-left: 40px;
+            padding-right: 40px;
+        }
+    }
+
+    &__eye-toggle {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border-radius: $radius-md;
+        color: var(--color-text-faint);
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        transition: color $transition-fast;
+        z-index: 1;
+
+        &:hover {
+            color: var(--color-text-secondary);
+        }
+    }
+
+    &__submit {
+        @include btn-primary;
+        width: 100%;
+        padding: $space-3;
+        font-size: $font-base;
+        margin-top: $space-2;
+    }
+
+    &__footer {
+        text-align: center;
+        font-size: $font-xs;
+        color: var(--color-text-faint);
+        margin-top: $space-6;
+    }
+}

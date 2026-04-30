@@ -1,0 +1,95 @@
+@use "../variables" as *;
+@use "../mixins" as *;
+
+.page-loader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 320px;
+    padding: $space-8;
+
+    &__spinner {
+        color: $primary;
+        animation: page-loader-spin 0.8s linear infinite;
+
+        svg {
+            display: block;
+        }
+    }
+}
+
+// Auth loading screen (shown before app renders)
+.app-loader {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-body-bg);
+    z-index: 9999;
+    transition: opacity 300ms ease;
+
+    &__inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: $space-4;
+    }
+
+    &__mark {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, $accent, $primary-light);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: $weight-bold;
+        font-size: $font-xl;
+        color: $white;
+        box-shadow: 0 4px 16px rgba($accent, 0.3);
+    }
+
+    &__dots {
+        display: flex;
+        gap: 6px;
+
+        span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: $primary;
+            opacity: 0.3;
+            animation: app-loader-dot 1.2s ease-in-out infinite;
+
+            &:nth-child(2) {
+                animation-delay: 0.15s;
+            }
+            &:nth-child(3) {
+                animation-delay: 0.3s;
+            }
+        }
+    }
+}
+
+@keyframes page-loader-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes app-loader-dot {
+    0%,
+    80%,
+    100% {
+        opacity: 0.3;
+        transform: scale(0.8);
+    }
+    40% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}

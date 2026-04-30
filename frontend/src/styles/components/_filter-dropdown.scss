@@ -1,0 +1,35 @@
+@use "../variables" as *;
+
+.filter-dropdown {
+    position: relative;
+
+    &__select {
+        appearance: none;
+        background: var(--color-input-bg);
+        border: 1px solid var(--color-input-border);
+        border-radius: $radius-lg;
+        padding: $space-3 40px $space-3 $space-4;
+        font-size: $font-sm;
+        color: var(--color-input-text);
+        cursor: pointer;
+        font-family: $font-body;
+        outline: none;
+        transition:
+            border-color $transition-fast,
+            background-color 300ms ease;
+
+        &:focus {
+            border-color: $primary;
+            box-shadow: 0 0 0 3px rgba($primary, 0.1);
+        }
+    }
+
+    &__chevron {
+        position: absolute;
+        right: $space-3;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--color-text-faint);
+        pointer-events: none;
+    }
+}

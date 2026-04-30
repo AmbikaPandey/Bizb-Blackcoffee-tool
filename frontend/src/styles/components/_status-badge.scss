@@ -1,0 +1,57 @@
+@use "../variables" as *;
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-1;
+    padding: 3px $space-3;
+    border-radius: 999px;
+    font-size: $font-xs;
+    font-weight: $weight-medium;
+
+    &--sent,
+    &--info {
+        background: $info-bg;
+        color: $info;
+    }
+    &--paid,
+    &--reimbursed,
+    &--active {
+        background: $success-bg;
+        color: $success;
+    }
+    &--completed {
+        background: $info-bg;
+        color: $info;
+    }
+    &--overdue,
+    &--danger,
+    &--cancelled {
+        background: $danger-bg;
+        color: $danger;
+    }
+    &--draft,
+    &--inactive {
+        background: $gray-100;
+        color: $gray-600;
+    }
+    &--pending,
+    &--warning,
+    &--partially-paid {
+        background: $warning-bg;
+        color: $warning;
+    }
+    &--in-progress {
+        background: $info-bg;
+        color: $info;
+    }
+    &--on-hold {
+        background: $orange-bg;
+        color: $orange;
+    }
+
+    svg {
+        width: 12px;
+        height: 12px;
+    }
+}

@@ -1,0 +1,447 @@
+@use "../variables" as *;
+@use "../mixins" as *;
+
+$_sidebar-bg: #1a1210;
+$_sidebar-surface: rgba(255, 255, 255, 0.04);
+$_sidebar-surface-hover: rgba(255, 255, 255, 0.07);
+$_sidebar-surface-active: rgba(200, 149, 108, 0.15);
+$_sidebar-accent: #c8956c;
+$_sidebar-text: rgba(255, 255, 255, 0.5);
+$_sidebar-text-hover: rgba(255, 255, 255, 0.85);
+$_sidebar-border: rgba(255, 255, 255, 0.06);
+$_transition: 280ms cubic-bezier(0.4, 0, 0.2, 1);
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: $sidebar-width;
+    background: $_sidebar-bg;
+    color: $white;
+    display: flex;
+    flex-direction: column;
+    z-index: 50;
+    transition: width $_transition;
+    overflow: visible;
+    font-family: $font-body;
+
+    // ── Toggle button on right edge ─────────────────
+    &__toggle {
+        position: absolute;
+        top: 22px;
+        right: -13px;
+        z-index: 60;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: $_sidebar-bg;
+        border: 1.5px solid rgba(255, 255, 255, 0.12);
+        color: rgba(255, 255, 255, 0.55);
+        cursor: pointer;
+        @include flex-center;
+        transition: all 200ms ease;
+        box-shadow:
+            0 2px 8px rgba(0, 0, 0, 0.3),
+            0 0 0 1px rgba(0, 0, 0, 0.1);
+        opacity: 0;
+
+        &:hover {
+            background: #2a201a;
+            color: $white;
+            border-color: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        &:active {
+            transform: scale(0.92);
+        }
+
+        &:focus-visible {
+            outline: 2px solid $_sidebar-accent;
+            outline-offset: 2px;
+        }
+    }
+
+    // Show toggle on sidebar hover
+    &:hover .sidebar__toggle {
+        opacity: 1;
+    }
+
+    // ── Brand ───────────────────────────────────────
+    &__brand {
+        display: flex;
+        align-items: center;
+        gap: $space-3;
+        padding: $space-5 $space-5 $space-4;
+        min-height: 68px;
+        transition: padding $_transition;
+
+        &-mark {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, $_sidebar-accent, #8b5e3c);
+            border-radius: 10px;
+            @include flex-center;
+            font-weight: $weight-bold;
+            font-size: $font-sm;
+            color: $white;
+            flex-shrink: 0;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(200, 149, 108, 0.3);
+        }
+
+        &-text {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        &-name {
+            font-family: $font-heading;
+            font-size: $font-lg;
+            font-weight: $weight-bold;
+            letter-spacing: 0.3px;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+
+        &-tag {
+            font-size: 10px;
+            color: $_sidebar-text;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            font-weight: $weight-medium;
+            white-space: nowrap;
+        }
+    }
+
+    // ── Divider ─────────────────────────────────────
+    &__divider {
+        height: 1px;
+        background: $_sidebar-border;
+        margin: 0 $space-5 $space-2;
+        transition: margin $_transition;
+    }
+
+    // ── Navigation ──────────────────────────────────
+    &__nav {
+        flex: 1;
+        padding: $space-2 $space-3;
+        overflow-y: auto;
+        overflow-x: hidden;
+        transition: padding $_transition;
+        @include custom-scrollbar;
+    }
+
+    &__item {
+        display: flex;
+        align-items: center;
+        gap: $space-3;
+        position: relative;
+        padding: 9px 14px;
+        margin-bottom: 1px;
+        border-radius: $radius-md;
+        color: $_sidebar-text;
+        font-size: 13px;
+        font-weight: $weight-regular;
+        text-decoration: none;
+        transition: all 180ms ease;
+        cursor: pointer;
+
+        &-icon {
+            @include flex-center;
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+            transition: color 180ms ease;
+        }
+
+        &-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            opacity: 1;
+            transition:
+                opacity 200ms ease,
+                width 200ms ease;
+        }
+
+        &:hover {
+            background: $_sidebar-surface-hover;
+            color: $_sidebar-text-hover;
+        }
+
+        &--active {
+            background: $_sidebar-surface-active;
+            color: $white;
+            font-weight: $weight-medium;
+
+            .sidebar__item-icon {
+                color: $_sidebar-accent;
+            }
+
+            // Accent bar
+            &::before {
+                content: "";
+                position: absolute;
+                left: 0;
+                top: 50%;
+                transform: translateY(-50%);
+                height: 20px;
+                width: 3px;
+                border-radius: 0 4px 4px 0;
+                background: $_sidebar-accent;
+            }
+        }
+    }
+
+    // ── Footer / Profile ────────────────────────────
+    &__footer {
+        border-top: 1px solid $_sidebar-border;
+        padding: $space-3 $space-3;
+        transition: padding $_transition;
+    }
+
+    &__profile {
+        display: flex;
+        align-items: center;
+        gap: $space-3;
+        padding: $space-2 $space-3;
+        border-radius: $radius-md;
+        transition: background 180ms ease;
+
+        &:hover {
+            background: $_sidebar-surface;
+        }
+    }
+
+    &__avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: $radius-md;
+        background: linear-gradient(135deg, $_sidebar-accent, #8b5e3c);
+        @include flex-center;
+        font-weight: $weight-semibold;
+        font-size: 13px;
+        color: $white;
+        flex-shrink: 0;
+    }
+
+    &__profile-info {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        overflow: hidden;
+        transition:
+            opacity 200ms ease,
+            width 200ms ease;
+    }
+
+    &__profile-name {
+        font-size: 13px;
+        font-weight: $weight-medium;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: rgba(255, 255, 255, 0.85);
+    }
+
+    &__profile-role {
+        font-size: 10px;
+        color: $_sidebar-accent;
+        font-weight: $weight-medium;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+    }
+
+    &__logout {
+        @include flex-center;
+        width: 30px;
+        height: 30px;
+        flex-shrink: 0;
+        border-radius: $radius-md;
+        border: none;
+        background: transparent;
+        color: $_sidebar-text;
+        cursor: pointer;
+        transition: all 180ms ease;
+        opacity: 0;
+
+        &:hover {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+        }
+    }
+
+    &__profile:hover .sidebar__logout {
+        opacity: 1;
+    }
+
+    // ── Collapsed State ─────────────────────────────
+    &--collapsed {
+        width: $sidebar-collapsed;
+
+        .sidebar__toggle {
+            opacity: 1;
+        }
+
+        .sidebar__brand {
+            justify-content: center;
+            padding: $space-5 $space-2 $space-4;
+
+            &-text {
+                width: 0;
+                opacity: 0;
+                overflow: hidden;
+            }
+        }
+
+        .sidebar__divider {
+            margin: 0 $space-2 $space-2;
+        }
+
+        .sidebar__nav {
+            padding: $space-2 $space-2;
+        }
+
+        .sidebar__item {
+            justify-content: center;
+            padding: 10px;
+
+            &-text {
+                width: 0;
+                opacity: 0;
+                position: absolute;
+            }
+
+            &--active::before {
+                height: 16px;
+            }
+
+            // Tooltip
+            &::after {
+                content: attr(title);
+                position: absolute;
+                left: calc(100% + 12px);
+                top: 50%;
+                transform: translateY(-50%);
+                background: $_sidebar-bg;
+                color: $white;
+                padding: 6px 12px;
+                border-radius: $radius-md;
+                font-size: 12px;
+                font-weight: $weight-medium;
+                white-space: nowrap;
+                pointer-events: none;
+                opacity: 0;
+                transition:
+                    opacity 150ms ease,
+                    transform 150ms ease;
+                transform: translateY(-50%) translateX(-4px);
+                z-index: 200;
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+                letter-spacing: 0.2px;
+            }
+
+            &:hover::after {
+                opacity: 1;
+                transform: translateY(-50%) translateX(0);
+            }
+        }
+
+        .sidebar__footer {
+            padding: $space-3 $space-2;
+        }
+
+        .sidebar__profile {
+            justify-content: center;
+            padding: $space-2;
+        }
+
+        .sidebar__profile-info {
+            width: 0;
+            opacity: 0;
+            overflow: hidden;
+            position: absolute;
+        }
+
+        .sidebar__logout {
+            display: none;
+        }
+    }
+
+    // ── Mobile: off-screen by default, slide in when open ──
+    @media (max-width: $bp-md) {
+        width: $sidebar-width;
+        transform: translateX(-100%);
+        transition: transform $_transition;
+        box-shadow: none;
+        overflow: hidden;
+
+        &.sidebar--collapsed {
+            width: $sidebar-width;
+            transform: translateX(-100%);
+
+            .sidebar__brand-text {
+                width: auto;
+                opacity: 1;
+            }
+
+            .sidebar__item {
+                justify-content: flex-start;
+                padding: 9px 14px;
+
+                &-text {
+                    width: auto;
+                    opacity: 1;
+                    position: static;
+                }
+
+                &::after {
+                    display: none;
+                }
+            }
+
+            .sidebar__profile {
+                justify-content: flex-start;
+                padding: $space-2 $space-3;
+            }
+
+            .sidebar__profile-info {
+                width: auto;
+                opacity: 1;
+                position: static;
+            }
+
+            .sidebar__divider {
+                margin: 0 $space-5 $space-2;
+            }
+
+            .sidebar__nav {
+                padding: $space-2 $space-3;
+            }
+
+            .sidebar__footer {
+                padding: $space-3 $space-3;
+            }
+
+            .sidebar__logout {
+                display: flex;
+            }
+        }
+
+        &.sidebar--mobile-open {
+            transform: translateX(0);
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .sidebar__toggle {
+            display: none;
+        }
+    }
+}

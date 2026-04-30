@@ -1,0 +1,73 @@
+@use "../variables" as *;
+@use "../mixins" as *;
+
+.stat-card {
+    @include card;
+    @include flex(row, center, space-between);
+
+    @include mobile {
+        padding: $space-4;
+    }
+
+    &__info {
+        display: flex;
+        flex-direction: column;
+        gap: $space-1;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    &__label {
+        font-size: $font-sm;
+        color: var(--color-text-muted);
+        font-weight: $weight-regular;
+    }
+
+    &__value {
+        font-family: $font-heading;
+        font-size: $font-2xl;
+        font-weight: $weight-bold;
+        color: var(--color-text-heading);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+
+        @include mobile {
+            font-size: $font-xl;
+        }
+    }
+
+    &__icon {
+        flex-shrink: 0;
+        @include icon-circle($info-bg, $info);
+
+        &--blue {
+            background: $info-bg;
+            color: $info;
+        }
+        &--teal {
+            background: $teal-bg;
+            color: $teal;
+        }
+        &--orange {
+            background: $orange-bg;
+            color: $orange;
+        }
+        &--purple {
+            background: $purple-bg;
+            color: $purple;
+        }
+        &--red {
+            background: $danger-bg;
+            color: $danger;
+        }
+        &--green {
+            background: $success-bg;
+            color: $success;
+        }
+        &--yellow {
+            background: $warning-bg;
+            color: $warning;
+        }
+    }
+}

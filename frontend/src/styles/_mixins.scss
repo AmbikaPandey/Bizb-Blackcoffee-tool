@@ -1,0 +1,262 @@
+@use "variables" as *;
+
+// ===========================
+// FLEX HELPERS
+// ===========================
+@mixin flex($direction: row, $align: stretch, $justify: flex-start, $gap: 0) {
+    display: flex;
+    flex-direction: $direction;
+    align-items: $align;
+    justify-content: $justify;
+    @if $gap != 0 {
+        gap: $gap;
+    }
+}
+
+@mixin flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@mixin flex-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+// ===========================
+// CARD
+// ===========================
+@mixin card($padding: $space-5) {
+    background: var(--color-card-bg);
+    border: 1px solid var(--color-card-border);
+    border-radius: $radius-xl;
+    padding: $padding;
+    transition:
+        box-shadow $transition-base,
+        background-color 300ms ease;
+
+    &:hover {
+        box-shadow: var(--shadow-md);
+    }
+}
+
+// ===========================
+// INPUT
+// ===========================
+@mixin input-base {
+    width: 100%;
+    padding: $space-3 $space-4;
+    border: 1.5px solid var(--color-input-border);
+    border-radius: $radius-lg;
+    font-size: $font-sm;
+    font-family: $font-body;
+    color: var(--color-input-text);
+    background: var(--color-input-bg);
+    outline: none;
+    text-transform: uppercase;
+    transition:
+        border-color 200ms ease,
+        box-shadow 200ms ease,
+        background-color 300ms ease;
+
+    &::placeholder {
+        color: var(--color-input-placeholder);
+        text-transform: none;
+    }
+
+    &[type="email"],
+    &[type="password"] {
+        text-transform: none;
+    }
+
+    &:hover:not(:focus):not(:disabled) {
+        border-color: var(--color-input-focus);
+    }
+
+    &:focus {
+        border-color: var(--color-input-focus);
+        box-shadow: 0 0 0 3px var(--color-input-focus-ring);
+    }
+
+    &:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+    }
+}
+
+// ===========================
+// BUTTON
+// ===========================
+@mixin btn-primary {
+    @include flex-center;
+    gap: $space-2;
+    padding: $space-3 $space-5;
+    background: $primary;
+    color: $white;
+    border: none;
+    border-radius: $radius-lg;
+    font-size: $font-sm;
+    font-weight: $weight-medium;
+    font-family: $font-body;
+    cursor: pointer;
+    transition:
+        background $transition-fast,
+        transform $transition-fast,
+        box-shadow $transition-fast;
+
+    &:hover {
+        background: $coffee-600;
+        box-shadow: 0 4px 14px rgba($primary, 0.25);
+        transform: translateY(-1px);
+    }
+
+    &:active {
+        transform: translateY(0);
+    }
+}
+
+@mixin btn-secondary {
+    @include flex-center;
+    gap: $space-2;
+    padding: $space-3 $space-5;
+    background: var(--color-surface);
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: $radius-lg;
+    font-size: $font-sm;
+    font-weight: $weight-medium;
+    font-family: $font-body;
+    cursor: pointer;
+    transition:
+        background $transition-fast,
+        border-color $transition-fast;
+
+    &:hover {
+        background: var(--color-surface-hover);
+        border-color: var(--color-text-faint);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--color-input-focus);
+        outline-offset: 2px;
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+// ===========================
+// TABLE
+// ===========================
+@mixin table-base {
+    width: 100%;
+    border-collapse: collapse;
+
+    thead tr {
+        text-align: left;
+        border-bottom: 1px solid var(--color-border-light);
+
+        th {
+            padding: $space-3 $space-4;
+            font-size: $font-xs;
+            font-weight: $weight-medium;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+    }
+
+    tbody tr {
+        border-bottom: 1px solid var(--color-border-subtle);
+        transition: background $transition-fast;
+
+        &:last-child {
+            border-bottom: none;
+        }
+
+        &:hover {
+            background: var(--color-surface-hover);
+        }
+
+        td {
+            padding: $space-3 $space-4;
+            font-size: $font-sm;
+            color: var(--color-text-secondary);
+        }
+        .balance-red {
+            color: $danger;
+        }
+    }
+}
+
+// ===========================
+// ICON CIRCLE
+// ===========================
+@mixin icon-circle($bg, $color, $size: 48px) {
+    width: $size;
+    height: $size;
+    border-radius: $radius-full;
+    background: $bg;
+    color: $color;
+    @include flex-center;
+    flex-shrink: 0;
+}
+
+// ===========================
+// TRUNCATE
+// ===========================
+@mixin truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+// ===========================
+// SCROLLBAR
+// ===========================
+@mixin custom-scrollbar {
+    &::-webkit-scrollbar {
+        width: 5px;
+    }
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    &::-webkit-scrollbar-thumb {
+        background: rgba($white, 0.15);
+        border-radius: 3px;
+    }
+    &::-webkit-scrollbar-thumb:hover {
+        background: rgba($white, 0.25);
+    }
+}
+
+// ===========================
+// RESPONSIVE BREAKPOINTS
+// ===========================
+@mixin mobile {
+    @media (max-width: $bp-md) {
+        @content;
+    }
+}
+
+@mixin mobile-sm {
+    @media (max-width: $bp-xs) {
+        @content;
+    }
+}
+
+@mixin tablet {
+    @media (max-width: $bp-lg) {
+        @content;
+    }
+}
+
+@mixin desktop {
+    @media (min-width: calc($bp-lg + 1px)) {
+        @content;
+    }
+}

@@ -1,0 +1,75 @@
+@use "../variables" as *;
+@use "../mixins" as *;
+
+.modal {
+    &__overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        @include flex-center;
+    }
+
+    &__backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba($black, 0.5);
+        backdrop-filter: blur(4px);
+    }
+
+    &__container {
+        position: relative;
+        background: var(--color-card-bg);
+        border-radius: $radius-xl;
+        box-shadow: var(--shadow-xl);
+        width: 100%;
+        max-width: 640px;
+        max-height: 90vh;
+        overflow-y: auto;
+        margin: $space-4;
+
+        @include mobile {
+            margin: $space-2;
+            border-radius: $radius-lg;
+            max-height: 95vh;
+        }
+    }
+
+    &__header {
+        @include flex-between;
+        padding: $space-6;
+        border-bottom: 1px solid var(--color-border);
+
+        @include mobile {
+            padding: $space-4;
+        }
+
+        h2 {
+            font-size: $font-xl;
+            font-weight: $weight-bold;
+            color: var(--color-text-heading);
+
+            @include mobile {
+                font-size: $font-lg;
+            }
+        }
+    }
+
+    &__close {
+        padding: $space-1;
+        border-radius: $radius-lg;
+        color: var(--color-text-muted);
+        transition: background $transition-fast;
+
+        &:hover {
+            background: var(--color-surface-alt);
+        }
+    }
+
+    &__body {
+        padding: $space-6;
+
+        @include mobile {
+            padding: $space-4;
+        }
+    }
+}

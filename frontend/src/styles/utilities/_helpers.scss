@@ -1,0 +1,48 @@
+@use "../variables" as *;
+
+.text-right {
+    text-align: right;
+}
+.text-center {
+    text-align: center;
+}
+.font-medium {
+    font-weight: $weight-medium;
+}
+.font-bold {
+    font-weight: $weight-bold;
+}
+.font-mono {
+    font-family: "Roboto Mono", monospace;
+}
+.text-primary {
+    color: $primary;
+}
+.text-success {
+    color: $success;
+}
+.text-danger {
+    color: $danger;
+}
+.text-warning {
+    color: $warning;
+}
+.text-outstanding {
+    color: $danger;
+}
+.text-muted {
+    color: var(--color-text-muted);
+}
+.text-orange {
+    color: $orange;
+}
+.balance-red {
+    color: $danger;
+    font-weight: 500;
+}
+.truncate-cell {
+    max-width: 180px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

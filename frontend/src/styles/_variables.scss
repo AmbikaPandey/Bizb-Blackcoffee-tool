@@ -1,0 +1,182 @@
+// ===========================
+// COLOR PALETTE — Blackcoffee Agency
+// ===========================
+$primary: #3c2415;
+$primary-dark: #2a1810;
+$primary-light: #5c3a28;
+$accent: #c8956c;
+$accent-light: #faf3ec;
+
+$white: #ffffff;
+$black: #000000;
+$body-bg: #faf7f4;
+
+$gray-50: #faf8f6;
+$gray-100: #f3f0ec;
+$gray-200: #e8e2db;
+$gray-300: #d4cbc1;
+$gray-400: #a89e94;
+$gray-500: #78706a;
+$gray-600: #5a524c;
+$gray-700: #3e3832;
+$gray-800: #2a2420;
+$gray-900: #1a1512;
+
+$success: #2d8659;
+$success-bg: #eef8f2;
+$warning: #c27a1a;
+$warning-bg: #fdf6eb;
+$danger: #ed4337;
+$danger-bg: #fdf0ee;
+$info: #2874a6;
+$info-bg: #edf4fa;
+
+$purple: #7d5ba6;
+$purple-bg: #f5f1fa;
+$teal: #1a8a7d;
+$teal-bg: #eef9f7;
+$orange: #d4740e;
+$orange-bg: #fef5ec;
+
+// Brand accent shades
+$coffee-600: #5c3a28;
+$coffee-500: #6f4a35;
+$coffee-400: #8b6347;
+$coffee-300: #c8956c;
+$coffee-200: #e4c9ad;
+$coffee-100: #f5e8d8;
+$coffee-50: #faf3ec;
+
+// ===========================
+// TYPOGRAPHY
+// ===========================
+$font-heading: "Poppins", sans-serif;
+$font-body: "Inter", "Roboto", sans-serif;
+
+$font-xs: 0.75rem;
+$font-sm: 0.875rem;
+$font-base: 1rem;
+$font-lg: 1.125rem;
+$font-xl: 1.25rem;
+$font-2xl: 1.5rem;
+$font-3xl: 1.875rem;
+
+$weight-light: 300;
+$weight-regular: 400;
+$weight-medium: 500;
+$weight-semibold: 600;
+$weight-bold: 700;
+
+// ===========================
+// SPACING
+// ===========================
+$space-1: 0.25rem;
+$space-2: 0.5rem;
+$space-3: 0.75rem;
+$space-4: 1rem;
+$space-5: 1.25rem;
+$space-6: 1.5rem;
+$space-8: 2rem;
+$space-10: 2.5rem;
+$space-12: 3rem;
+
+// ===========================
+// BORDERS & RADIUS
+// ===========================
+$radius-sm: 0.375rem;
+$radius-md: 0.5rem;
+$radius-lg: 0.75rem;
+$radius-xl: 1rem;
+$radius-full: 50%;
+$border-color: $gray-200;
+
+// ===========================
+// SHADOWS
+// ===========================
+$shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+$shadow-md:
+    0 4px 6px -1px rgba(0, 0, 0, 0.07),
+    0 2px 4px -2px rgba(0, 0, 0, 0.05);
+$shadow-lg:
+    0 10px 15px -3px rgba(0, 0, 0, 0.08),
+    0 4px 6px -4px rgba(0, 0, 0, 0.05);
+$shadow-xl:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 8px 10px -6px rgba(0, 0, 0, 0.04);
+
+// ===========================
+// LAYOUT
+// ===========================
+$sidebar-width: 260px;
+$sidebar-collapsed: 72px;
+$header-height: 72px;
+$sidebar-bg: #1e1410;
+
+// ===========================
+// TRANSITIONS
+// ===========================
+$transition-fast: 150ms ease;
+$transition-base: 200ms ease;
+$transition-slow: 300ms ease;
+
+// ===========================
+// BREAKPOINTS
+// ===========================
+$bp-xs: 480px;
+$bp-sm: 640px;
+$bp-md: 768px;
+$bp-lg: 1024px;
+$bp-xl: 1280px;
+
+// ===========================
+// CSS CUSTOM PROPERTIES (Themeable)
+// ===========================
+:root {
+    // Backgrounds
+    --color-body-bg: #{$body-bg};
+    --color-surface: #{$white};
+    --color-surface-hover: #{$gray-50};
+    --color-surface-alt: #{$gray-100};
+    --color-bg-hover: #{$gray-50};
+    --color-row-hover: rgba(200, 149, 108, 0.06);
+
+    // Text
+    --color-text-primary: #{$gray-800};
+    --color-text-secondary: #{$gray-600};
+    --color-text-muted: #{$gray-500};
+    --color-text-faint: #{$gray-400};
+    --color-text-heading: #{$primary-dark};
+
+    // Borders
+    --color-border: #{$gray-200};
+    --color-border-light: #{$gray-100};
+    --color-border-subtle: #{$gray-50};
+
+    // Interactive
+    --color-input-bg: #{$white};
+    --color-input-border: #{$gray-200};
+    --color-input-text: #{$gray-900};
+    --color-input-placeholder: #{$gray-400};
+    --color-input-focus: #{$accent};
+    --color-input-focus-ring: rgba(200, 149, 108, 0.2);
+
+    // Cards & Dropdown
+    --color-card-bg: #{$white};
+    --color-card-border: #{$gray-200};
+    --color-dropdown-bg: #{$white};
+
+    // Header
+    --color-header-bg: #{$white};
+    --color-header-border: #{$gray-200};
+
+    // Scrollbar
+    --color-scrollbar-track: #{$gray-100};
+    --color-scrollbar-thumb: #{$gray-300};
+    --color-scrollbar-thumb-hover: #{$gray-400};
+
+    // Shadows
+    --shadow-sm: #{$shadow-sm};
+    --shadow-md: #{$shadow-md};
+    --shadow-lg: #{$shadow-lg};
+    --shadow-xl: #{$shadow-xl};
+}

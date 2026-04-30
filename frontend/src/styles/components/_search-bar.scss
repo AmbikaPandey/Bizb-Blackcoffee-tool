@@ -1,0 +1,20 @@
+@use "../variables" as *;
+@use "../mixins" as *;
+
+.search-bar {
+    position: relative;
+    flex: 1;
+
+    &__icon {
+        position: absolute;
+        left: $space-3;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--color-text-faint);
+    }
+
+    &__input {
+        @include input-base;
+        padding-left: 40px;
+    }
+}

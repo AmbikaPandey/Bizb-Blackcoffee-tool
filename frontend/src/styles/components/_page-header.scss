@@ -1,0 +1,50 @@
+@use "../variables" as *;
+@use "../mixins" as *;
+
+.page-header {
+    @include flex-between;
+    margin-bottom: $space-6;
+
+    @include mobile {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: $space-3;
+        margin-bottom: $space-4;
+    }
+
+    &__info {
+        h1 {
+            font-size: $font-2xl;
+            font-weight: $weight-bold;
+            color: var(--color-text-heading);
+            margin-bottom: $space-1;
+
+            @include mobile {
+                font-size: $font-xl;
+            }
+        }
+
+        p {
+            color: var(--color-text-muted);
+            font-size: $font-sm;
+        }
+    }
+
+    &__actions {
+        @include flex(row, center, flex-end, $space-2);
+
+        @include mobile {
+            width: 100%;
+        }
+    }
+
+    &__action {
+        @include btn-primary;
+        white-space: nowrap;
+
+        @include mobile {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+}

@@ -1,0 +1,105 @@
+@use "../variables" as *;
+@use "../mixins" as *;
+
+.dashboard {
+    &__tables {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: $space-6;
+
+        @include tablet {
+            grid-template-columns: 1fr;
+            gap: $space-4;
+        }
+    }
+
+    &__section {
+        @include card;
+
+        &-header {
+            @include flex-between;
+            margin-bottom: $space-4;
+
+            h3 {
+                font-size: $font-lg;
+                font-weight: $weight-bold;
+                color: var(--color-text-heading);
+
+                @include mobile {
+                    font-size: $font-base;
+                }
+            }
+        }
+
+        &-link {
+            @include flex(row, center, flex-start, $space-1);
+            font-size: $font-sm;
+            color: var(--color-text-muted);
+            transition: color $transition-fast;
+
+            &:hover {
+                color: $primary;
+            }
+        }
+    }
+
+    &__table {
+        @include table-base;
+        overflow-x: auto;
+
+        .amount-right {
+            text-align: right;
+        }
+        .balance-red {
+            text-align: right;
+            color: $danger;
+            font-weight: $weight-medium;
+        }
+        .truncate-cell {
+            max-width: 150px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    }
+
+    &__chart-section {
+        margin-bottom: $space-6;
+
+        @include mobile {
+            margin-bottom: $space-4;
+        }
+    }
+
+    &__chart {
+        min-height: 320px;
+
+        @include mobile {
+            min-height: 220px;
+        }
+    }
+}
+
+.clickable-row {
+    cursor: pointer;
+    transition: background-color $transition-fast;
+    &:hover {
+        background-color: var(--color-row-hover);
+    }
+}
+
+.stats-grid--4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: $space-4;
+    margin-bottom: $space-6;
+
+    @include tablet {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    @include mobile {
+        grid-template-columns: 1fr;
+        gap: $space-3;
+        margin-bottom: $space-4;
+    }
+}
