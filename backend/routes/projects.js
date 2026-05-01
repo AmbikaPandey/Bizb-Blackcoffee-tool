@@ -11,9 +11,9 @@ const router = express.Router();
 router.get('/', authenticate, async (req, res) => {
   try {
     let filter = {};
-    if (req.user.role === 'Manager') {
+    if (req.user.role === 'Sales Manager') {
       filter = { assigned_manager: req.user.id };
-    } else if (req.user.role === 'Executive') {
+    } else if (req.user.role === 'Sales Executive') {
       filter = { assigned_executives: req.user.id };
     }
 
@@ -21,6 +21,8 @@ router.get('/', authenticate, async (req, res) => {
       .populate('client_id', 'name')
       .populate('assigned_manager', 'username')
       .populate('assigned_executives', 'username')
+      .populate('products', 'name rate')
+      .populate('vendors', 'name')
       .sort({ _id: -1 }).lean();
     res.json(projects.map((p) => ({
       id: p._id, ...p,
@@ -42,11 +44,13 @@ router.get('/:id', authenticate, async (req, res) => {
     const project = await Project.findById(req.params.id)
       .populate('client_id', 'name')
       .populate('assigned_manager', 'username')
-      .populate('assigned_executives', 'username').lean();
+      .populate('assigned_executives', 'username')
+      .populate('products', 'name rate category')
+      .populate('vendors', 'name city').lean();
     if (!project) return res.status(404).json({ error: 'Project not found' });
 
     // Executives can only view their assigned projects
-    if (req.user.role === 'Executive' &&
+    if (req.user.role === 'Sales Executive' &&
       !project.assigned_executives.some(e => String(e._id) === String(req.user.id))) {
       return res.status(403).json({ error: 'Access denied' });
     }
@@ -66,9 +70,9 @@ router.get('/:id', authenticate, async (req, res) => {
 });
 
 // POST create project — Admin and Manager
-router.post('/', authenticate, requireRole('Admin', 'Manager'), async (req, res) => {
+router.post('/', authenticate, requireRole('Super Admin', 'Admin', 'Sales Manager'), async (req, res) => {
   try {
-    const { name, client_id, budget, start_date, end_date, status, code, description, assigned_manager, assigned_executives } = req.body;
+    const { name, client_id, budget, start_date, end_date, status, code, description, assigned_manager, assigned_executives, products, vendors, venue, revenue } = req.body;
     if (!name || !name.trim()) return res.status(400).json({ error: 'Project name is required' });
 
     let projectCode = code?.trim();
@@ -82,7 +86,7 @@ router.post('/', authenticate, requireRole('Admin', 'Manager'), async (req, res)
     }
 
     // Manager auto-assigns themselves
-    const managerId = req.user.role === 'Manager' ? req.user.id : (assigned_manager || null);
+    const managerId = req.user.role === 'Sales Manager' ? req.user.id : (assigned_manager || null);
 
     const project = await Project.create({
       name: name.trim(), code: projectCode,
@@ -91,6 +95,10 @@ router.post('/', authenticate, requireRole('Admin', 'Manager'), async (req, res)
       description: description || '',
       assigned_manager: managerId,
       assigned_executives: assigned_executives || [],
+      products: products || [],
+      vendors: vendors || [],
+      venue: venue || '',
+      revenue: revenue || 0,
     });
 
     await AuditLog.create({
@@ -106,13 +114,13 @@ router.post('/', authenticate, requireRole('Admin', 'Manager'), async (req, res)
 });
 
 // PUT update project — Admin and Manager (own projects)
-router.put('/:id', authenticate, requireRole('Admin', 'Manager'), async (req, res) => {
+router.put('/:id', authenticate, requireRole('Super Admin', 'Admin', 'Sales Manager'), async (req, res) => {
   try {
     const project = await Project.findById(req.params.id);
     if (!project) return res.status(404).json({ error: 'Project not found' });
 
     // Manager can only update their own projects
-    if (req.user.role === 'Manager' && String(project.assigned_manager) !== String(req.user.id)) {
+    if (req.user.role === 'Sales Manager' && String(project.assigned_manager) !== String(req.user.id)) {
       return res.status(403).json({ error: 'Access denied' });
     }
 
@@ -129,7 +137,7 @@ router.put('/:id', authenticate, requireRole('Admin', 'Manager'), async (req, re
 });
 
 // DELETE project — Admin only
-router.delete('/:id', authenticate, requireRole('Admin'), async (req, res) => {
+router.delete('/:id', authenticate, requireRole('Super Admin', 'Admin'), async (req, res) => {
   try {
     const project = await Project.findById(req.params.id);
     if (!project) return res.status(404).json({ error: 'Project not found' });

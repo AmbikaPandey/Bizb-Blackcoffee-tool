@@ -17,9 +17,13 @@ const statusMap = {
     Inactive: 'inactive',
     Cancelled: 'cancelled',
     'Partially Paid': 'partially-paid',
+    Quoted: 'sent',
+    Converted: 'paid',
+    Revised: 'pending',
+    Accepted: 'approved',
 };
 
-const showCheck = ['Reimbursed', 'Paid', 'Completed', 'Approved'];
+const showCheck = ['Reimbursed', 'Paid', 'Completed', 'Approved', 'Converted', 'Accepted'];
 
 const normalize = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : '';
 

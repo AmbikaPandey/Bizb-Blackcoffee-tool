@@ -56,9 +56,9 @@ async function seed() {
       username: 'Ambika',
       email: 'ambika@bizb.in',
       password: 'admin123',
-      role: 'Admin',
+      role: 'Super Admin',
     });
-    console.log('Seeded admin user (ambika@bizb.in / admin123)');
+    console.log('Seeded super admin user (ambika@bizb.in / admin123)');
   } else {
     console.log(`Users already exist (${userCount}), skipping`);
   }

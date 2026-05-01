@@ -1,0 +1,512 @@
+@use "sass:color";
+@use "../variables" as *;
+@use "../mixins" as *;
+
+// ── Costings Page ──────────────────────────────────
+.costings-page,
+.quotes-page,
+.audit-page,
+.commission-page,
+.view-quote-page {
+    .text-success {
+        color: $success;
+    }
+    .text-right {
+        text-align: right;
+    }
+    .text-center {
+        text-align: center;
+    }
+    .font-mono {
+        font-family: "Consolas", monospace;
+        font-size: 0.85rem;
+    }
+    .font-bold {
+        font-weight: 600;
+    }
+    .mt-1 {
+        margin-top: 0.25rem;
+    }
+    .mt-2 {
+        margin-top: 0.5rem;
+    }
+    .mt-3 {
+        margin-top: 1rem;
+    }
+    .mr-1 {
+        margin-right: 0.5rem;
+    }
+
+    .action-btns {
+        display: flex;
+        gap: 4px;
+        justify-content: flex-end;
+    }
+
+    .btn-icon {
+        background: none;
+        border: 1px solid $gray-200;
+        border-radius: 4px;
+        padding: 4px 6px;
+        cursor: pointer;
+        color: $gray-600;
+        transition: all 0.2s;
+        &:hover {
+            background: $gray-100;
+            color: $primary;
+        }
+        &--danger:hover {
+            color: $danger;
+            border-color: $danger;
+        }
+        &--success:hover {
+            color: $success;
+            border-color: $success;
+        }
+    }
+
+    .filter-select,
+    .filter-input {
+        padding: 6px 10px;
+        border: 1px solid $gray-200;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        background: $white;
+    }
+
+    .page__filters {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+}
+
+// ── New Costing Form ──────────────────────────────────
+.new-costing-page {
+    .page__header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        h1 {
+            font-size: 1.3rem;
+            margin: 0;
+        }
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        &--full {
+            grid-column: 1 / -1;
+        }
+        label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: $gray-600;
+        }
+        input,
+        select,
+        textarea {
+            padding: 8px 10px;
+            border: 1px solid $gray-200;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            &:focus {
+                outline: none;
+                border-color: $primary;
+            }
+        }
+    }
+
+    .costing-items {
+        margin-bottom: 1.5rem;
+        &__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            h3 {
+                margin: 0;
+                font-size: 1rem;
+            }
+        }
+        &__table-wrap {
+            overflow-x: auto;
+        }
+        &__table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            th {
+                padding: 6px 8px;
+                background: $gray-100;
+                font-size: 0.75rem;
+                text-transform: uppercase;
+                color: $gray-600;
+                text-align: left;
+                border-bottom: 1px solid $gray-200;
+            }
+            td {
+                padding: 4px 6px;
+                border-bottom: 1px solid $gray-100;
+                vertical-align: top;
+            }
+        }
+    }
+
+    .input-sm {
+        width: 100%;
+        padding: 4px 6px;
+        border: 1px solid $gray-200;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        &:focus {
+            outline: none;
+            border-color: $primary;
+        }
+    }
+
+    .costing-summary {
+        max-width: 400px;
+        margin-left: auto;
+        &__row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 12px;
+            font-size: 0.875rem;
+            &--total {
+                font-weight: 700;
+                font-size: 1rem;
+                background: $primary;
+                color: $white;
+                border-radius: 6px;
+                padding: 10px 12px;
+                margin-top: 4px;
+            }
+        }
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-end;
+        margin-top: 1.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid $gray-200;
+    }
+}
+
+// ── View Quote ────────────────────────────────────────
+.view-quote-page {
+    .page__header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        &-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+    }
+
+    .quote-detail {
+        &__top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            h2 {
+                margin: 0;
+                font-size: 1.3rem;
+            }
+        }
+        &__info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            padding: 1rem;
+            background: $gray-50;
+            border-radius: 8px;
+            h4 {
+                margin: 0 0 0.25rem;
+                font-size: 0.85rem;
+                color: $gray-500;
+                text-transform: uppercase;
+            }
+        }
+        &__summary {
+            max-width: 400px;
+            margin-left: auto;
+            margin-top: 1rem;
+            .summary-row {
+                display: flex;
+                justify-content: space-between;
+                padding: 6px 0;
+                font-size: 0.9rem;
+                border-bottom: 1px solid $gray-100;
+                &--total {
+                    font-weight: 700;
+                    font-size: 1.1rem;
+                    border-bottom: none;
+                    padding-top: 8px;
+                    color: $primary;
+                }
+            }
+        }
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 2px 8px;
+        background: $accent-light;
+        color: $primary;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .revision-list {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .revision-item {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        padding: 6px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        &:hover {
+            background: $gray-100;
+        }
+        &--active {
+            background: $accent-light;
+            font-weight: 600;
+        }
+    }
+}
+
+// ── Audit Trail ───────────────────────────────────────
+.audit-page {
+    .audit-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .audit-timeline {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .audit-entry {
+        display: flex;
+        gap: 12px;
+        padding: 12px 0;
+        border-bottom: 1px solid $gray-100;
+
+        &__icon {
+            flex-shrink: 0;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: $accent-light;
+            color: $primary;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        &__content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        &__header {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        &__action {
+            font-weight: 600;
+            text-transform: capitalize;
+            font-size: 0.85rem;
+        }
+
+        &__entity {
+            background: $gray-100;
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            color: $gray-600;
+        }
+
+        &__time {
+            font-size: 0.75rem;
+            color: $gray-400;
+            margin-left: auto;
+        }
+
+        &__details {
+            margin: 2px 0;
+            font-size: 0.85rem;
+            color: $gray-700;
+        }
+
+        &__user {
+            font-size: 0.75rem;
+            color: $gray-500;
+            margin: 0;
+        }
+    }
+}
+
+// ── Commission Dashboard ──────────────────────────────
+.commission-page {
+    .tab-bar {
+        display: flex;
+        gap: 2px;
+        margin-bottom: 1.5rem;
+        border-bottom: 2px solid $gray-200;
+    }
+
+    .tab-btn {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border: none;
+        background: none;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: $gray-500;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        transition: all 0.2s;
+        &:hover {
+            color: $primary;
+        }
+        &.active {
+            color: $primary;
+            border-bottom-color: $primary;
+            font-weight: 600;
+        }
+    }
+
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        &--sm {
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        }
+    }
+
+    .status-cards {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .status-card {
+        padding: 1rem;
+        background: $white;
+        border: 1px solid $gray-200;
+        border-radius: 8px;
+        min-width: 140px;
+        &__status {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: $gray-500;
+            font-weight: 600;
+        }
+        &__count {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: $primary;
+        }
+        &__detail {
+            font-size: 0.8rem;
+            color: $gray-600;
+        }
+    }
+
+    .commission-settings {
+        max-width: 600px;
+        h3 {
+            margin-bottom: 1rem;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            label {
+                font-size: 0.8rem;
+                font-weight: 600;
+                color: $gray-600;
+            }
+            input {
+                padding: 8px 10px;
+                border: 1px solid $gray-200;
+                border-radius: 6px;
+                font-size: 0.875rem;
+                &:focus {
+                    outline: none;
+                    border-color: $primary;
+                }
+            }
+            small {
+                font-size: 0.72rem;
+            }
+        }
+    }
+}
+
+// ── Shared Buttons ────────────────────────────────────
+.btn--sm {
+    padding: 4px 10px;
+    font-size: 0.8rem;
+}
+
+.btn--success {
+    background: $success;
+    color: $white;
+    border: 1px solid $success;
+    &:hover {
+        background: color.adjust($success, $lightness: -8%);
+    }
+}
+
+.btn--danger {
+    background: $danger;
+    color: $white;
+    border: 1px solid $danger;
+    &:hover {
+        background: color.adjust($danger, $lightness: -8%);
+    }
+}

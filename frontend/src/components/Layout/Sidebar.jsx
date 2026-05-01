@@ -2,23 +2,27 @@ import { NavLink, useLocation } from 'react-router-dom';
 import {
     LayoutDashboard, Users, Package, FileText, CreditCard,
     FolderKanban, Building2, Receipt, BarChart3, Settings, UserCog,
-    ChevronLeft, ChevronRight, LogOut
+    ChevronLeft, ChevronRight, LogOut, Calculator, FileCheck, TrendingUp, ScrollText
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSidebar } from '../../context/SidebarContext';
 
 const navItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['Admin', 'Manager'] },
-    { path: '/clients', label: 'Clients', icon: Users, roles: ['Admin', 'Manager'] },
-    { path: '/products', label: 'Products', icon: Package, roles: ['Admin'] },
-    { path: '/invoices', label: 'Invoices', icon: FileText, roles: ['Admin', 'Manager'] },
-    { path: '/payments', label: 'Payments', icon: CreditCard, roles: ['Admin'] },
-    { path: '/projects', label: 'Projects', icon: FolderKanban, roles: ['Admin', 'Manager', 'Executive'] },
-    { path: '/vendors', label: 'Vendors', icon: Building2, roles: ['Admin', 'Manager'] },
-    { path: '/expenses', label: 'Expenses', icon: Receipt, roles: ['Admin', 'Manager', 'Executive'] },
-    { path: '/reports', label: 'Reports', icon: BarChart3, roles: ['Admin'] },
-    { path: '/settings', label: 'Settings', icon: Settings, roles: ['Admin'] },
-    { path: '/users', label: 'Users', icon: UserCog, roles: ['Admin', 'Manager', 'Executive'] },
+    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['Super Admin', 'Admin', 'Sales Manager', 'Accounts'] },
+    { path: '/clients', label: 'Clients', icon: Users, roles: ['Super Admin', 'Admin', 'Sales Manager'] },
+    { path: '/products', label: 'Products', icon: Package, roles: ['Super Admin', 'Admin'] },
+    { path: '/costings', label: 'Costings', icon: Calculator, roles: ['Super Admin', 'Admin', 'Sales Manager', 'Accounts'] },
+    { path: '/quotes', label: 'Quotes', icon: FileCheck, roles: ['Super Admin', 'Admin', 'Sales Manager', 'Accounts'] },
+    { path: '/invoices', label: 'Invoices', icon: FileText, roles: ['Super Admin', 'Admin', 'Sales Manager', 'Accounts'] },
+    { path: '/payments', label: 'Payments', icon: CreditCard, roles: ['Super Admin', 'Admin', 'Accounts'] },
+    { path: '/projects', label: 'Projects', icon: FolderKanban, roles: ['Super Admin', 'Admin', 'Sales Manager', 'Sales Executive'] },
+    { path: '/vendors', label: 'Vendors', icon: Building2, roles: ['Super Admin', 'Admin', 'Sales Manager'] },
+    { path: '/expenses', label: 'Expenses', icon: Receipt, roles: ['Super Admin', 'Admin', 'Sales Manager', 'Sales Executive', 'Accounts'] },
+    { path: '/commission', label: 'Commission', icon: TrendingUp, roles: ['Super Admin', 'Admin'] },
+    { path: '/reports', label: 'Reports', icon: BarChart3, roles: ['Super Admin', 'Admin', 'Accounts'] },
+    { path: '/audit', label: 'Audit Trail', icon: ScrollText, roles: ['Super Admin', 'Admin'] },
+    { path: '/settings', label: 'Settings', icon: Settings, roles: ['Super Admin', 'Admin'] },
+    { path: '/users', label: 'Users', icon: UserCog, roles: ['Super Admin', 'Admin', 'Sales Manager', 'Sales Executive', 'Accounts'] },
 ];
 
 export default function Sidebar() {

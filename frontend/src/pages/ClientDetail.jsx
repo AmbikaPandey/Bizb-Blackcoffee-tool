@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Building2, MapPin } from 'lucide-react';
+import { ArrowLeft, Building2, MapPin, FolderKanban } from 'lucide-react';
 import PageLoader from '../components/common/PageLoader';
+import StatusBadge from '../components/common/StatusBadge';
 import { useToast } from '../components/common/Toast';
 import { api } from '../services/api';
 import { formatCurrency } from '../utils/currency';
@@ -17,12 +18,14 @@ export default function ClientDetail() {
     const toast = useToast();
     const [client, setClient] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [projects, setProjects] = useState([]);
 
     useEffect(() => {
         api.getClient(id)
             .then(setClient)
             .catch(() => { toast('Failed to load client', 'error'); navigate('/clients'); })
             .finally(() => setLoading(false));
+        api.getProjects().then(all => setProjects(all.filter(p => String(p.client_id) === id))).catch(() => { });
     }, [id]);
 
     if (loading) return <PageLoader />;
@@ -93,6 +96,29 @@ export default function ClientDetail() {
                         </table>
                     </div>
                 </div>
+            </div>
+
+            <div className="client-detail__summary-card">
+                <h3 className="client-detail__card-title"><FolderKanban size={18} /> Linked Projects</h3>
+                {projects.length > 0 ? (
+                    <div className="page-card__table">
+                        <table>
+                            <thead>
+                                <tr><th>Project</th><th>Status</th><th className="text-right">Budget</th><th className="text-right">Revenue</th></tr>
+                            </thead>
+                            <tbody>
+                                {projects.map(p => (
+                                    <tr key={p.id || p._id} style={{ cursor: 'pointer' }} onClick={() => navigate('/projects')}>
+                                        <td className="font-medium">{p.name}{p.code ? ` (${p.code})` : ''}</td>
+                                        <td><StatusBadge status={p.status} /></td>
+                                        <td className="text-right">{formatCurrency(p.budget)}</td>
+                                        <td className="text-right">{formatCurrency(p.revenue || 0)}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : <p style={{ color: '#9ca3af', fontSize: '0.85rem' }}>No projects linked to this client.</p>}
             </div>
 
             <div className="client-detail__summary-card">

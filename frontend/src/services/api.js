@@ -84,6 +84,7 @@ export const api = {
   updateInvoice: (id, data) => request(`/invoices/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   updateInvoiceStatus: (id, status) => request(`/invoices/${id}`, { method: 'PUT', body: JSON.stringify({ status }) }),
   deleteInvoice: (id) => request(`/invoices/${id}`, { method: 'DELETE' }),
+  convertProformaToTax: (id) => request(`/invoices/${id}/convert-to-tax`, { method: 'POST' }),
 
   // Payments
   getPayments: (params = {}) => {
@@ -106,6 +107,9 @@ export const api = {
   createVendor: (data) => request('/vendors', { method: 'POST', body: JSON.stringify(data) }),
   updateVendor: (id, data) => request(`/vendors/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteVendor: (id) => request(`/vendors/${id}`, { method: 'DELETE' }),
+  getVendorPayments: (id) => request(`/vendors/${id}/payments`),
+  addVendorPayment: (id, data) => request(`/vendors/${id}/payments`, { method: 'POST', body: JSON.stringify(data) }),
+  deleteVendorPayment: (id, paymentId) => request(`/vendors/${id}/payments/${paymentId}`, { method: 'DELETE' }),
 
   // Expenses
   getExpenses: (params = {}) => {
@@ -148,4 +152,60 @@ export const api = {
     const qs = new URLSearchParams(params).toString();
     return request(`/reports/reimbursements${qs ? `?${qs}` : ''}`);
   },
+
+  // Audit Logs
+  getAuditLogs: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/audit${qs ? `?${qs}` : ''}`);
+  },
+  getAuditStats: () => request('/audit/stats'),
+
+  // Costings (Internal)
+  getCostings: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/costings${qs ? `?${qs}` : ''}`);
+  },
+  getCosting: (id) => request(`/costings/${id}`),
+  getNextCostingNumber: () => request('/costings/next-number'),
+  createCosting: (data) => request('/costings', { method: 'POST', body: JSON.stringify(data) }),
+  updateCosting: (id, data) => request(`/costings/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteCosting: (id) => request(`/costings/${id}`, { method: 'DELETE' }),
+
+  // Quotes
+  getQuotes: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/quotes${qs ? `?${qs}` : ''}`);
+  },
+  getQuote: (id) => request(`/quotes/${id}`),
+  getNextQuoteNumber: () => request('/quotes/next-number'),
+  createQuote: (data) => request('/quotes', { method: 'POST', body: JSON.stringify(data) }),
+  createQuoteFromCosting: (costingId) => request(`/quotes/from-costing/${costingId}`, { method: 'POST' }),
+  updateQuote: (id, data) => request(`/quotes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  reviseQuote: (id) => request(`/quotes/${id}/revise`, { method: 'POST' }),
+  convertQuoteToInvoice: (id) => request(`/quotes/${id}/convert-to-invoice`, { method: 'POST' }),
+  deleteQuote: (id) => request(`/quotes/${id}`, { method: 'DELETE' }),
+  downloadQuotePdf: async (id) => {
+    const token = getToken();
+    const headers = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(`${API_BASE}/quotes/${id}/pdf`, { headers });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(err.error || 'Failed to download PDF');
+    }
+    return res.blob();
+  },
+
+  // Commission Engine
+  getCommissionSettings: () => request('/commission/settings'),
+  saveCommissionSettings: (data) => request('/commission/settings', { method: 'PUT', body: JSON.stringify(data) }),
+  getVendorMarkup: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/commission/vendor-markup${qs ? `?${qs}` : ''}`);
+  },
+  getAgencyCharges: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/commission/agency-charges${qs ? `?${qs}` : ''}`);
+  },
+  getProfitSummary: () => request('/commission/profit-summary'),
 };

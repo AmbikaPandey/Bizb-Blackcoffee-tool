@@ -12,7 +12,7 @@ import { api } from '../services/api';
 import { formatCurrency } from '../utils/currency';
 import { uppercaseFormData } from '../utils/formTransform';
 
-const emptyForm = { name: '', vendor_id: '', category: '', hsn: '', rate: '', unit: 'NOS', gst: '18', description: '', status: 'Active' };
+const emptyForm = { name: '', vendor_id: '', category: '', hsn: '', base_cost: '', markup_pct: '', rate: '', unit: 'NOS', gst: '18', description: '', status: 'Active' };
 
 export default function Products() {
     const toast = useToast();
@@ -48,7 +48,9 @@ export default function Products() {
         setEditTarget(p);
         setForm({
             name: p.name || '', vendor_id: p.vendor_id?._id || p.vendor_id || '',
-            category: p.category || '', hsn: p.hsn || '', rate: p.rate || '',
+            category: p.category || '', hsn: p.hsn || '',
+            base_cost: p.base_cost || '', markup_pct: p.markup_pct ?? '',
+            rate: p.selling_price || p.rate || '',
             unit: p.unit || 'NOS', gst: p.gst ?? '18', description: p.description || '',
             status: p.status || 'Active',
         });
@@ -61,7 +63,13 @@ export default function Products() {
         if (!form.vendor_id) { toast('Vendor is required', 'error'); return; }
         setSaving(true);
         try {
-            const data = uppercaseFormData({ ...form, rate: parseFloat(form.rate) || 0, gst: parseFloat(form.gst) || 0 });
+            const data = uppercaseFormData({
+                ...form,
+                base_cost: parseFloat(form.base_cost) || 0,
+                markup_pct: parseFloat(form.markup_pct) || 0,
+                rate: parseFloat(form.rate) || 0,
+                gst: parseFloat(form.gst) || 0,
+            });
             if (editTarget) {
                 await api.updateProduct(editTarget.id || editTarget._id, data);
                 toast('Product updated');
@@ -112,7 +120,9 @@ export default function Products() {
                                 <th>Vendor</th>
                                 <th>Category</th>
                                 <th>HSN/SAC</th>
-                                <th className="text-right">Rate</th>
+                                <th className="text-right">Base Cost</th>
+                                <th className="text-right">Markup %</th>
+                                <th className="text-right">Selling Price</th>
                                 <th>Unit</th>
                                 <th className="text-right">GST %</th>
                                 <th>Status</th>
@@ -126,7 +136,9 @@ export default function Products() {
                                     <td>{p.vendor_name || '-'}</td>
                                     <td>{p.category || '-'}</td>
                                     <td className="mono">{p.hsn}</td>
-                                    <td className="text-right">{formatCurrency(p.rate)}</td>
+                                    <td className="text-right">{p.base_cost ? formatCurrency(p.base_cost) : '-'}</td>
+                                    <td className="text-right">{p.markup_pct != null && p.markup_pct > 0 ? `${p.markup_pct}%` : '-'}</td>
+                                    <td className="text-right">{formatCurrency(p.selling_price || p.rate)}</td>
                                     <td>{p.unit}</td>
                                     <td className="text-right">{p.gst}%</td>
                                     <td><StatusBadge status={p.status || 'Active'} /></td>
@@ -140,7 +152,7 @@ export default function Products() {
                                 </tr>
                             ))}
                             {filtered.length === 0 && (
-                                <tr><td colSpan={9} className="text-center">No products found</td></tr>
+                                <tr><td colSpan={11} className="text-center">No products found</td></tr>
                             )}
                         </tbody>
                     </table>
@@ -174,17 +186,42 @@ export default function Products() {
                             <input type="text" placeholder="e.g. 998361" className="form-group__input" value={form.hsn} onChange={(e) => setForm({ ...form, hsn: e.target.value })} />
                         </div>
                         <div className="form-group">
-                            <label className="form-group__label">Rate</label>
-                            <input type="number" step="0.01" min="0" placeholder="0.00" className="form-group__input" value={form.rate} onChange={(e) => setForm({ ...form, rate: e.target.value })} />
-                        </div>
-                    </div>
-                    <div className="form-row form-row--3">
-                        <div className="form-group">
                             <label className="form-group__label">Unit</label>
                             <select className="form-group__input" value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })}>
                                 <option>NOS</option><option>HRS</option><option>KGS</option><option>MTR</option><option>LTR</option><option>PCS</option><option>SET</option><option>BOX</option>
                             </select>
                         </div>
+                    </div>
+                    <div className="form-row form-row--3">
+                        <div className="form-group">
+                            <label className="form-group__label">Base Cost (₹)</label>
+                            <input type="number" step="0.01" min="0" placeholder="0.00" className="form-group__input" value={form.base_cost}
+                                onChange={(e) => {
+                                    const bc = parseFloat(e.target.value) || 0;
+                                    const mp = parseFloat(form.markup_pct) || 0;
+                                    const sp = Math.round(bc * (1 + mp / 100) * 100) / 100;
+                                    setForm({ ...form, base_cost: e.target.value, rate: sp || '' });
+                                }} />
+                        </div>
+                        <div className="form-group">
+                            <label className="form-group__label">Markup (%)</label>
+                            <input type="number" step="0.1" min="0" placeholder="0" className="form-group__input" value={form.markup_pct}
+                                onChange={(e) => {
+                                    const mp = parseFloat(e.target.value) || 0;
+                                    const bc = parseFloat(form.base_cost) || 0;
+                                    const sp = Math.round(bc * (1 + mp / 100) * 100) / 100;
+                                    setForm({ ...form, markup_pct: e.target.value, rate: sp || '' });
+                                }} />
+                        </div>
+                        <div className="form-group">
+                            <label className="form-group__label">Selling Price (₹)</label>
+                            <input type="number" step="0.01" min="0" placeholder="Auto-calculated" className="form-group__input" value={form.rate}
+                                readOnly={!!form.base_cost && parseFloat(form.base_cost) > 0}
+                                onChange={(e) => setForm({ ...form, rate: e.target.value })} />
+                            {form.base_cost > 0 && <small style={{ color: '#78706a', fontSize: '0.72rem' }}>Auto-calculated from Base Cost + Markup</small>}
+                        </div>
+                    </div>
+                    <div className="form-row form-row--2">
                         <div className="form-group">
                             <label className="form-group__label">GST %</label>
                             <select className="form-group__input" value={form.gst} onChange={(e) => setForm({ ...form, gst: e.target.value })}>
