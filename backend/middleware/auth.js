@@ -1,6 +1,19 @@
 const Session = require('../models/Session');
 const User = require('../models/User');
 
+// Role hierarchy: Super Admin > Admin > Sales Manager > Sales Executive / Accounts
+const ROLE_HIERARCHY = {
+  'Super Admin': 5,
+  'Admin': 4,
+  'Sales Manager': 3,
+  'Sales Executive': 2,
+  'Accounts': 2,
+};
+
+function getRoleLevel(role) {
+  return ROLE_HIERARCHY[role] || 0;
+}
+
 async function authenticate(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -9,6 +22,13 @@ async function authenticate(req, res, next) {
   const token = authHeader.split(' ')[1];
   const session = await Session.findOne({ token, expires_at: { $gt: new Date() } });
   if (!session) return res.status(401).json({ error: 'Invalid or expired session' });
+
+  // Check idle timeout
+  if (session.isIdle()) {
+    await session.deleteOne();
+    return res.status(401).json({ error: 'Session timed out due to inactivity' });
+  }
+
   const user = await User.findById(session.user_id).lean();
   if (!user || !user.is_active) return res.status(401).json({ error: 'User not found or inactive' });
 
@@ -24,8 +44,15 @@ async function authenticate(req, res, next) {
 }
 
 function requireAdmin(req, res, next) {
-  if (req.user?.role !== 'Admin') {
+  if (!['Super Admin', 'Admin'].includes(req.user?.role)) {
     return res.status(403).json({ error: 'Admin access required' });
+  }
+  next();
+}
+
+function requireSuperAdmin(req, res, next) {
+  if (req.user?.role !== 'Super Admin') {
+    return res.status(403).json({ error: 'Super Admin access required' });
   }
   next();
 }
@@ -39,4 +66,4 @@ function requireRole(...roles) {
   };
 }
 
-module.exports = { authenticate, requireAdmin, requireRole };
+module.exports = { authenticate, requireAdmin, requireSuperAdmin, requireRole, getRoleLevel, ROLE_HIERARCHY };

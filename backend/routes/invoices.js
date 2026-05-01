@@ -249,4 +249,43 @@ router.delete('/:id', authenticate, async (req, res) => {
   }
 });
 
+// POST convert proforma to tax invoice
+router.post('/:id/convert-to-tax', authenticate, async (req, res) => {
+  try {
+    const proforma = await Invoice.findById(req.params.id);
+    if (!proforma) return res.status(404).json({ error: 'Invoice not found' });
+    if (proforma.type !== 'proforma') return res.status(400).json({ error: 'Only proforma invoices can be converted' });
+    if (proforma.converted_to) return res.status(400).json({ error: 'Already converted to tax invoice' });
+
+    const taxNumber = await getNextInvoiceNumber('tax');
+    const taxInvoice = await Invoice.create({
+      invoice_number: taxNumber,
+      type: 'tax',
+      client_id: proforma.client_id,
+      invoice_date: new Date().toISOString().split('T')[0],
+      credit_period: proforma.credit_period,
+      place_of_supply: proforma.place_of_supply,
+      tax_type: proforma.tax_type,
+      items: proforma.items,
+      subtotal: proforma.subtotal,
+      taxable_amount: proforma.taxable_amount,
+      grand_total: proforma.grand_total,
+      notes: proforma.notes,
+      status: 'Draft',
+      converted_from_proforma: proforma._id,
+    });
+
+    proforma.converted_to = taxInvoice._id;
+    proforma.status = 'Cancelled';
+    await proforma.save();
+
+    await recalcClientOutstanding(proforma.client_id);
+
+    res.status(201).json({ id: taxInvoice._id, ...taxInvoice.toObject(), invoice_number: cleanInvoiceNumber(taxInvoice.invoice_number) });
+  } catch (err) {
+    console.error('Convert to tax error:', err);
+    res.status(500).json({ error: 'Failed to convert to tax invoice' });
+  }
+});
+
 module.exports = router;

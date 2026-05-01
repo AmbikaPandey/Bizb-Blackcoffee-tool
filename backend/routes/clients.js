@@ -77,7 +77,7 @@ router.get('/:id', authenticate, async (req, res) => {
   }
 });
 
-router.post('/', authenticate, requireRole('Admin', 'Manager'), async (req, res) => {
+router.post('/', authenticate, requireRole('Super Admin', 'Admin', 'Sales Manager'), async (req, res) => {
   try {
     const { name, gstin, pan, contact, service_type, city, email, phone, state, address, pincode, latitude, longitude } = req.body;
     if (!name || !name.trim()) return res.status(400).json({ error: 'Client name is required' });
@@ -97,7 +97,7 @@ router.post('/', authenticate, requireRole('Admin', 'Manager'), async (req, res)
   }
 });
 
-router.put('/:id', authenticate, requireRole('Admin', 'Manager'), async (req, res) => {
+router.put('/:id', authenticate, requireRole('Super Admin', 'Admin', 'Sales Manager'), async (req, res) => {
   try {
     const client = await Client.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after', runValidators: true }).lean();
     if (!client) return res.status(404).json({ error: 'Client not found' });
@@ -107,7 +107,7 @@ router.put('/:id', authenticate, requireRole('Admin', 'Manager'), async (req, re
   }
 });
 
-router.delete('/:id', authenticate, requireRole('Admin'), async (req, res) => {
+router.delete('/:id', authenticate, requireRole('Super Admin', 'Admin'), async (req, res) => {
   try {
     const client = await Client.findById(req.params.id);
     if (!client) return res.status(404).json({ error: 'Client not found' });

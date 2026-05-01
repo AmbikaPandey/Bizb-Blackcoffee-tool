@@ -14,7 +14,7 @@ function sanitize(str) {
   return typeof str === 'string' ? str.replace(/[<>]/g, '').trim() : '';
 }
 
-router.get('/', authenticate, requireRole('Admin', 'Manager'), async (req, res) => {
+router.get('/', authenticate, requireRole('Super Admin', 'Admin', 'Sales Manager'), async (req, res) => {
   try {
     const vendors = await Vendor.find().populate('created_by', 'username').sort({ name: 1 }).lean();
     res.json(vendors.map((v) => ({
@@ -27,7 +27,7 @@ router.get('/', authenticate, requireRole('Admin', 'Manager'), async (req, res) 
   }
 });
 
-router.get('/:id', authenticate, requireRole('Admin', 'Manager'), async (req, res) => {
+router.get('/:id', authenticate, requireRole('Super Admin', 'Admin', 'Sales Manager'), async (req, res) => {
   try {
     const vendor = await Vendor.findById(req.params.id).populate('created_by', 'username').lean();
     if (!vendor) return res.status(404).json({ error: 'Vendor not found' });
@@ -46,7 +46,7 @@ router.get('/:id', authenticate, requireRole('Admin', 'Manager'), async (req, re
   }
 });
 
-router.post('/', authenticate, requireRole('Admin', 'Manager'), async (req, res) => {
+router.post('/', authenticate, requireRole('Super Admin', 'Admin', 'Sales Manager'), async (req, res) => {
   try {
     const { name, gstin, pan, contact, city, phone, email, state, address, pincode, bank_details } = req.body;
     if (!name || !name.trim()) return res.status(400).json({ error: 'Vendor name is required' });
@@ -67,7 +67,7 @@ router.post('/', authenticate, requireRole('Admin', 'Manager'), async (req, res)
   }
 });
 
-router.put('/:id', authenticate, requireRole('Admin', 'Manager'), async (req, res) => {
+router.put('/:id', authenticate, requireRole('Super Admin', 'Admin', 'Sales Manager'), async (req, res) => {
   try {
     if (req.body.phone && !PHONE_RE.test(req.body.phone)) return res.status(400).json({ error: 'Invalid phone number (10 digits starting with 6-9)' });
     if (req.body.pan && !PAN_RE.test(req.body.pan)) return res.status(400).json({ error: 'Invalid PAN format' });
@@ -81,13 +81,56 @@ router.put('/:id', authenticate, requireRole('Admin', 'Manager'), async (req, re
   }
 });
 
-router.delete('/:id', authenticate, requireRole('Admin', 'Manager'), async (req, res) => {
+router.delete('/:id', authenticate, requireRole('Super Admin', 'Admin'), async (req, res) => {
   try {
     const vendor = await Vendor.findByIdAndDelete(req.params.id);
     if (!vendor) return res.status(404).json({ error: 'Vendor not found' });
     res.json({ message: 'Vendor deleted' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete vendor' });
+  }
+});
+
+// ── Vendor Payment Tracking ──────────────────────────
+// POST add payment to vendor
+router.post('/:id/payments', authenticate, requireRole('Super Admin', 'Admin', 'Sales Manager', 'Accounts'), async (req, res) => {
+  try {
+    const vendor = await Vendor.findById(req.params.id);
+    if (!vendor) return res.status(404).json({ error: 'Vendor not found' });
+    const { amount, date, mode, reference, project_id, notes } = req.body;
+    if (!amount || amount <= 0) return res.status(400).json({ error: 'Amount must be positive' });
+    if (!date) return res.status(400).json({ error: 'Date is required' });
+    vendor.payments.push({ amount, date, mode, reference, project_id: project_id || null, notes, recorded_by: req.user.id });
+    vendor.total_paid = vendor.payments.reduce((s, p) => s + p.amount, 0);
+    await vendor.save();
+    res.status(201).json({ id: vendor._id, ...vendor.toObject() });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to record payment' });
+  }
+});
+
+// GET vendor payments
+router.get('/:id/payments', authenticate, requireRole('Super Admin', 'Admin', 'Sales Manager', 'Accounts'), async (req, res) => {
+  try {
+    const vendor = await Vendor.findById(req.params.id).populate('payments.project_id', 'name').populate('payments.recorded_by', 'username').lean();
+    if (!vendor) return res.status(404).json({ error: 'Vendor not found' });
+    res.json({ payments: vendor.payments || [], total_paid: vendor.total_paid || 0 });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch payments' });
+  }
+});
+
+// DELETE a vendor payment
+router.delete('/:id/payments/:paymentId', authenticate, requireRole('Super Admin', 'Admin'), async (req, res) => {
+  try {
+    const vendor = await Vendor.findById(req.params.id);
+    if (!vendor) return res.status(404).json({ error: 'Vendor not found' });
+    vendor.payments.id(req.params.paymentId)?.deleteOne();
+    vendor.total_paid = vendor.payments.reduce((s, p) => s + p.amount, 0);
+    await vendor.save();
+    res.json({ message: 'Payment deleted', total_paid: vendor.total_paid });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete payment' });
   }
 });
 

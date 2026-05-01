@@ -26,14 +26,16 @@ router.get('/:id', authenticate, async (req, res) => {
 
 router.post('/', authenticate, requireAdmin, async (req, res) => {
   try {
-    const { name, vendor_id, category, hsn, rate, unit, gst, description, status } = req.body;
+    const { name, vendor_id, category, hsn, rate, base_cost, markup_pct, unit, gst, description, status } = req.body;
     if (!name || !name.trim()) return res.status(400).json({ error: 'Product name is required' });
     if (!vendor_id) return res.status(400).json({ error: 'Vendor is required' });
     const vendor = await Vendor.findById(vendor_id);
     if (!vendor) return res.status(400).json({ error: 'Invalid vendor' });
-    const product = await Product.create({ name: name.trim(), vendor_id, category, hsn, rate, unit, gst, description, status });
+    const product = new Product({ name: name.trim(), vendor_id, category, hsn, rate, base_cost, markup_pct, unit, gst, description, status });
+    await product.save();
     res.status(201).json({ id: product._id, ...product.toObject() });
   } catch (err) {
+    console.error('Product create error:', err);
     res.status(500).json({ error: 'Failed to create product' });
   }
 });
@@ -44,9 +46,13 @@ router.put('/:id', authenticate, requireAdmin, async (req, res) => {
       const vendor = await Vendor.findById(req.body.vendor_id);
       if (!vendor) return res.status(400).json({ error: 'Invalid vendor' });
     }
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after', runValidators: true }).populate('vendor_id', 'name').lean();
+    const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ error: 'Product not found' });
-    res.json({ id: product._id, ...product, vendor_name: product.vendor_id?.name || '' });
+    Object.assign(product, req.body);
+    await product.save();
+    await product.populate('vendor_id', 'name');
+    const obj = product.toObject();
+    res.json({ id: obj._id, ...obj, vendor_name: obj.vendor_id?.name || '' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to update product' });
   }

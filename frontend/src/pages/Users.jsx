@@ -11,7 +11,7 @@ import { lookupIFSC } from '../utils/ifscLookup';
 import { validate, transform } from '../utils/validation';
 
 const emptyForm = {
-    username: '', email: '', password: '', role: 'Executive', pan: '',
+    username: '', email: '', password: '', role: 'Sales Executive', pan: '',
     contact_number: '', address: '', employee_code: '', designation: '',
     bank_details: { account_number: '', ifsc_code: '', bank_name: '', branch_name: '', bank_address: '' },
 };
@@ -169,8 +169,8 @@ export default function UsersPage() {
                                         </td>
                                         <td>{u.email}</td>
                                         <td>
-                                            <span className={`role-cell ${u.role === 'Admin' ? 'role-cell--admin' : ''}`}>
-                                                {u.role === 'Admin' ? <ShieldCheck size={14} /> : <Shield size={14} />}
+                                            <span className={`role-cell ${['Super Admin', 'Admin'].includes(u.role) ? 'role-cell--admin' : ''}`}>
+                                                {['Super Admin', 'Admin'].includes(u.role) ? <ShieldCheck size={14} /> : <Shield size={14} />}
                                                 {u.role}
                                             </span>
                                         </td>
@@ -178,7 +178,7 @@ export default function UsersPage() {
                                         <td>
                                             <ActionMenu actions={[
                                                 { icon: <Eye size={15} />, label: 'View Details', onClick: () => navigate(`/users/${u.id}`) },
-                                                ...((isAdmin || (isManager && u.role === 'Executive') || isSelf(u)) ? [
+                                                ...((isAdmin || (isManager && u.role === 'Sales Executive') || isSelf(u)) ? [
                                                     { icon: <Pencil size={15} />, label: 'Edit', onClick: () => openEditModal(u) },
                                                     { icon: <KeyRound size={15} />, label: 'Reset Password', onClick: () => { setPasswordModal(u); setNewPassword(''); setError(''); } },
                                                 ] : []),
@@ -225,9 +225,11 @@ export default function UsersPage() {
                         <select className="form-group__select" value={form.role}
                             onChange={(e) => setForm({ ...form, role: e.target.value })}
                             disabled={!isAdmin || readOnlyForSelf}>
+                            {isAdmin && <option value="Super Admin">Super Admin</option>}
                             {isAdmin && <option value="Admin">Admin</option>}
-                            {isAdmin && <option value="Manager">Manager</option>}
-                            <option value="Executive">Executive</option>
+                            {isAdmin && <option value="Sales Manager">Sales Manager</option>}
+                            <option value="Sales Executive">Sales Executive</option>
+                            {isAdmin && <option value="Accounts">Accounts</option>}
                         </select>
                     </div>
                     <div className="form-group">

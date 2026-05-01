@@ -29,12 +29,14 @@ router.post('/login', loginLimiter, async (req, res) => {
 
     const token = crypto.randomBytes(32).toString('hex');
     const expiresHours = parseInt(process.env.SESSION_EXPIRY_HOURS, 10) || 24;
+    const idleTimeoutMinutes = parseInt(process.env.SESSION_IDLE_TIMEOUT_MINUTES, 10) || 30;
     const expires_at = new Date(Date.now() + expiresHours * 60 * 60 * 1000);
 
     await Session.create({
       user_id: user._id,
       token,
       expires_at,
+      idle_timeout_minutes: idleTimeoutMinutes,
       ip_address: req.ip || req.connection?.remoteAddress,
       user_agent: req.headers['user-agent'] || null,
       last_active_at: new Date(),
@@ -43,6 +45,7 @@ router.post('/login', loginLimiter, async (req, res) => {
     res.json({
       token,
       user: { id: user._id, username: user.username, email: user.email, role: user.role },
+      session: { idle_timeout_minutes: idleTimeoutMinutes },
     });
   } catch (err) {
     res.status(500).json({ error: 'Login failed' });

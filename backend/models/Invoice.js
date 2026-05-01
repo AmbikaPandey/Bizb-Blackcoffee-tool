@@ -35,6 +35,8 @@ const invoiceSchema = new mongoose.Schema({
   balance: { type: Number, default: 0 },
   status: { type: String, enum: ['Draft', 'Sent', 'Paid', 'Partially Paid', 'Overdue', 'Cancelled'], default: 'Draft' },
   type: { type: String, enum: ['tax', 'proforma'], default: 'tax' },
+  converted_to: { type: mongoose.Schema.Types.ObjectId, ref: 'Invoice', default: null },
+  converted_from_proforma: { type: mongoose.Schema.Types.ObjectId, ref: 'Invoice', default: null },
   items: [invoiceItemSchema],
 }, { timestamps: true });
 

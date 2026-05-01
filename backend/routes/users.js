@@ -18,12 +18,12 @@ function maskAccountNumber(num) {
   return '●'.repeat(num.length - 4) + num.slice(-4);
 }
 
-// GET all users — Admin sees all, Manager sees Executives, others see only self
+// GET all users — Super Admin/Admin sees all, Sales Manager sees Sales Executives, others see only self
 router.get('/', authenticate, async (req, res) => {
   try {
     let filter;
-    if (req.user.role === 'Admin') filter = {};
-    else if (req.user.role === 'Manager') filter = { $or: [{ role: 'Executive' }, { _id: req.user.id }] };
+    if (['Super Admin', 'Admin'].includes(req.user.role)) filter = {};
+    else if (req.user.role === 'Sales Manager') filter = { $or: [{ role: 'Sales Executive' }, { _id: req.user.id }] };
     else filter = { _id: req.user.id };
 
     const users = await User.find(filter)
@@ -48,10 +48,10 @@ router.get('/:id', authenticate, async (req, res) => {
     const user = await User.findById(req.params.id).select('-password').lean();
     if (!user) return res.status(404).json({ error: 'User not found' });
     // Non-admin/manager can only view themselves
-    if (!isSelf && req.user.role === 'Executive') {
+    if (!isSelf && !['Super Admin', 'Admin', 'Sales Manager'].includes(req.user.role)) {
       return res.status(403).json({ error: 'Access denied' });
     }
-    if (!isSelf && req.user.role === 'Manager' && user.role !== 'Executive') {
+    if (!isSelf && req.user.role === 'Sales Manager' && user.role !== 'Sales Executive') {
       return res.status(403).json({ error: 'Access denied' });
     }
 
@@ -85,7 +85,7 @@ router.get('/:id', authenticate, async (req, res) => {
 });
 
 // POST create user — Admin can create any role, Manager can only create Executive
-router.post('/', authenticate, requireRole('Admin', 'Manager'), async (req, res) => {
+router.post('/', authenticate, requireRole('Super Admin', 'Admin', 'Sales Manager'), async (req, res) => {
   try {
     const { username, email, password, role, contact_number, address, employee_code, designation, bank_details, pan } = req.body;
 
@@ -102,9 +102,9 @@ router.post('/', authenticate, requireRole('Admin', 'Manager'), async (req, res)
       return res.status(400).json({ error: 'Invalid PAN format' });
     }
 
-    const assignedRole = req.user.role === 'Manager' ? 'Executive' : (role || 'Executive');
-    if (req.user.role === 'Manager' && assignedRole !== 'Executive') {
-      return res.status(403).json({ error: 'Managers can only create Executives' });
+    const assignedRole = req.user.role === 'Sales Manager' ? 'Sales Executive' : (role || 'Sales Executive');
+    if (req.user.role === 'Sales Manager' && assignedRole !== 'Sales Executive') {
+      return res.status(403).json({ error: 'Sales Managers can only create Sales Executives' });
     }
 
     const user = await User.create({
@@ -137,11 +137,11 @@ router.put('/:id', authenticate, async (req, res) => {
     const target = await User.findById(req.params.id);
     if (!target) return res.status(404).json({ error: 'User not found' });
 
-    // Non-admin/manager can only edit themselves
-    if (!isSelf && req.user.role === 'Executive') {
+    // Non-admin can only edit themselves
+    if (!isSelf && !['Super Admin', 'Admin', 'Sales Manager'].includes(req.user.role)) {
       return res.status(403).json({ error: 'Access denied' });
     }
-    if (!isSelf && req.user.role === 'Manager' && target.role !== 'Executive') {
+    if (!isSelf && req.user.role === 'Sales Manager' && target.role !== 'Sales Executive') {
       return res.status(403).json({ error: 'Access denied' });
     }
 
@@ -155,7 +155,7 @@ router.put('/:id', authenticate, async (req, res) => {
     }
 
     // Non-admins editing self: can only change personal fields
-    if (isSelf && req.user.role !== 'Admin') {
+    if (isSelf && !['Super Admin', 'Admin'].includes(req.user.role)) {
       if (contact_number !== undefined) target.contact_number = sanitize(contact_number);
       if (address !== undefined) target.address = sanitize(address);
       if (pan !== undefined) target.pan = sanitize(pan);
@@ -172,7 +172,7 @@ router.put('/:id', authenticate, async (req, res) => {
       if (designation !== undefined) target.designation = sanitize(designation);
       if (pan !== undefined) target.pan = sanitize(pan);
       if (bank_details !== undefined) target.bank_details = bank_details;
-      if (role !== undefined && req.user.role === 'Admin') target.role = role;
+      if (role !== undefined && ['Super Admin', 'Admin'].includes(req.user.role)) target.role = role;
     }
 
     await target.save();
@@ -194,11 +194,11 @@ router.put('/:id/password', authenticate, async (req, res) => {
     const target = await User.findById(req.params.id);
     if (!target) return res.status(404).json({ error: 'User not found' });
 
-    // Non-admin/manager can only change their own password
-    if (!isSelf && req.user.role === 'Executive') {
+    // Non-admin can only change their own password
+    if (!isSelf && !['Super Admin', 'Admin', 'Sales Manager'].includes(req.user.role)) {
       return res.status(403).json({ error: 'Access denied' });
     }
-    if (!isSelf && req.user.role === 'Manager' && target.role !== 'Executive') {
+    if (!isSelf && req.user.role === 'Sales Manager' && target.role !== 'Sales Executive') {
       return res.status(403).json({ error: 'Access denied' });
     }
 
@@ -211,7 +211,7 @@ router.put('/:id/password', authenticate, async (req, res) => {
 });
 
 // DELETE user — Admin only
-router.delete('/:id', authenticate, requireRole('Admin'), async (req, res) => {
+router.delete('/:id', authenticate, requireRole('Super Admin', 'Admin'), async (req, res) => {
   try {
     if (String(req.user.id) === req.params.id) {
       return res.status(400).json({ error: 'Cannot delete your own account' });

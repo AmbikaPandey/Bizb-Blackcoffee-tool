@@ -14,12 +14,12 @@ function sanitize(str) {
 router.get('/', authenticate, async (req, res) => {
   try {
     let filter = {};
-    if (req.user.role === 'Executive') {
+    if (req.user.role === 'Sales Executive') {
       filter = { submitted_by: req.user.id };
     }
 
     // Optional query filters for Admin/Manager
-    if (req.user.role !== 'Executive') {
+    if (req.user.role !== 'Sales Executive') {
       if (req.query.project_id) filter.project_id = req.query.project_id;
       if (req.query.submitted_by) filter.submitted_by = req.query.submitted_by;
       if (req.query.status) filter.status = req.query.status;
@@ -50,7 +50,7 @@ router.get('/', authenticate, async (req, res) => {
 });
 
 // GET reimbursements for a specific user
-router.get('/user/:userId', authenticate, requireRole('Admin', 'Manager'), async (req, res) => {
+router.get('/user/:userId', authenticate, requireRole('Super Admin', 'Admin', 'Sales Manager'), async (req, res) => {
   try {
     const expenses = await Expense.find({ submitted_by: req.params.userId, status: { $in: ['Approved', 'Rejected'] } })
       .populate('project_id', 'name')
@@ -68,7 +68,7 @@ router.get('/user/:userId', authenticate, requireRole('Admin', 'Manager'), async
   }
 });
 
-router.get('/stats', authenticate, requireRole('Admin', 'Manager'), async (req, res) => {
+router.get('/stats', authenticate, requireRole('Super Admin', 'Admin', 'Sales Manager', 'Accounts'), async (req, res) => {
   try {
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
@@ -104,7 +104,7 @@ router.get('/:id', authenticate, async (req, res) => {
     if (!expense) return res.status(404).json({ error: 'Expense not found' });
 
     // Executive can only view own expenses
-    if (req.user.role === 'Executive' && String(expense.submitted_by?._id || expense.submitted_by) !== String(req.user.id)) {
+    if (req.user.role === 'Sales Executive' && String(expense.submitted_by?._id || expense.submitted_by) !== String(req.user.id)) {
       return res.status(403).json({ error: 'Access denied' });
     }
 
@@ -129,7 +129,7 @@ router.post('/', authenticate, async (req, res) => {
     if (!description || !amount) return res.status(400).json({ error: 'Description and amount are required' });
 
     // If Executive, validate they are assigned to the project
-    if (req.user.role === 'Executive') {
+    if (req.user.role === 'Sales Executive') {
       if (!project_id) return res.status(400).json({ error: 'Project is required' });
       const project = await Project.findById(project_id).lean();
       if (!project) return res.status(404).json({ error: 'Project not found' });
@@ -144,7 +144,7 @@ router.post('/', authenticate, async (req, res) => {
       invoice_number: sanitize(invoice_number),
       project_id: project_id || null,
       submitted_by: req.user.id,
-      status: req.user.role === 'Executive' ? 'Pending' : (status || 'Pending'),
+      status: req.user.role === 'Sales Executive' ? 'Pending' : (status || 'Pending'),
       receipt_url: sanitize(receipt_url),
       notes: sanitize(notes),
     });
@@ -167,21 +167,21 @@ router.put('/:id', authenticate, async (req, res) => {
     const expense = await Expense.findById(req.params.id);
     if (!expense) return res.status(404).json({ error: 'Expense not found' });
 
-    if (req.user.role === 'Executive') {
+    if (req.user.role === 'Sales Executive') {
       if (String(expense.submitted_by) !== String(req.user.id)) {
         return res.status(403).json({ error: 'Access denied' });
       }
       if (expense.status !== 'Pending') {
         return res.status(400).json({ error: 'Can only edit pending expenses' });
       }
-      // Executive can only update description, amount, date, receipt
+      // Sales Executive can only update description, amount, date, receipt
       const { description, amount, date, receipt_url, notes } = req.body;
       if (description !== undefined) expense.description = sanitize(description);
       if (amount !== undefined) expense.amount = amount;
       if (date !== undefined) expense.date = date;
       if (receipt_url !== undefined) expense.receipt_url = sanitize(receipt_url);
       if (notes !== undefined) expense.notes = sanitize(notes);
-    } else if (req.user.role === 'Manager') {
+    } else if (req.user.role === 'Sales Manager') {
       // Manager can update most fields but NOT status or invoice_number
       const { description, category, amount, date, paid_by, project_id, receipt_url, notes } = req.body;
       if (description !== undefined) expense.description = sanitize(description);
@@ -249,7 +249,7 @@ router.put('/:id', authenticate, async (req, res) => {
 });
 
 // DELETE expense — Admin only
-router.delete('/:id', authenticate, requireRole('Admin'), async (req, res) => {
+router.delete('/:id', authenticate, requireRole('Super Admin', 'Admin'), async (req, res) => {
   try {
     const expense = await Expense.findByIdAndDelete(req.params.id);
     if (!expense) return res.status(404).json({ error: 'Expense not found' });
@@ -260,7 +260,7 @@ router.delete('/:id', authenticate, requireRole('Admin'), async (req, res) => {
 });
 
 // Export CSV
-router.get('/export/csv', authenticate, requireRole('Admin', 'Manager'), async (req, res) => {
+router.get('/export/csv', authenticate, requireRole('Super Admin', 'Admin', 'Sales Manager', 'Accounts'), async (req, res) => {
   try {
     const expenses = await Expense.find()
       .populate('project_id', 'name')

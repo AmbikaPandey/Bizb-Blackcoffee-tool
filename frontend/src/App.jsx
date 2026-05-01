@@ -25,6 +25,12 @@ const Reports = lazy(() => import("./pages/Reports"));
 const Settings = lazy(() => import("./pages/Settings"));
 const UsersPage = lazy(() => import("./pages/Users"));
 const UserDetail = lazy(() => import("./pages/UserDetail"));
+const Costings = lazy(() => import("./pages/Costings"));
+const NewCosting = lazy(() => import("./pages/NewCosting"));
+const Quotes = lazy(() => import("./pages/Quotes"));
+const ViewQuote = lazy(() => import("./pages/ViewQuote"));
+const AuditTrail = lazy(() => import("./pages/AuditTrail"));
+const CommissionDashboard = lazy(() => import("./pages/CommissionDashboard"));
 
 function AppLoader() {
   return (
@@ -67,7 +73,7 @@ function PublicRoute({ children }) {
 
 function DefaultRedirect() {
   const { user } = useAuth();
-  if (user?.role === 'Executive') return <Navigate to="/projects" replace />;
+  if (user?.role === 'Sales Executive') return <Navigate to="/projects" replace />;
   return <Navigate to="/dashboard" replace />;
 }
 
@@ -89,21 +95,28 @@ export default function App() {
                 <Route path="/login" element={<PublicRoute><LoginRedirect /></PublicRoute>} />
                 <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
                   <Route index element={<DefaultRedirect />} />
-                  <Route path="dashboard" element={<RoleRoute roles={['Admin', 'Manager']}><Dashboard /></RoleRoute>} />
-                  <Route path="clients" element={<RoleRoute roles={['Admin', 'Manager']}><Clients /></RoleRoute>} />
-                  <Route path="clients/:id" element={<RoleRoute roles={['Admin', 'Manager']}><ClientDetail /></RoleRoute>} />
-                  <Route path="products" element={<AdminRoute><Products /></AdminRoute>} />
-                  <Route path="invoices" element={<RoleRoute roles={['Admin', 'Manager']}><Invoices /></RoleRoute>} />
-                  <Route path="invoices/new" element={<RoleRoute roles={['Admin', 'Manager']}><NewInvoice /></RoleRoute>} />
-                  <Route path="invoices/:id" element={<RoleRoute roles={['Admin', 'Manager']}><ViewInvoice /></RoleRoute>} />
-                  <Route path="invoices/:id/edit" element={<RoleRoute roles={['Admin', 'Manager']}><EditInvoice /></RoleRoute>} />
-                  <Route path="payments" element={<AdminRoute><Payments /></AdminRoute>} />
+                  <Route path="dashboard" element={<RoleRoute roles={['Super Admin', 'Admin', 'Sales Manager', 'Accounts']}><Dashboard /></RoleRoute>} />
+                  <Route path="clients" element={<RoleRoute roles={['Super Admin', 'Admin', 'Sales Manager']}><Clients /></RoleRoute>} />
+                  <Route path="clients/:id" element={<RoleRoute roles={['Super Admin', 'Admin', 'Sales Manager']}><ClientDetail /></RoleRoute>} />
+                  <Route path="products" element={<RoleRoute roles={['Super Admin', 'Admin']}><Products /></RoleRoute>} />
+                  <Route path="costings" element={<RoleRoute roles={['Super Admin', 'Admin', 'Sales Manager', 'Accounts']}><Costings /></RoleRoute>} />
+                  <Route path="costings/new" element={<RoleRoute roles={['Super Admin', 'Admin', 'Sales Manager']}><NewCosting /></RoleRoute>} />
+                  <Route path="costings/:id/edit" element={<RoleRoute roles={['Super Admin', 'Admin', 'Sales Manager']}><NewCosting /></RoleRoute>} />
+                  <Route path="quotes" element={<RoleRoute roles={['Super Admin', 'Admin', 'Sales Manager', 'Accounts']}><Quotes /></RoleRoute>} />
+                  <Route path="quotes/:id" element={<RoleRoute roles={['Super Admin', 'Admin', 'Sales Manager', 'Accounts']}><ViewQuote /></RoleRoute>} />
+                  <Route path="invoices" element={<RoleRoute roles={['Super Admin', 'Admin', 'Sales Manager', 'Accounts']}><Invoices /></RoleRoute>} />
+                  <Route path="invoices/new" element={<RoleRoute roles={['Super Admin', 'Admin', 'Sales Manager']}><NewInvoice /></RoleRoute>} />
+                  <Route path="invoices/:id" element={<RoleRoute roles={['Super Admin', 'Admin', 'Sales Manager', 'Accounts']}><ViewInvoice /></RoleRoute>} />
+                  <Route path="invoices/:id/edit" element={<RoleRoute roles={['Super Admin', 'Admin', 'Sales Manager']}><EditInvoice /></RoleRoute>} />
+                  <Route path="payments" element={<RoleRoute roles={['Super Admin', 'Admin', 'Accounts']}><Payments /></RoleRoute>} />
                   <Route path="projects" element={<Projects />} />
-                  <Route path="vendors" element={<RoleRoute roles={['Admin', 'Manager']}><Vendors /></RoleRoute>} />
-                  <Route path="vendors/:id" element={<RoleRoute roles={['Admin', 'Manager']}><VendorDetail /></RoleRoute>} />
+                  <Route path="vendors" element={<RoleRoute roles={['Super Admin', 'Admin', 'Sales Manager']}><Vendors /></RoleRoute>} />
+                  <Route path="vendors/:id" element={<RoleRoute roles={['Super Admin', 'Admin', 'Sales Manager']}><VendorDetail /></RoleRoute>} />
                   <Route path="expenses" element={<Expenses />} />
-                  <Route path="reports" element={<AdminRoute><Reports /></AdminRoute>} />
-                  <Route path="settings" element={<AdminRoute><Settings /></AdminRoute>} />
+                  <Route path="commission" element={<RoleRoute roles={['Super Admin', 'Admin']}><CommissionDashboard /></RoleRoute>} />
+                  <Route path="reports" element={<RoleRoute roles={['Super Admin', 'Admin', 'Accounts']}><Reports /></RoleRoute>} />
+                  <Route path="audit" element={<RoleRoute roles={['Super Admin', 'Admin']}><AuditTrail /></RoleRoute>} />
+                  <Route path="settings" element={<RoleRoute roles={['Super Admin', 'Admin']}><Settings /></RoleRoute>} />
                   <Route path="users" element={<ProtectedRoute><UsersPage /></ProtectedRoute>} />
                   <Route path="users/:id" element={<ProtectedRoute><UserDetail /></ProtectedRoute>} />
                 </Route>

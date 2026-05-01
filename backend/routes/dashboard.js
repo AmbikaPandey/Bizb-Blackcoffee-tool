@@ -8,7 +8,7 @@ const { cleanInvoiceNumber } = require('../helpers/invoiceHelpers');
 
 const router = express.Router();
 
-router.get('/stats', authenticate, requireRole('Admin', 'Manager'), async (req, res) => {
+router.get('/stats', authenticate, requireRole('Super Admin', 'Admin', 'Sales Manager', 'Accounts'), async (req, res) => {
   try {
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
@@ -78,7 +78,7 @@ router.get('/stats', authenticate, requireRole('Admin', 'Manager'), async (req, 
 });
 
 // Client map data - returns clients with coordinates
-router.get('/client-map', authenticate, requireRole('Admin', 'Manager'), async (req, res) => {
+router.get('/client-map', authenticate, requireRole('Super Admin', 'Admin', 'Sales Manager', 'Accounts'), async (req, res) => {
   try {
     const filter = { latitude: { $exists: true, $type: 'number' }, longitude: { $exists: true, $type: 'number' } };
     if (req.query.service_type) filter.service_type = req.query.service_type;

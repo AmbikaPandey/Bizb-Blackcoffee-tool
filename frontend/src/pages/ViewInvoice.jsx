@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Pencil, CreditCard, Printer, Download, X, Check } from 'lucide-react';
+import { ArrowLeft, Pencil, CreditCard, Printer, Download, X, Check, FileUp } from 'lucide-react';
 import StatusBadge from '../components/common/StatusBadge';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import Modal from '../components/common/Modal';
@@ -201,6 +201,17 @@ export default function ViewInvoice() {
                     <button className="view-invoice__cancel-btn" onClick={() => setCancelConfirm(true)}>
                         <X size={14} /> Cancel Invoice
                     </button>
+                    {invoice.type === 'proforma' && !invoice.converted_to && (
+                        <button className="view-invoice__sent-btn" onClick={async () => {
+                            try {
+                                const result = await api.convertProformaToTax(invoice._id || id);
+                                toast(`Converted! Tax Invoice ${result.invoice_number} created`);
+                                navigate(`/invoices/${result.id || result._id}`);
+                            } catch (err) { toast(err.message || 'Conversion failed', 'error'); }
+                        }}>
+                            <FileUp size={14} /> Convert to Tax Invoice
+                        </button>
+                    )}
                 </div>
             )}
 

@@ -14,7 +14,7 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { formatCurrency } from '../utils/currency';
 
-const emptyForm = { name: '', client_id: '', budget: '', start_date: '', end_date: '', status: 'Active', description: '', assigned_manager: '', assigned_executives: [] };
+const emptyForm = { name: '', client_id: '', budget: '', start_date: '', end_date: '', status: 'Active', description: '', assigned_manager: '', assigned_executives: [], products: [], vendors: [], venue: '', revenue: '' };
 
 const formatDuration = (start, end) => {
     if (!start && !end) return '-';
@@ -39,9 +39,11 @@ export default function Projects() {
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
     const [viewTarget, setViewTarget] = useState(null);
+    const [allProducts, setAllProducts] = useState([]);
+    const [allVendors, setAllVendors] = useState([]);
 
-    const managers = allUsers.filter(u => u.role === 'Manager');
-    const executives = allUsers.filter(u => u.role === 'Executive');
+    const managers = allUsers.filter(u => u.role === 'Sales Manager');
+    const executives = allUsers.filter(u => u.role === 'Sales Executive');
 
     async function loadProjects() {
         try { setProjects(await api.getProjects()); }
@@ -54,6 +56,8 @@ export default function Projects() {
         if (!isExecutive) {
             api.getClients().then(setClients).catch(() => { });
             api.getUsers().then(setAllUsers).catch(() => { });
+            api.getProducts().then(setAllProducts).catch(() => { });
+            api.getVendors().then(setAllVendors).catch(() => { });
         }
     }, []);
 
@@ -88,6 +92,10 @@ export default function Projects() {
             description: p.description || '',
             assigned_manager: p.assigned_manager || '',
             assigned_executives: (p.assigned_executives || []).map(String),
+            products: (p.products || []).map(pr => String(pr._id || pr)),
+            vendors: (p.vendors || []).map(v => String(v._id || v)),
+            venue: p.venue || '',
+            revenue: p.revenue || '',
         });
         setShowModal(true);
     }
@@ -97,7 +105,7 @@ export default function Projects() {
         if (!form.name.trim()) { toast('Project name is required', 'error'); return; }
         setSaving(true);
         try {
-            const data = { ...form, budget: parseFloat(form.budget) || 0 };
+            const data = { ...form, budget: parseFloat(form.budget) || 0, revenue: parseFloat(form.revenue) || 0 };
             if (editTarget) {
                 await api.updateProject(editTarget.id || editTarget._id, data);
                 toast('Project updated');
@@ -202,6 +210,32 @@ export default function Projects() {
                             <span>Spent</span><strong>{formatCurrency(viewTarget.spent)}</strong>
                         </div>
                         <div className="project-detail__row">
+                            <span>Revenue</span><strong>{formatCurrency(viewTarget.revenue)}</strong>
+                        </div>
+                        <div className="project-detail__row">
+                            <span>Profit (Revenue - Cost)</span>
+                            <strong style={{ color: (viewTarget.revenue - viewTarget.spent) >= 0 ? '#2d8659' : '#ed4337' }}>
+                                {formatCurrency(viewTarget.revenue - viewTarget.spent)}
+                            </strong>
+                        </div>
+                        {viewTarget.venue && (
+                            <div className="project-detail__row">
+                                <span>Venue</span><strong>{viewTarget.venue}</strong>
+                            </div>
+                        )}
+                        {viewTarget.products?.length > 0 && (
+                            <div className="project-detail__row">
+                                <span>Products/Services</span>
+                                <strong>{viewTarget.products.map(p => p.name || p).join(', ')}</strong>
+                            </div>
+                        )}
+                        {viewTarget.vendors?.length > 0 && (
+                            <div className="project-detail__row">
+                                <span>Vendors</span>
+                                <strong>{viewTarget.vendors.map(v => v.name || v).join(', ')}</strong>
+                            </div>
+                        )}
+                        <div className="project-detail__row">
                             <span>Duration</span><strong>{formatDuration(viewTarget.start_date, viewTarget.end_date)}</strong>
                         </div>
                         {viewTarget.budget > 0 && (
@@ -260,6 +294,32 @@ export default function Projects() {
                     <div className="form-group">
                         <label className="form-group__label">Description</label>
                         <textarea className="form-group__input" rows={3} placeholder="Project description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-group__label">Venue / Location</label>
+                        <input type="text" placeholder="Event venue or project location" className="form-group__input" value={form.venue} onChange={(e) => setForm({ ...form, venue: e.target.value })} />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-group__label">Attach Products / Services</label>
+                        <select className="form-group__input" multiple value={form.products}
+                            onChange={(e) => setForm({ ...form, products: Array.from(e.target.selectedOptions, o => o.value) })}
+                            style={{ minHeight: '80px' }}>
+                            {allProducts.filter(p => p.status === 'Active').map((p) => <option key={p.id || p._id} value={p.id || p._id}>{p.name} ({formatCurrency(p.selling_price || p.rate)})</option>)}
+                        </select>
+                        <small style={{ color: '#6b7280', fontSize: '0.75rem' }}>Hold Ctrl/Cmd to select multiple</small>
+                    </div>
+                    <div className="form-group">
+                        <label className="form-group__label">Attach Vendors</label>
+                        <select className="form-group__input" multiple value={form.vendors}
+                            onChange={(e) => setForm({ ...form, vendors: Array.from(e.target.selectedOptions, o => o.value) })}
+                            style={{ minHeight: '80px' }}>
+                            {allVendors.filter(v => v.status === 'Active').map((v) => <option key={v.id || v._id} value={v.id || v._id}>{v.name}</option>)}
+                        </select>
+                        <small style={{ color: '#6b7280', fontSize: '0.75rem' }}>Hold Ctrl/Cmd to select multiple</small>
+                    </div>
+                    <div className="form-group">
+                        <label className="form-group__label">Revenue</label>
+                        <input type="number" step="0.01" min="0" placeholder="Invoiced revenue" className="form-group__input" value={form.revenue} onChange={(e) => setForm({ ...form, revenue: e.target.value })} />
                     </div>
                     {isAdmin && (
                         <div className="form-group">

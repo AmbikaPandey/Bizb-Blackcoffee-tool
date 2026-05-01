@@ -16,6 +16,10 @@ const expenseRoutes = require('./routes/expenses');
 const settingRoutes = require('./routes/settings');
 const dashboardRoutes = require('./routes/dashboard');
 const reportRoutes = require('./routes/reports');
+const auditRoutes = require('./routes/audit');
+const costingRoutes = require('./routes/costings');
+const quoteRoutes = require('./routes/quotes');
+const commissionRoutes = require('./routes/commission');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -47,6 +51,10 @@ app.use('/api/expenses', expenseRoutes);
 app.use('/api/settings', settingRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/audit', auditRoutes);
+app.use('/api/costings', costingRoutes);
+app.use('/api/quotes', quoteRoutes);
+app.use('/api/commission', commissionRoutes);
 
 // Indian States for Place of Supply
 app.get('/api/states', (req, res) => {

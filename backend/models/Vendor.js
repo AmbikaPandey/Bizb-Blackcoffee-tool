@@ -8,6 +8,16 @@ const bankDetailsSchema = new mongoose.Schema({
   bank_address: { type: String, default: '' },
 }, { _id: false });
 
+const vendorPaymentSchema = new mongoose.Schema({
+  amount: { type: Number, required: true },
+  date: { type: String, required: true },
+  mode: { type: String, default: 'Bank Transfer' },
+  reference: { type: String, default: '' },
+  project_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', default: null },
+  notes: { type: String, default: '' },
+  recorded_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+}, { timestamps: true });
+
 const vendorSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
   gstin: { type: String, default: '' },
@@ -22,6 +32,8 @@ const vendorSchema = new mongoose.Schema({
   status: { type: String, enum: ['Active', 'Inactive'], default: 'Active' },
   bank_details: { type: bankDetailsSchema, default: () => ({}) },
   created_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  payments: [vendorPaymentSchema],
+  total_paid: { type: Number, default: 0 },
 }, { timestamps: true });
 
 vendorSchema.index({ name: 1 });
