@@ -12,10 +12,14 @@ async function request(url, options = {}) {
   const res = await fetch(`${API_BASE}${url}`, { headers, ...options });
 
   if (res.status === 401) {
-    localStorage.removeItem('bizb_token');
-    localStorage.removeItem('bizb_user');
-    window.location.href = '/login';
-    throw new Error('Session expired');
+    // Don't treat login/register 401 as session expiry
+    const isAuthRoute = url === '/auth/login' || url === '/auth/register';
+    if (!isAuthRoute) {
+      localStorage.removeItem('bizb_token');
+      localStorage.removeItem('bizb_user');
+      window.location.href = '/login';
+      throw new Error('Session expired');
+    }
   }
 
   if (!res.ok) {
@@ -39,6 +43,8 @@ export const api = {
 
   // Users
   getUsers: () => request('/users'),
+  getUser: (id) => request(`/users/${id}`),
+  createUser: (data) => request('/users', { method: 'POST', body: JSON.stringify(data) }),
   updateUser: (id, data) => request(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   updateUserPassword: (id, password) => request(`/users/${id}/password`, { method: 'PUT', body: JSON.stringify({ password }) }),
   deleteUser: (id) => request(`/users/${id}`, { method: 'DELETE' }),
@@ -89,19 +95,25 @@ export const api = {
 
   // Projects
   getProjects: () => request('/projects'),
+  getProject: (id) => request(`/projects/${id}`),
   createProject: (data) => request('/projects', { method: 'POST', body: JSON.stringify(data) }),
   updateProject: (id, data) => request(`/projects/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteProject: (id) => request(`/projects/${id}`, { method: 'DELETE' }),
 
   // Vendors
   getVendors: () => request('/vendors'),
+  getVendor: (id) => request(`/vendors/${id}`),
   createVendor: (data) => request('/vendors', { method: 'POST', body: JSON.stringify(data) }),
   updateVendor: (id, data) => request(`/vendors/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteVendor: (id) => request(`/vendors/${id}`, { method: 'DELETE' }),
 
   // Expenses
-  getExpenses: () => request('/expenses'),
+  getExpenses: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/expenses${qs ? `?${qs}` : ''}`);
+  },
   getExpenseStats: () => request('/expenses/stats'),
+  getUserExpenses: (userId) => request(`/expenses/user/${userId}`),
   createExpense: (data) => request('/expenses', { method: 'POST', body: JSON.stringify(data) }),
   updateExpense: (id, data) => request(`/expenses/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteExpense: (id) => request(`/expenses/${id}`, { method: 'DELETE' }),
@@ -115,6 +127,10 @@ export const api = {
 
   // Dashboard
   getDashboardStats: () => request('/dashboard/stats'),
+  getClientMapData: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/dashboard/client-map${qs ? `?${qs}` : ''}`);
+  },
 
   // Reports
   getReportSummary: () => request('/reports/summary'),

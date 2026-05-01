@@ -116,7 +116,7 @@ export default function Invoices() {
                                 <th>Invoice #</th>
                                 <th>Client</th>
                                 <th>Date</th>
-                                <th>Due Date</th>
+                                <th>Credit Period</th>
                                 <th className="text-right">Amount</th>
                                 <th className="text-right">Balance</th>
                                 <th>Status</th>
@@ -135,7 +135,7 @@ export default function Invoices() {
                                     <td className="font-medium">{inv.invoice_number}</td>
                                     <td className="truncate-cell">{inv.client_name}</td>
                                     <td>{formatDate(inv.invoice_date)}</td>
-                                    <td>{formatDate(inv.due_date)}</td>
+                                    <td>{inv.credit_period ? `${inv.credit_period} days` : '-'}</td>
                                     <td className="text-right">{formatCurrency(inv.grand_total)}</td>
                                     <td className={`text-right font-medium ${inv.balance > 0 ? 'balance-red' : ''}`}>
                                         {formatCurrency(inv.balance ?? inv.grand_total)}

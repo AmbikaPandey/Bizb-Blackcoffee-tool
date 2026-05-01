@@ -3,12 +3,12 @@ const Client = require('../models/Client');
 const Invoice = require('../models/Invoice');
 const Payment = require('../models/Payment');
 const Project = require('../models/Project');
-const { authenticate, requireAdmin } = require('../middleware/auth');
+const { authenticate, requireRole } = require('../middleware/auth');
 const { cleanInvoiceNumber } = require('../helpers/invoiceHelpers');
 
 const router = express.Router();
 
-router.get('/stats', authenticate, requireAdmin, async (req, res) => {
+router.get('/stats', authenticate, requireRole('Admin', 'Manager'), async (req, res) => {
   try {
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
@@ -34,8 +34,8 @@ router.get('/stats', authenticate, requireAdmin, async (req, res) => {
         { $group: { _id: null, total: { $sum: '$grand_total' } } },
       ]),
       Invoice.find().populate('client_id', 'name').sort({ _id: -1 }).limit(5).lean(),
-      Invoice.find({ status: { $in: ['Draft', 'Sent', 'Overdue', 'Partially Paid'] }, due_date: { $ne: null } })
-        .populate('client_id', 'name').sort({ due_date: 1 }).limit(5).lean(),
+      Invoice.find({ status: { $in: ['Draft', 'Sent', 'Overdue', 'Partially Paid'] }, credit_period: { $ne: null } })
+        .populate('client_id', 'name').sort({ invoice_date: 1 }).limit(5).lean(),
       Payment.find().populate('client_id', 'name').populate('invoice_id', 'invoice_number').sort({ _id: -1 }).limit(10).lean(),
       Project.countDocuments({ status: { $regex: /^active$/i } }),
     ]);
@@ -60,7 +60,7 @@ router.get('/stats', authenticate, requireAdmin, async (req, res) => {
         id: inv._id,
         invoice_number: cleanInvoiceNumber(inv.invoice_number),
         client: inv.client_id?.name || '',
-        dueDate: inv.due_date,
+        creditPeriod: inv.credit_period,
         balance: inv.balance,
       })),
       recentTransactions: recentTransactions.map((p) => ({
@@ -74,6 +74,23 @@ router.get('/stats', authenticate, requireAdmin, async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch dashboard stats' });
+  }
+});
+
+// Client map data - returns clients with coordinates
+router.get('/client-map', authenticate, requireRole('Admin', 'Manager'), async (req, res) => {
+  try {
+    const filter = { latitude: { $exists: true, $type: 'number' }, longitude: { $exists: true, $type: 'number' } };
+    if (req.query.service_type) filter.service_type = req.query.service_type;
+    if (req.query.state) filter.state = req.query.state;
+
+    const clients = await Client.find(filter)
+      .select('name service_type city state latitude longitude')
+      .sort({ name: 1 }).lean();
+
+    res.json(clients.map(c => ({ id: c._id, ...c })));
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch client map data' });
   }
 });
 

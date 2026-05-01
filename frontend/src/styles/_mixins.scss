@@ -196,7 +196,7 @@
 // ===========================
 // ICON CIRCLE
 // ===========================
-@mixin icon-circle($bg, $color, $size: 48px) {
+@mixin icon-circle($bg, $color, $size: 40px) {
     width: $size;
     height: $size;
     border-radius: $radius-full;

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Eye, Pencil, Trash2 } from 'lucide-react';
+import { Eye, Pencil, Trash2, Loader2, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '../components/common/PageHeader';
 import SearchBar from '../components/common/SearchBar';
@@ -12,8 +12,10 @@ import { api } from '../services/api';
 import { lookupPincode } from '../utils/pincodeLookup';
 import { formatCurrency } from '../utils/currency';
 import { uppercaseFormData } from '../utils/formTransform';
+import { validate, transform } from '../utils/validation';
+import { lookupGST, isValidGSTIN, extractPanFromGstin, getStateFromGstin } from '../utils/gstLookup';
 
-const emptyForm = { name: '', gstin: '', email: '', phone: '', contact: '', address: '', pincode: '', city: '', state: '' };
+const emptyForm = { name: '', gstin: '', pan: '', email: '', phone: '', contact: '', service_type: '', address: '', pincode: '', city: '', state: '', latitude: '', longitude: '' };
 
 export default function Clients() {
     const toast = useToast();
@@ -26,6 +28,9 @@ export default function Clients() {
     const [loading, setLoading] = useState(true);
     const [form, setForm] = useState({ ...emptyForm });
     const [saving, setSaving] = useState(false);
+    const [pincodeLoading, setPincodeLoading] = useState(false);
+    const [gstLoading, setGstLoading] = useState(false);
+    const [errors, setErrors] = useState({});
 
     async function loadClients() {
         try { setClients(await api.getClients()); }
@@ -38,21 +43,34 @@ export default function Clients() {
     function openCreate() {
         setEditTarget(null);
         setForm({ ...emptyForm });
+        setErrors({});
         setShowModal(true);
     }
 
     function openEdit(c) {
         setEditTarget(c);
-        setForm({ name: c.name || '', gstin: c.gstin || '', email: c.email || '', phone: c.phone || '', contact: c.contact || '', address: c.address || '', pincode: c.pincode || '', city: c.city || '', state: c.state || '' });
+        setForm({ name: c.name || '', gstin: c.gstin || '', pan: c.pan || '', email: c.email || '', phone: c.phone || '', contact: c.contact || '', service_type: c.service_type || '', address: c.address || '', pincode: c.pincode || '', city: c.city || '', state: c.state || '', latitude: c.latitude || '', longitude: c.longitude || '' });
+        setErrors({});
         setShowModal(true);
     }
 
     async function handleSubmit(e) {
         e.preventDefault();
         if (!form.name.trim()) { toast('Client name is required', 'error'); return; }
+        if (form.pincode && !/^\d{6}$/.test(form.pincode)) { toast('Pincode must be 6 digits', 'error'); return; }
+        const phoneErr = form.phone ? validate('phone', form.phone) : { valid: true };
+        const panErr = form.pan ? validate('pan', form.pan) : { valid: true };
+        const gstErr = form.gstin ? validate('gstin', form.gstin) : { valid: true };
+        if (!phoneErr.valid) { toast(phoneErr.error, 'error'); return; }
+        if (!panErr.valid) { toast(panErr.error, 'error'); return; }
+        if (!gstErr.valid) { toast(gstErr.error, 'error'); return; }
         setSaving(true);
         try {
-            const data = uppercaseFormData(form);
+            const data = uppercaseFormData({
+                ...form,
+                latitude: form.latitude ? Number.parseFloat(form.latitude) : null,
+                longitude: form.longitude ? Number.parseFloat(form.longitude) : null,
+            });
             if (editTarget) {
                 await api.updateClient(editTarget.id || editTarget._id, data);
                 toast('Client updated');
@@ -98,6 +116,7 @@ export default function Clients() {
                             <tr>
                                 <th>Client Name</th>
                                 <th>GSTIN</th>
+                                <th>Service Type</th>
                                 <th>Contact</th>
                                 <th>City</th>
                                 <th className="text-right">Outstanding</th>
@@ -109,6 +128,7 @@ export default function Clients() {
                                 <tr key={client.id || client._id}>
                                     <td className="font-medium">{client.name}</td>
                                     <td className="mono">{client.gstin || '-'}</td>
+                                    <td>{client.service_type || '-'}</td>
                                     <td>{client.contact || '-'}</td>
                                     <td>{client.city || '-'}</td>
                                     <td className={`text-right font-medium ${client.outstanding > 0 ? 'balance-red' : ''}`}>
@@ -118,6 +138,7 @@ export default function Clients() {
                                         <ActionMenu actions={[
                                             { icon: <Eye size={15} />, label: 'View Details', onClick: () => navigate(`/clients/${client.id || client._id}`) },
                                             { icon: <Pencil size={15} />, label: 'Edit', onClick: () => openEdit(client) },
+                                            ...(client.latitude && client.longitude ? [{ icon: <MapPin size={15} />, label: 'Locate on Map', onClick: () => window.open(`https://www.google.com/maps?q=${client.latitude},${client.longitude}`, '_blank') }] : []),
                                             { divider: true },
                                             { icon: <Trash2 size={15} />, label: 'Delete', danger: true, onClick: () => setDeleteTarget(client) },
                                         ]} />
@@ -125,7 +146,7 @@ export default function Clients() {
                                 </tr>
                             ))}
                             {filtered.length === 0 && (
-                                <tr><td colSpan={6} className="text-center">No clients found</td></tr>
+                                <tr><td colSpan={7} className="text-center">No clients found</td></tr>
                             )}
                         </tbody>
                     </table>
@@ -134,15 +155,62 @@ export default function Clients() {
 
             <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editTarget ? 'Edit Client' : 'Add New Client'}>
                 <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label className="form-group__label">Client Name *</label>
-                        <input type="text" placeholder="Enter client name" className="form-group__input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+                    <div className="form-row form-row--2">
+                        <div className="form-group">
+                            <label className="form-group__label">Client Name *</label>
+                            <input type="text" placeholder="Enter client name" className="form-group__input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+                        </div>
+                        <div className="form-group">
+                            <label className="form-group__label">Service Type</label>
+                            <input type="text" placeholder="e.g. IT Services, Consulting" className="form-group__input" value={form.service_type} onChange={(e) => setForm({ ...form, service_type: e.target.value })} />
+                        </div>
                     </div>
                     <div className="form-row form-row--2">
                         <div className="form-group">
                             <label className="form-group__label">GSTIN</label>
-                            <input type="text" placeholder="22AAAAA0000A1Z5" className="form-group__input" value={form.gstin} onChange={(e) => setForm({ ...form, gstin: e.target.value })} />
+                            <div style={{ position: 'relative' }}>
+                                <input type="text" placeholder="22AAAAA0000A1Z5" className={`form-group__input${errors.gstin ? ' form-group__input--error' : ''}`} value={form.gstin}
+                                    onChange={(e) => {
+                                        const val = transform('gstin', e.target.value);
+                                        setForm({ ...form, gstin: val });
+                                        if (val && !validate('gstin', val).valid) setErrors(p => ({ ...p, gstin: 'Invalid GSTIN format' }));
+                                        else setErrors(p => ({ ...p, gstin: '' }));
+                                    }}
+                                    onBlur={async () => {
+                                        if (!form.gstin || !isValidGSTIN(form.gstin)) return;
+                                        setGstLoading(true);
+                                        const info = await lookupGST(form.gstin);
+                                        setGstLoading(false);
+                                        if (info) {
+                                            setForm(prev => ({
+                                                ...prev,
+                                                name: info.name || prev.name,
+                                                address: info.address || prev.address,
+                                                state: info.state || prev.state,
+                                                pan: info.pan || extractPanFromGstin(prev.gstin) || prev.pan,
+                                                pincode: info.pincode || prev.pincode,
+                                            }));
+                                        }
+                                    }}
+                                />
+                                {gstLoading && <Loader2 size={16} className="spin" style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', color: '#888' }} />}
+                            </div>
+                            {errors.gstin && <span className="form-group__error">{errors.gstin}</span>}
                         </div>
+                        <div className="form-group">
+                            <label className="form-group__label">PAN</label>
+                            <input type="text" placeholder="AAAAA9999A" className={`form-group__input${errors.pan ? ' form-group__input--error' : ''}`} value={form.pan} maxLength={10}
+                                onChange={(e) => {
+                                    const val = transform('pan', e.target.value);
+                                    setForm({ ...form, pan: val });
+                                    if (val && !validate('pan', val).valid) setErrors(p => ({ ...p, pan: 'Invalid PAN format' }));
+                                    else setErrors(p => ({ ...p, pan: '' }));
+                                }}
+                            />
+                            {errors.pan && <span className="form-group__error">{errors.pan}</span>}
+                        </div>
+                    </div>
+                    <div className="form-row form-row--2">
                         <div className="form-group">
                             <label className="form-group__label">Email</label>
                             <input type="email" placeholder="client@example.com" className="form-group__input" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
@@ -151,7 +219,15 @@ export default function Clients() {
                     <div className="form-row form-row--2">
                         <div className="form-group">
                             <label className="form-group__label">Phone</label>
-                            <input type="tel" placeholder="9876543210" className="form-group__input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                            <input type="tel" placeholder="9876543210" className={`form-group__input${errors.phone ? ' form-group__input--error' : ''}`} value={form.phone} maxLength={10}
+                                onChange={(e) => {
+                                    const val = transform('phone', e.target.value);
+                                    setForm({ ...form, phone: val });
+                                    if (val && !validate('phone', val).valid) setErrors(p => ({ ...p, phone: 'Must be 10 digits starting with 6-9' }));
+                                    else setErrors(p => ({ ...p, phone: '' }));
+                                }}
+                            />
+                            {errors.phone && <span className="form-group__error">{errors.phone}</span>}
                         </div>
                         <div className="form-group">
                             <label className="form-group__label">Contact Person</label>
@@ -165,14 +241,19 @@ export default function Clients() {
                     <div className="form-row form-row--3">
                         <div className="form-group">
                             <label className="form-group__label">Pincode</label>
-                            <input type="text" placeholder="110001" className="form-group__input" value={form.pincode} maxLength={6} onChange={async (e) => {
-                                const val = e.target.value.replace(/\D/g, '').slice(0, 6);
-                                setForm((prev) => ({ ...prev, pincode: val }));
-                                if (val.length === 6) {
-                                    const info = await lookupPincode(val);
-                                    if (info) setForm((prev) => ({ ...prev, city: info.city, state: info.state }));
-                                }
-                            }} />
+                            <div style={{ position: 'relative' }}>
+                                <input type="text" placeholder="110001" className="form-group__input" value={form.pincode} maxLength={6} onChange={async (e) => {
+                                    const val = e.target.value.replaceAll(/\D/g, '').slice(0, 6);
+                                    setForm((prev) => ({ ...prev, pincode: val }));
+                                    if (val.length === 6) {
+                                        setPincodeLoading(true);
+                                        const info = await lookupPincode(val);
+                                        setPincodeLoading(false);
+                                        if (info) setForm((prev) => ({ ...prev, city: info.city, state: info.state, latitude: info.latitude || prev.latitude, longitude: info.longitude || prev.longitude }));
+                                    }
+                                }} />
+                                {pincodeLoading && <Loader2 size={16} className="spin" style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', color: '#888' }} />}
+                            </div>
                         </div>
                         <div className="form-group">
                             <label className="form-group__label">City</label>
@@ -183,9 +264,26 @@ export default function Clients() {
                             <input type="text" placeholder="State" className="form-group__input" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} />
                         </div>
                     </div>
+                    <div className="form-row form-row--2">
+                        <div className="form-group">
+                            <label className="form-group__label">Latitude</label>
+                            <input type="number" step="any" placeholder="Auto-filled from pincode" className="form-group__input" value={form.latitude} onChange={(e) => setForm({ ...form, latitude: e.target.value })} />
+                        </div>
+                        <div className="form-group">
+                            <label className="form-group__label">Longitude</label>
+                            <input type="number" step="any" placeholder="Auto-filled from pincode" className="form-group__input" value={form.longitude} onChange={(e) => setForm({ ...form, longitude: e.target.value })} />
+                        </div>
+                    </div>
+                    {form.latitude && form.longitude && (
+                        <div style={{ marginBottom: '1rem' }}>
+                            <button type="button" className="btn-cancel" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem' }} onClick={() => window.open(`https://www.google.com/maps?q=${form.latitude},${form.longitude}`, '_blank')}>
+                                <MapPin size={14} /> Locate on Map
+                            </button>
+                        </div>
+                    )}
                     <div className="form-actions">
                         <button type="button" className="btn-cancel" onClick={() => setShowModal(false)}>Cancel</button>
-                        <button type="submit" className="btn-save" disabled={saving}>{saving ? 'Saving...' : editTarget ? 'Update Client' : 'Save Client'}</button>
+                        <button type="submit" className="btn-save" disabled={saving || pincodeLoading}>{saving ? 'Saving...' : editTarget ? 'Update Client' : 'Save Client'}</button>
                     </div>
                 </form>
             </Modal>

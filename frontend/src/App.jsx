@@ -19,10 +19,12 @@ const EditInvoice = lazy(() => import("./pages/EditInvoice"));
 const Payments = lazy(() => import("./pages/Payments"));
 const Projects = lazy(() => import("./pages/Projects"));
 const Vendors = lazy(() => import("./pages/Vendors"));
+const VendorDetail = lazy(() => import("./pages/VendorDetail"));
 const Expenses = lazy(() => import("./pages/Expenses"));
 const Reports = lazy(() => import("./pages/Reports"));
 const Settings = lazy(() => import("./pages/Settings"));
 const UsersPage = lazy(() => import("./pages/Users"));
+const UserDetail = lazy(() => import("./pages/UserDetail"));
 
 function AppLoader() {
   return (
@@ -44,30 +46,35 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
-function AdminRoute({ children }) {
-  const { user, loading, isAdmin } = useAuth();
+function RoleRoute({ children, roles }) {
+  const { user, loading } = useAuth();
   if (loading) return <AppLoader />;
   if (!user) return <Navigate to="/login" replace />;
-  if (!isAdmin) return <Navigate to="/invoices" replace />;
+  if (roles && !roles.includes(user.role)) return <Navigate to="/" replace />;
   return children;
+}
+
+function AdminRoute({ children }) {
+  return <RoleRoute roles={['Admin']}>{children}</RoleRoute>;
 }
 
 function PublicRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) return <AppLoader />;
-  if (user) return <Navigate to="/invoices" replace />;
+  if (user) return <Navigate to="/" replace />;
   return children;
 }
 
 function DefaultRedirect() {
-  const { isAdmin } = useAuth();
-  return <Navigate to={isAdmin ? "/dashboard" : "/invoices"} replace />;
+  const { user } = useAuth();
+  if (user?.role === 'Executive') return <Navigate to="/projects" replace />;
+  return <Navigate to="/dashboard" replace />;
 }
 
 function LoginRedirect() {
-  const { user, loading, isAdmin } = useAuth();
+  const { user, loading } = useAuth();
   if (loading) return <AppLoader />;
-  if (user) return <Navigate to={isAdmin ? "/dashboard" : "/invoices"} replace />;
+  if (user) return <Navigate to="/" replace />;
   return <Login />;
 }
 
@@ -82,21 +89,23 @@ export default function App() {
                 <Route path="/login" element={<PublicRoute><LoginRedirect /></PublicRoute>} />
                 <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
                   <Route index element={<DefaultRedirect />} />
-                  <Route path="dashboard" element={<AdminRoute><Dashboard /></AdminRoute>} />
-                  <Route path="clients" element={<AdminRoute><Clients /></AdminRoute>} />
-                  <Route path="clients/:id" element={<AdminRoute><ClientDetail /></AdminRoute>} />
+                  <Route path="dashboard" element={<RoleRoute roles={['Admin', 'Manager']}><Dashboard /></RoleRoute>} />
+                  <Route path="clients" element={<RoleRoute roles={['Admin', 'Manager']}><Clients /></RoleRoute>} />
+                  <Route path="clients/:id" element={<RoleRoute roles={['Admin', 'Manager']}><ClientDetail /></RoleRoute>} />
                   <Route path="products" element={<AdminRoute><Products /></AdminRoute>} />
-                  <Route path="invoices" element={<Invoices />} />
-                  <Route path="invoices/new" element={<NewInvoice />} />
-                  <Route path="invoices/:id" element={<ViewInvoice />} />
-                  <Route path="invoices/:id/edit" element={<EditInvoice />} />
+                  <Route path="invoices" element={<RoleRoute roles={['Admin', 'Manager']}><Invoices /></RoleRoute>} />
+                  <Route path="invoices/new" element={<RoleRoute roles={['Admin', 'Manager']}><NewInvoice /></RoleRoute>} />
+                  <Route path="invoices/:id" element={<RoleRoute roles={['Admin', 'Manager']}><ViewInvoice /></RoleRoute>} />
+                  <Route path="invoices/:id/edit" element={<RoleRoute roles={['Admin', 'Manager']}><EditInvoice /></RoleRoute>} />
                   <Route path="payments" element={<AdminRoute><Payments /></AdminRoute>} />
-                  <Route path="projects" element={<AdminRoute><Projects /></AdminRoute>} />
-                  <Route path="vendors" element={<AdminRoute><Vendors /></AdminRoute>} />
-                  <Route path="expenses" element={<AdminRoute><Expenses /></AdminRoute>} />
+                  <Route path="projects" element={<Projects />} />
+                  <Route path="vendors" element={<RoleRoute roles={['Admin', 'Manager']}><Vendors /></RoleRoute>} />
+                  <Route path="vendors/:id" element={<RoleRoute roles={['Admin', 'Manager']}><VendorDetail /></RoleRoute>} />
+                  <Route path="expenses" element={<Expenses />} />
                   <Route path="reports" element={<AdminRoute><Reports /></AdminRoute>} />
                   <Route path="settings" element={<AdminRoute><Settings /></AdminRoute>} />
-                  <Route path="users" element={<AdminRoute><UsersPage /></AdminRoute>} />
+                  <Route path="users" element={<ProtectedRoute><UsersPage /></ProtectedRoute>} />
+                  <Route path="users/:id" element={<ProtectedRoute><UserDetail /></ProtectedRoute>} />
                 </Route>
               </Routes>
             </Suspense>

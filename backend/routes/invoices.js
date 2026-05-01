@@ -127,7 +127,7 @@ router.post('/', authenticate, async (req, res) => {
   try {
     const {
       invoice_number, client_id, invoice_type, tax_type,
-      invoice_date, due_date, place_of_supply, po_number,
+      invoice_date, credit_period, place_of_supply, po_number,
       transport, vehicle_no, gr_rr_no, eway_bill,
       notes, terms, items, type,
     } = req.body;
@@ -144,7 +144,7 @@ router.post('/', authenticate, async (req, res) => {
       invoice_number: finalNumber, client_id,
       invoice_type: invoice_type || 'Tax Invoice',
       tax_type: tax_type || 'IGST',
-      invoice_date, due_date: due_date || null,
+      invoice_date, credit_period: credit_period || null,
       place_of_supply: place_of_supply || null,
       po_number: po_number || null,
       transport: transport || null,
@@ -169,6 +169,7 @@ router.post('/', authenticate, async (req, res) => {
       client_id: populated.client_id?._id || populated.client_id,
     });
   } catch (err) {
+    console.error('Invoice create error:', err);
     if (err.code === 11000) return res.status(409).json({ error: 'Invoice number already exists' });
     res.status(500).json({ error: 'Failed to create invoice' });
   }
@@ -181,7 +182,7 @@ router.put('/:id', authenticate, async (req, res) => {
 
     const {
       status, client_id, invoice_type, tax_type,
-      invoice_date, due_date, place_of_supply, po_number,
+      invoice_date, credit_period, place_of_supply, po_number,
       transport, vehicle_no, gr_rr_no, eway_bill,
       notes, terms, items,
     } = req.body;
@@ -202,7 +203,7 @@ router.put('/:id', authenticate, async (req, res) => {
     existing.invoice_type = invoice_type || 'Tax Invoice';
     existing.tax_type = tax_type || 'IGST';
     existing.invoice_date = invoice_date;
-    existing.due_date = due_date || null;
+    existing.credit_period = credit_period || null;
     existing.place_of_supply = place_of_supply || null;
     existing.po_number = po_number || null;
     existing.transport = transport || null;

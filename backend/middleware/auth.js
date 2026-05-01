@@ -30,4 +30,13 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-module.exports = { authenticate, requireAdmin };
+function requireRole(...roles) {
+  return (req, res, next) => {
+    if (!roles.includes(req.user?.role)) {
+      return res.status(403).json({ error: `Access restricted to: ${roles.join(', ')}` });
+    }
+    next();
+  };
+}
+
+module.exports = { authenticate, requireAdmin, requireRole };

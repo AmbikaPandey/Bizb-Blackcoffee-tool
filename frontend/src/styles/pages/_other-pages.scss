@@ -480,6 +480,11 @@
     }
 
     &__info {
+        display: flex;
+        flex-direction: column;
+        gap: $space-1;
+        min-width: 0;
+
         .label {
             font-size: $font-sm;
             color: $danger;
@@ -790,5 +795,433 @@
         border: none;
         border-top: 1px solid var(--color-border);
         margin: $space-2 0;
+    }
+}
+
+// ── Vendor Detail ──────────────────────────────
+.vendor-detail {
+    &__back {
+        display: inline-flex;
+        align-items: center;
+        gap: $space-2;
+        background: none;
+        border: none;
+        color: var(--color-text-secondary);
+        cursor: pointer;
+        font-size: $font-sm;
+        margin-bottom: $space-4;
+        padding: 0;
+
+        &:hover {
+            color: var(--color-text-heading);
+        }
+    }
+
+    &__top {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: $space-5;
+        margin-bottom: $space-5;
+
+        @include mobile {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    &__card,
+    &__products-card {
+        @include card;
+    }
+
+    &__card-title {
+        display: flex;
+        align-items: center;
+        gap: $space-2;
+        font-size: $font-base;
+        font-weight: $weight-semibold;
+        color: var(--color-text-heading);
+        margin-bottom: $space-4;
+    }
+
+    &__name {
+        font-size: $font-xl;
+        font-weight: $weight-bold;
+        color: var(--color-text-heading);
+        text-transform: uppercase;
+        margin-bottom: $space-1;
+    }
+
+    &__gstin {
+        font-size: $font-sm;
+        color: var(--color-text-muted);
+        margin-bottom: $space-2;
+    }
+
+    &__address {
+        display: flex;
+        gap: $space-2;
+        font-size: $font-sm;
+        color: var(--color-text-secondary);
+        margin-bottom: $space-3;
+
+        svg {
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        div {
+            display: flex;
+            flex-direction: column;
+        }
+    }
+
+    &__contact {
+        font-size: $font-sm;
+        color: var(--color-text-secondary);
+        margin-bottom: $space-3;
+
+        p {
+            margin-bottom: $space-1;
+            display: flex;
+            align-items: center;
+            gap: $space-1;
+        }
+        strong {
+            color: var(--color-text-heading);
+        }
+    }
+
+    &__meta {
+        font-size: $font-sm;
+        color: var(--color-text-muted);
+        border-top: 1px solid var(--color-border-light);
+        padding-top: $space-3;
+        margin-top: $space-3;
+
+        p {
+            margin-bottom: $space-1;
+        }
+        strong {
+            color: var(--color-text-heading);
+        }
+    }
+
+    &__bank {
+        display: flex;
+        flex-direction: column;
+        gap: $space-1;
+    }
+
+    &__bank-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: $space-2 0;
+        border-bottom: 1px solid var(--color-border-light);
+
+        span {
+            font-size: $font-sm;
+            color: var(--color-text-muted);
+        }
+        strong {
+            font-size: $font-sm;
+            font-weight: $weight-semibold;
+            color: var(--color-text-heading);
+        }
+    }
+
+    &__empty {
+        font-size: $font-sm;
+        color: var(--color-text-muted);
+    }
+
+    &__products-card {
+        overflow: hidden;
+
+        .page-card__table {
+            margin: -#{$space-5};
+            margin-top: 0;
+        }
+    }
+}
+
+// ── User Detail ──────────────────────────────
+.user-detail {
+    &__back {
+        display: inline-flex;
+        align-items: center;
+        gap: $space-2;
+        background: none;
+        border: none;
+        color: var(--color-text-secondary);
+        cursor: pointer;
+        font-size: $font-sm;
+        margin-bottom: $space-4;
+        padding: 0;
+
+        &:hover {
+            color: var(--color-text-heading);
+        }
+    }
+
+    &__top {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: $space-5;
+        margin-bottom: $space-5;
+
+        @include mobile {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    &__card,
+    &__reimbursement-card {
+        @include card;
+    }
+
+    &__card-title {
+        display: flex;
+        align-items: center;
+        gap: $space-2;
+        font-size: $font-base;
+        font-weight: $weight-semibold;
+        color: var(--color-text-heading);
+        margin-bottom: $space-4;
+    }
+
+    &__header {
+        display: flex;
+        align-items: center;
+        gap: $space-4;
+        margin-bottom: $space-4;
+    }
+
+    &__avatar {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: $primary;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: $font-xl;
+        font-weight: $weight-bold;
+        flex-shrink: 0;
+    }
+
+    &__name {
+        font-size: $font-lg;
+        font-weight: $weight-bold;
+        color: var(--color-text-heading);
+        margin-bottom: $space-1;
+    }
+
+    &__info-grid {
+        display: flex;
+        flex-direction: column;
+        gap: $space-1;
+        margin-bottom: $space-3;
+    }
+
+    &__info-row {
+        display: grid;
+        grid-template-columns: 20px 120px 1fr;
+        align-items: center;
+        gap: $space-2;
+        padding: $space-2 0;
+        border-bottom: 1px solid var(--color-border-light);
+        font-size: $font-sm;
+
+        svg {
+            color: var(--color-text-muted);
+        }
+        span {
+            color: var(--color-text-muted);
+        }
+        strong {
+            color: var(--color-text-heading);
+            font-weight: $weight-semibold;
+        }
+    }
+
+    &__meta {
+        font-size: $font-sm;
+        color: var(--color-text-muted);
+        border-top: 1px solid var(--color-border-light);
+        padding-top: $space-3;
+        margin-top: $space-3;
+
+        p {
+            margin-bottom: $space-1;
+            display: flex;
+            align-items: center;
+            gap: $space-2;
+        }
+        strong {
+            color: var(--color-text-heading);
+        }
+    }
+
+    &__bank {
+        display: flex;
+        flex-direction: column;
+        gap: $space-1;
+    }
+
+    &__bank-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: $space-2 0;
+        border-bottom: 1px solid var(--color-border-light);
+
+        span {
+            font-size: $font-sm;
+            color: var(--color-text-muted);
+        }
+        strong {
+            font-size: $font-sm;
+            font-weight: $weight-semibold;
+            color: var(--color-text-heading);
+        }
+    }
+
+    &__empty {
+        font-size: $font-sm;
+        color: var(--color-text-muted);
+    }
+
+    &__reimbursement-card {
+        overflow: hidden;
+
+        .page-card__table {
+            margin: -#{$space-5};
+            margin-top: 0;
+        }
+    }
+}
+
+// ── Expense Page Enhancements ──────────────────
+.expense-top-bar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: $space-4;
+}
+
+.btn-export {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-1;
+    padding: 8px 16px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-card-bg);
+    color: var(--color-text);
+    cursor: pointer;
+    font-size: $font-sm;
+    font-weight: $weight-medium;
+    transition: all 0.15s;
+
+    &:hover {
+        background: var(--color-bg-hover);
+    }
+}
+
+.inline-edit {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-1;
+
+    &__input {
+        width: 100px;
+        padding: 4px 8px;
+        border: 1px solid $primary;
+        border-radius: 6px;
+        font-size: $font-sm;
+        outline: none;
+        background: var(--color-card-bg);
+        color: var(--color-text);
+    }
+
+    &__btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 2px;
+        display: flex;
+        align-items: center;
+
+        &--save {
+            color: $success;
+        }
+        &--cancel {
+            color: $danger;
+        }
+    }
+}
+
+.invoice-no-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-1;
+
+    &__edit {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 2px;
+        display: flex;
+        align-items: center;
+        color: var(--color-text-muted);
+        opacity: 0;
+        transition: opacity 0.15s;
+
+        &:hover {
+            color: $primary;
+        }
+    }
+
+    tr:hover & &__edit {
+        opacity: 1;
+    }
+}
+
+.payment-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: $font-xs;
+    font-weight: $weight-semibold;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+
+    &--paid {
+        background: rgba($success, 0.12);
+        color: $success;
+    }
+
+    &--unpaid {
+        background: rgba($warning, 0.12);
+        color: $warning;
+    }
+
+    &:hover {
+        opacity: 0.8;
+    }
+}
+
+// ── Form validation error ──────────────────
+.form-group {
+    &__error {
+        display: block;
+        color: $danger;
+        font-size: $font-xs;
+        margin-top: 4px;
+    }
+
+    &__input--error {
+        border-color: $danger !important;
     }
 }

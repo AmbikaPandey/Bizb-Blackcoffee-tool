@@ -2,10 +2,18 @@ const express = require('express');
 const Client = require('../models/Client');
 const Invoice = require('../models/Invoice');
 const Payment = require('../models/Payment');
-const { authenticate, requireAdmin } = require('../middleware/auth');
+const { authenticate, requireRole } = require('../middleware/auth');
 const { cleanInvoiceNumber } = require('../helpers/invoiceHelpers');
 
 const router = express.Router();
+
+const PAN_RE = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+const PHONE_RE = /^[6-9]\d{9}$/;
+const GSTIN_RE = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+
+function sanitize(str) {
+  return typeof str === 'string' ? str.replace(/[<>]/g, '').trim() : '';
+}
 
 router.get('/', authenticate, async (req, res) => {
   try {
@@ -69,20 +77,29 @@ router.get('/:id', authenticate, async (req, res) => {
   }
 });
 
-router.post('/', authenticate, requireAdmin, async (req, res) => {
+router.post('/', authenticate, requireRole('Admin', 'Manager'), async (req, res) => {
   try {
-    const { name, gstin, contact, city, email, phone, state } = req.body;
+    const { name, gstin, pan, contact, service_type, city, email, phone, state, address, pincode, latitude, longitude } = req.body;
     if (!name || !name.trim()) return res.status(400).json({ error: 'Client name is required' });
-    const client = await Client.create({ name: name.trim(), gstin, contact, city, email, phone, state });
+    if (pincode && !/^\d{6}$/.test(pincode)) return res.status(400).json({ error: 'Invalid pincode format' });
+    if (phone && !PHONE_RE.test(phone)) return res.status(400).json({ error: 'Invalid phone number (10 digits starting with 6-9)' });
+    if (pan && !PAN_RE.test(pan)) return res.status(400).json({ error: 'Invalid PAN format' });
+    if (gstin && !GSTIN_RE.test(gstin)) return res.status(400).json({ error: 'Invalid GSTIN format' });
+    const client = await Client.create({
+      name: sanitize(name), gstin: sanitize(gstin), pan: sanitize(pan), contact: sanitize(contact),
+      service_type: sanitize(service_type), city: sanitize(city), email: sanitize(email),
+      phone: sanitize(phone), state: sanitize(state), address: sanitize(address),
+      pincode: sanitize(pincode), latitude: latitude || null, longitude: longitude || null,
+    });
     res.status(201).json({ id: client._id, ...client.toObject() });
   } catch (err) {
     res.status(500).json({ error: 'Failed to create client' });
   }
 });
 
-router.put('/:id', authenticate, requireAdmin, async (req, res) => {
+router.put('/:id', authenticate, requireRole('Admin', 'Manager'), async (req, res) => {
   try {
-    const client = await Client.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true }).lean();
+    const client = await Client.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after', runValidators: true }).lean();
     if (!client) return res.status(404).json({ error: 'Client not found' });
     res.json({ id: client._id, ...client });
   } catch (err) {
@@ -90,7 +107,7 @@ router.put('/:id', authenticate, requireAdmin, async (req, res) => {
   }
 });
 
-router.delete('/:id', authenticate, requireAdmin, async (req, res) => {
+router.delete('/:id', authenticate, requireRole('Admin'), async (req, res) => {
   try {
     const client = await Client.findById(req.params.id);
     if (!client) return res.status(404).json({ error: 'Client not found' });

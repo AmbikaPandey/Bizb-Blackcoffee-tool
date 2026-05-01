@@ -7,6 +7,9 @@ const statusMap = {
     Draft: 'draft',
     Pending: 'pending',
     Reimbursed: 'reimbursed',
+    Approved: 'approved',
+    Rejected: 'rejected',
+    Unpaid: 'unpaid',
     'In Progress': 'in-progress',
     Completed: 'completed',
     'On Hold': 'on-hold',
@@ -16,7 +19,7 @@ const statusMap = {
     'Partially Paid': 'partially-paid',
 };
 
-const showCheck = ['Reimbursed', 'Paid', 'Completed'];
+const showCheck = ['Reimbursed', 'Paid', 'Completed', 'Approved'];
 
 const normalize = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : '';
 

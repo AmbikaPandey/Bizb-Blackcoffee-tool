@@ -8,17 +8,17 @@ import { useAuth } from '../../context/AuthContext';
 import { useSidebar } from '../../context/SidebarContext';
 
 const navItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, adminOnly: true },
-    { path: '/clients', label: 'Clients', icon: Users, adminOnly: true },
-    { path: '/products', label: 'Products', icon: Package, adminOnly: true },
-    { path: '/invoices', label: 'Invoices', icon: FileText },
-    { path: '/payments', label: 'Payments', icon: CreditCard, adminOnly: true },
-    { path: '/projects', label: 'Projects', icon: FolderKanban, adminOnly: true },
-    { path: '/vendors', label: 'Vendors', icon: Building2, adminOnly: true },
-    { path: '/expenses', label: 'Expenses', icon: Receipt, adminOnly: true },
-    { path: '/reports', label: 'Reports', icon: BarChart3, adminOnly: true },
-    { path: '/settings', label: 'Settings', icon: Settings, adminOnly: true },
-    { path: '/users', label: 'Users', icon: UserCog, adminOnly: true },
+    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['Admin', 'Manager'] },
+    { path: '/clients', label: 'Clients', icon: Users, roles: ['Admin', 'Manager'] },
+    { path: '/products', label: 'Products', icon: Package, roles: ['Admin'] },
+    { path: '/invoices', label: 'Invoices', icon: FileText, roles: ['Admin', 'Manager'] },
+    { path: '/payments', label: 'Payments', icon: CreditCard, roles: ['Admin'] },
+    { path: '/projects', label: 'Projects', icon: FolderKanban, roles: ['Admin', 'Manager', 'Executive'] },
+    { path: '/vendors', label: 'Vendors', icon: Building2, roles: ['Admin', 'Manager'] },
+    { path: '/expenses', label: 'Expenses', icon: Receipt, roles: ['Admin', 'Manager', 'Executive'] },
+    { path: '/reports', label: 'Reports', icon: BarChart3, roles: ['Admin'] },
+    { path: '/settings', label: 'Settings', icon: Settings, roles: ['Admin'] },
+    { path: '/users', label: 'Users', icon: UserCog, roles: ['Admin', 'Manager', 'Executive'] },
 ];
 
 export default function Sidebar() {
@@ -26,7 +26,7 @@ export default function Sidebar() {
     const { user, isAdmin, logout } = useAuth();
     const { collapsed, toggle, mobileOpen, closeMobile } = useSidebar();
 
-    const visibleItems = navItems.filter((item) => !item.adminOnly || isAdmin);
+    const visibleItems = navItems.filter((item) => !item.roles || item.roles.includes(user?.role));
 
     const handleNavClick = () => {
         if (window.innerWidth <= 768) closeMobile();
@@ -47,7 +47,7 @@ export default function Sidebar() {
             <div className="sidebar__brand">
                 <div className="sidebar__brand-mark">BC</div>
                 <div className="sidebar__brand-text">
-                    <span className="sidebar__brand-name">Blackcoffee</span>
+                    <span className="sidebar__brand-name">BizB</span>
                 </div>
             </div>
 

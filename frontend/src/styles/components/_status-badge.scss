@@ -16,7 +16,8 @@
     }
     &--paid,
     &--reimbursed,
-    &--active {
+    &--active,
+    &--approved {
         background: $success-bg;
         color: $success;
     }
@@ -26,7 +27,8 @@
     }
     &--overdue,
     &--danger,
-    &--cancelled {
+    &--cancelled,
+    &--rejected {
         background: $danger-bg;
         color: $danger;
     }
@@ -37,7 +39,8 @@
     }
     &--pending,
     &--warning,
-    &--partially-paid {
+    &--partially-paid,
+    &--unpaid {
         background: $warning-bg;
         color: $warning;
     }

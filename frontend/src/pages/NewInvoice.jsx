@@ -45,7 +45,7 @@ export default function NewInvoice() {
         invoice_number: '',
         tax_type: 'IGST',
         invoice_date: new Date().toISOString().split('T')[0],
-        due_date: '',
+        credit_period: '',
         place_of_supply: '',
         po_number: '',
         transport: '',
@@ -152,8 +152,8 @@ export default function NewInvoice() {
             setError('Please select an invoice date');
             return;
         }
-        if (form.due_date && form.due_date < form.invoice_date) {
-            setError('Due date cannot be before the invoice date');
+        if (form.credit_period && Number(form.credit_period) < 0) {
+            setError('Credit period cannot be negative');
             return;
         }
 
@@ -238,11 +238,8 @@ export default function NewInvoice() {
                             <input type="date" value={form.invoice_date} onChange={(e) => updateForm('invoice_date', e.target.value)} />
                         </div>
                         <div className="new-invoice__field">
-                            <label>Due Date</label>
-                            <input type="date" value={form.due_date} min={form.invoice_date} onChange={(e) => updateForm('due_date', e.target.value)} />
-                            {form.due_date && form.due_date < form.invoice_date && (
-                                <span className="new-invoice__hint new-invoice__hint--error">Due date cannot be before invoice date</span>
-                            )}
+                            <label>Credit Period (Days)</label>
+                            <input type="number" min="0" value={form.credit_period} placeholder="e.g. 30" onChange={(e) => updateForm('credit_period', e.target.value)} />
                         </div>
                     </div>
                     <div className="new-invoice__grid">

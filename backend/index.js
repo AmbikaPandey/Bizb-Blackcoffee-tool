@@ -22,7 +22,14 @@ const PORT = process.env.PORT || 3001;
 
 app.set('trust proxy', 1);
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  origin: function (origin, callback) {
+    // Allow requests from localhost on any port (dev) or no origin (tools/scripts)
+    if (!origin || /^https?:\/\/localhost(:\d+)?$/.test(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
 app.use(express.json({ limit: '2mb' }));

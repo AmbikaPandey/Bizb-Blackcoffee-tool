@@ -17,9 +17,9 @@ const invoiceSchema = new mongoose.Schema({
   invoice_number: { type: String, unique: true, required: true },
   client_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Client', required: true },
   invoice_type: { type: String, default: 'Tax Invoice' },
-  tax_type: { type: String, enum: ['IGST', 'CGST/SGST'], default: 'IGST' },
+  tax_type: { type: String, enum: ['IGST', 'CGST/SGST', 'CGST + SGST'], default: 'IGST' },
   invoice_date: { type: String, required: true },
-  due_date: { type: String, default: null },
+  credit_period: { type: Number, default: null },
   place_of_supply: { type: String, default: null },
   po_number: { type: String, default: null },
   transport: { type: String, default: null },
@@ -40,6 +40,6 @@ const invoiceSchema = new mongoose.Schema({
 
 invoiceSchema.index({ client_id: 1 });
 invoiceSchema.index({ type: 1, status: 1 });
-invoiceSchema.index({ status: 1, due_date: 1 });
+invoiceSchema.index({ status: 1, credit_period: 1 });
 
 module.exports = mongoose.model('Invoice', invoiceSchema);

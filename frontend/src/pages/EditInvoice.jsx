@@ -49,7 +49,7 @@ export default function EditInvoice() {
         invoice_number: '',
         tax_type: 'IGST',
         invoice_date: '',
-        due_date: '',
+        credit_period: '',
         place_of_supply: '',
         po_number: '',
         transport: '',
@@ -78,7 +78,7 @@ export default function EditInvoice() {
                 invoice_number: inv.invoice_number || '',
                 tax_type: inv.tax_type || 'IGST',
                 invoice_date: inv.invoice_date || '',
-                due_date: inv.due_date || '',
+                credit_period: inv.credit_period != null ? String(inv.credit_period) : '',
                 place_of_supply: inv.place_of_supply || '',
                 po_number: inv.po_number || '',
                 transport: inv.transport || '',
@@ -251,8 +251,8 @@ export default function EditInvoice() {
                             <input type="date" value={form.invoice_date} onChange={(e) => updateForm('invoice_date', e.target.value)} />
                         </div>
                         <div className="new-invoice__field">
-                            <label>Due Date</label>
-                            <input type="date" value={form.due_date} onChange={(e) => updateForm('due_date', e.target.value)} />
+                            <label>Credit Period (Days)</label>
+                            <input type="number" min="0" value={form.credit_period} placeholder="e.g. 30" onChange={(e) => updateForm('credit_period', e.target.value)} />
                         </div>
                     </div>
                     <div className="new-invoice__grid">

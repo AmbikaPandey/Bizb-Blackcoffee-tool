@@ -101,7 +101,9 @@ router.get('/ageing', authenticate, requireAdmin, async (req, res) => {
     const clientMap = {};
 
     for (const inv of invoices) {
-      const dueDate = inv.due_date ? new Date(inv.due_date) : new Date(inv.invoice_date);
+      const invoiceDate = new Date(inv.invoice_date);
+      const creditDays = inv.credit_period || 0;
+      const dueDate = new Date(invoiceDate.getTime() + creditDays * 24 * 60 * 60 * 1000);
       const daysOverdue = Math.max(0, Math.floor((today - dueDate) / (1000 * 60 * 60 * 24)));
       const balance = inv.balance || 0;
       const clientName = inv.client_id?.name || 'Unknown';

@@ -13,6 +13,9 @@ export async function lookupIFSC(ifsc) {
 
         const result = {
             bank: data.BANK ? `${data.BANK}, ${data.BRANCH}` : '',
+            bank_name: data.BANK || '',
+            branch_name: data.BRANCH || '',
+            bank_address: data.ADDRESS || '',
         };
 
         cache.set(code, result);

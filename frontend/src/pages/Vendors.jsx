@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Eye, Pencil, Trash2, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import PageHeader from '../components/common/PageHeader';
 import SearchBar from '../components/common/SearchBar';
 import Modal from '../components/common/Modal';
@@ -9,12 +10,19 @@ import ActionMenu from '../components/common/ActionMenu';
 import { useToast } from '../components/common/Toast';
 import { api } from '../services/api';
 import { lookupPincode } from '../utils/pincodeLookup';
+import { lookupIFSC } from '../utils/ifscLookup';
 import { uppercaseFormData } from '../utils/formTransform';
+import { validate, transform } from '../utils/validation';
+import { lookupGST, isValidGSTIN, extractPanFromGstin } from '../utils/gstLookup';
 
-const emptyForm = { name: '', gstin: '', contact: '', pincode: '', city: '', phone: '', email: '', state: '' };
+const emptyForm = {
+    name: '', gstin: '', pan: '', contact: '', pincode: '', city: '', phone: '', email: '', state: '', address: '',
+    bank_details: { account_number: '', ifsc_code: '', bank_name: '', branch_name: '', bank_address: '' },
+};
 
 export default function Vendors() {
     const toast = useToast();
+    const navigate = useNavigate();
     const [search, setSearch] = useState('');
     const [vendors, setVendors] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -23,6 +31,9 @@ export default function Vendors() {
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [form, setForm] = useState({ ...emptyForm });
     const [saving, setSaving] = useState(false);
+    const [errors, setErrors] = useState({});
+    const [gstLoading, setGstLoading] = useState(false);
+    const [ifscLoading, setIfscLoading] = useState(false);
 
     async function loadVendors() {
         try { setVendors(await api.getVendors()); }
@@ -35,18 +46,28 @@ export default function Vendors() {
     function openCreate() {
         setEditTarget(null);
         setForm({ ...emptyForm });
+        setErrors({});
         setShowModal(true);
     }
 
     function openEdit(v) {
         setEditTarget(v);
-        setForm({ name: v.name || '', gstin: v.gstin || '', contact: v.contact || '', pincode: v.pincode || '', city: v.city || '', phone: v.phone || '', email: v.email || '', state: v.state || '' });
+        setForm({
+            name: v.name || '', gstin: v.gstin || '', pan: v.pan || '', contact: v.contact || '',
+            pincode: v.pincode || '', city: v.city || '', phone: v.phone || '', email: v.email || '',
+            state: v.state || '', address: v.address || '',
+            bank_details: v.bank_details || { account_number: '', ifsc_code: '', bank_name: '', branch_name: '', bank_address: '' },
+        });
+        setErrors({});
         setShowModal(true);
     }
 
     async function handleSubmit(e) {
         e.preventDefault();
         if (!form.name.trim()) { toast('Vendor name is required', 'error'); return; }
+        if (form.phone && !validate('phone', form.phone).valid) { toast('Invalid phone number (10 digits starting with 6-9)', 'error'); return; }
+        if (form.pan && !validate('pan', form.pan).valid) { toast('Invalid PAN format', 'error'); return; }
+        if (form.gstin && !validate('gstin', form.gstin).valid) { toast('Invalid GSTIN format', 'error'); return; }
         setSaving(true);
         try {
             const data = uppercaseFormData(form);
@@ -111,6 +132,7 @@ export default function Vendors() {
                                     <td className="text-primary">{v.email || '-'}</td>
                                     <td>
                                         <ActionMenu actions={[
+                                            { icon: <Eye size={15} />, label: 'View Details', onClick: () => navigate(`/vendors/${v.id || v._id}`) },
                                             { icon: <Pencil size={15} />, label: 'Edit', onClick: () => openEdit(v) },
                                             { divider: true },
                                             { icon: <Trash2 size={15} />, label: 'Delete', danger: true, onClick: () => setDeleteTarget(v) },
@@ -135,22 +157,73 @@ export default function Vendors() {
                     <div className="form-row form-row--2">
                         <div className="form-group">
                             <label className="form-group__label">GSTIN</label>
-                            <input type="text" placeholder="22AAAAA0000A1Z5" className="form-group__input" value={form.gstin} onChange={(e) => setForm({ ...form, gstin: e.target.value })} />
+                            <div style={{ position: 'relative' }}>
+                                <input type="text" placeholder="22AAAAA0000A1Z5" className={`form-group__input${errors.gstin ? ' form-group__input--error' : ''}`} value={form.gstin}
+                                    onChange={(e) => {
+                                        const val = transform('gstin', e.target.value);
+                                        setForm({ ...form, gstin: val });
+                                        if (val && !validate('gstin', val).valid) setErrors(p => ({ ...p, gstin: 'Invalid GSTIN' }));
+                                        else setErrors(p => ({ ...p, gstin: '' }));
+                                    }}
+                                    onBlur={async () => {
+                                        if (!form.gstin || !isValidGSTIN(form.gstin)) return;
+                                        setGstLoading(true);
+                                        const info = await lookupGST(form.gstin);
+                                        setGstLoading(false);
+                                        if (info) {
+                                            setForm(prev => ({
+                                                ...prev,
+                                                name: info.name || prev.name,
+                                                address: info.address || prev.address,
+                                                state: info.state || prev.state,
+                                                pan: info.pan || extractPanFromGstin(prev.gstin) || prev.pan,
+                                                pincode: info.pincode || prev.pincode,
+                                            }));
+                                        }
+                                    }}
+                                />
+                                {gstLoading && <Loader2 size={16} className="spin" style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', color: '#888' }} />}
+                            </div>
+                            {errors.gstin && <span className="form-group__error">{errors.gstin}</span>}
                         </div>
                         <div className="form-group">
-                            <label className="form-group__label">Contact Person</label>
-                            <input type="text" placeholder="Contact name" className="form-group__input" value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })} />
+                            <label className="form-group__label">PAN</label>
+                            <input type="text" placeholder="AAAAA9999A" className={`form-group__input${errors.pan ? ' form-group__input--error' : ''}`} value={form.pan} maxLength={10}
+                                onChange={(e) => {
+                                    const val = transform('pan', e.target.value);
+                                    setForm({ ...form, pan: val });
+                                    if (val && !validate('pan', val).valid) setErrors(p => ({ ...p, pan: 'Invalid PAN' }));
+                                    else setErrors(p => ({ ...p, pan: '' }));
+                                }}
+                            />
+                            {errors.pan && <span className="form-group__error">{errors.pan}</span>}
                         </div>
                     </div>
                     <div className="form-row form-row--2">
                         <div className="form-group">
+                            <label className="form-group__label">Contact Person</label>
+                            <input type="text" placeholder="Contact name" className="form-group__input" value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })} />
+                        </div>
+                        <div className="form-group">
                             <label className="form-group__label">Email</label>
                             <input type="email" placeholder="vendor@example.com" className="form-group__input" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
                         </div>
-                        <div className="form-group">
-                            <label className="form-group__label">Phone</label>
-                            <input type="tel" placeholder="9876543210" className="form-group__input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-                        </div>
+                    </div>
+                    <div className="form-group">
+                        <label className="form-group__label">Phone</label>
+                        <input type="tel" placeholder="9876543210" className={`form-group__input${errors.phone ? ' form-group__input--error' : ''}`} value={form.phone} maxLength={10}
+                            onChange={(e) => {
+                                const val = transform('phone', e.target.value);
+                                setForm({ ...form, phone: val });
+                                if (val && !validate('phone', val).valid) setErrors(p => ({ ...p, phone: 'Must be 10 digits starting with 6-9' }));
+                                else setErrors(p => ({ ...p, phone: '' }));
+                            }}
+                        />
+                        {errors.phone && <span className="form-group__error">{errors.phone}</span>}
+                    </div>
+                    <div className="form-group">
+                        <label className="form-group__label">Address</label>
+                        <input type="text" placeholder="Street address" className="form-group__input" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
                     </div>
                     <div className="form-row form-row--3">
                         <div className="form-group">
@@ -171,6 +244,60 @@ export default function Vendors() {
                         <div className="form-group">
                             <label className="form-group__label">State</label>
                             <input type="text" placeholder="State" className="form-group__input" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} />
+                        </div>
+                    </div>
+                    <h4 style={{ margin: '1rem 0 0.5rem', fontSize: '0.9rem', fontWeight: 600 }}>Bank Details</h4>
+                    <div className="form-group">
+                        <label className="form-group__label">Account Number</label>
+                        <input type="text" placeholder="Account number" className="form-group__input"
+                            value={form.bank_details?.account_number || ''} onChange={(e) => setForm({ ...form, bank_details: { ...form.bank_details, account_number: e.target.value.replace(/\D/g, '').slice(0, 18) } })} />
+                    </div>
+                    <div className="form-row form-row--2">
+                        <div className="form-group">
+                            <label className="form-group__label">IFSC Code</label>
+                            <div style={{ position: 'relative' }}>
+                                <input type="text" placeholder="e.g. SBIN0001234" className={`form-group__input${errors.ifsc ? ' form-group__input--error' : ''}`}
+                                    maxLength={11}
+                                    value={form.bank_details?.ifsc_code || ''}
+                                    onChange={(e) => {
+                                        const val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 11);
+                                        setForm({ ...form, bank_details: { ...form.bank_details, ifsc_code: val } });
+                                        setErrors(p => ({ ...p, ifsc: '' }));
+                                    }}
+                                    onBlur={async () => {
+                                        const ifsc = form.bank_details?.ifsc_code;
+                                        if (!ifsc || ifsc.length !== 11) return;
+                                        if (!/^[A-Z]{4}0[A-Z0-9]{6}$/i.test(ifsc)) { setErrors(p => ({ ...p, ifsc: 'Invalid IFSC format' })); return; }
+                                        setIfscLoading(true);
+                                        const info = await lookupIFSC(ifsc);
+                                        setIfscLoading(false);
+                                        if (info) {
+                                            setForm(prev => ({ ...prev, bank_details: { ...prev.bank_details, bank_name: info.bank_name, branch_name: info.branch_name, bank_address: info.bank_address } }));
+                                        } else {
+                                            setErrors(p => ({ ...p, ifsc: 'IFSC not found' }));
+                                        }
+                                    }}
+                                />
+                                {ifscLoading && <Loader2 size={16} className="spin" style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', color: '#888' }} />}
+                            </div>
+                            {errors.ifsc && <span className="form-group__error">{errors.ifsc}</span>}
+                        </div>
+                        <div className="form-group">
+                            <label className="form-group__label">Bank Name</label>
+                            <input type="text" placeholder="Auto-filled from IFSC" className="form-group__input"
+                                value={form.bank_details?.bank_name || ''} onChange={(e) => setForm({ ...form, bank_details: { ...form.bank_details, bank_name: e.target.value } })} />
+                        </div>
+                    </div>
+                    <div className="form-row form-row--2">
+                        <div className="form-group">
+                            <label className="form-group__label">Branch Name</label>
+                            <input type="text" placeholder="Auto-filled from IFSC" className="form-group__input"
+                                value={form.bank_details?.branch_name || ''} onChange={(e) => setForm({ ...form, bank_details: { ...form.bank_details, branch_name: e.target.value } })} />
+                        </div>
+                        <div className="form-group">
+                            <label className="form-group__label">Branch Address</label>
+                            <input type="text" placeholder="Auto-filled from IFSC" className="form-group__input"
+                                value={form.bank_details?.bank_address || ''} onChange={(e) => setForm({ ...form, bank_details: { ...form.bank_details, bank_address: e.target.value } })} />
                         </div>
                     </div>
                     <div className="form-actions">

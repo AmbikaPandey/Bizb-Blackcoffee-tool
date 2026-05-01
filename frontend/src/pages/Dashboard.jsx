@@ -5,6 +5,7 @@ import StatCard from '../components/common/StatCard';
 import StatusBadge from '../components/common/StatusBadge';
 import PageHeader from '../components/common/PageHeader';
 import PageLoader from '../components/common/PageLoader';
+import IndiaMap from '../components/common/IndiaMap';
 import { api } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { formatCurrency, shortCurrency } from '../utils/currency';
@@ -63,6 +64,9 @@ export default function Dashboard() {
                 </div>
             </div>
 
+            {/* India Client Map */}
+            <IndiaMap />
+
             <div className="dashboard__tables">
                 <div className="dashboard__section">
                     <div className="dashboard__section-header">
@@ -107,7 +111,7 @@ export default function Dashboard() {
                         <thead>
                             <tr>
                                 <th>Client</th>
-                                <th>Due Date</th>
+                                <th>Credit Period</th>
                                 <th>Balance</th>
                             </tr>
                         </thead>
@@ -115,7 +119,7 @@ export default function Dashboard() {
                             {(stats?.pendingPayments || []).map((p) => (
                                 <tr key={p.id} className="clickable-row" onClick={() => navigate(`/invoices/${p.id}`)}>
                                     <td className="truncate-cell">{p.client}</td>
-                                    <td>{p.dueDate || '-'}</td>
+                                    <td>{p.creditPeriod ? `${p.creditPeriod} days` : '-'}</td>
                                     <td className="balance-red">{formatCurrency(p.balance)}</td>
                                 </tr>
                             ))}

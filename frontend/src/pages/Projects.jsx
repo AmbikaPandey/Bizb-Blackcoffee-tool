@@ -10,11 +10,11 @@ import ConfirmDialog from '../components/common/ConfirmDialog';
 import PageLoader from '../components/common/PageLoader';
 import ActionMenu from '../components/common/ActionMenu';
 import { useToast } from '../components/common/Toast';
+import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { formatCurrency } from '../utils/currency';
-import { uppercaseFormData } from '../utils/formTransform';
 
-const emptyForm = { name: '', client_id: '', budget: '', start_date: '', end_date: '', status: 'Active' };
+const emptyForm = { name: '', client_id: '', budget: '', start_date: '', end_date: '', status: 'Active', description: '', assigned_manager: '', assigned_executives: [] };
 
 const formatDuration = (start, end) => {
     if (!start && !end) return '-';
@@ -26,8 +26,10 @@ const formatDuration = (start, end) => {
 
 export default function Projects() {
     const toast = useToast();
+    const { isAdmin, isExecutive } = useAuth();
     const [projects, setProjects] = useState([]);
     const [clients, setClients] = useState([]);
+    const [allUsers, setAllUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editTarget, setEditTarget] = useState(null);
@@ -38,6 +40,9 @@ export default function Projects() {
     const [statusFilter, setStatusFilter] = useState('');
     const [viewTarget, setViewTarget] = useState(null);
 
+    const managers = allUsers.filter(u => u.role === 'Manager');
+    const executives = allUsers.filter(u => u.role === 'Executive');
+
     async function loadProjects() {
         try { setProjects(await api.getProjects()); }
         catch { toast('Failed to load projects', 'error'); }
@@ -46,7 +51,10 @@ export default function Projects() {
 
     useEffect(() => {
         loadProjects();
-        api.getClients().then(setClients).catch(() => { });
+        if (!isExecutive) {
+            api.getClients().then(setClients).catch(() => { });
+            api.getUsers().then(setAllUsers).catch(() => { });
+        }
     }, []);
 
     const filtered = projects.filter((p) => {
@@ -77,6 +85,9 @@ export default function Projects() {
             name: p.name || '', client_id: p.client_id || '',
             budget: p.budget || '', start_date: p.start_date || '',
             end_date: p.end_date || '', status: p.status || 'Active',
+            description: p.description || '',
+            assigned_manager: p.assigned_manager || '',
+            assigned_executives: (p.assigned_executives || []).map(String),
         });
         setShowModal(true);
     }
@@ -86,7 +97,7 @@ export default function Projects() {
         if (!form.name.trim()) { toast('Project name is required', 'error'); return; }
         setSaving(true);
         try {
-            const data = uppercaseFormData({ ...form, budget: parseFloat(form.budget) || 0 });
+            const data = { ...form, budget: parseFloat(form.budget) || 0 };
             if (editTarget) {
                 await api.updateProject(editTarget.id || editTarget._id, data);
                 toast('Project updated');
@@ -114,7 +125,7 @@ export default function Projects() {
 
     return (
         <div>
-            <PageHeader title="Projects" subtitle="Manage projects and track profitability" buttonLabel="Add Project" onButtonClick={openCreate} />
+            <PageHeader title="Projects" subtitle="Manage projects and track profitability" buttonLabel={!isExecutive ? "Add Project" : undefined} onButtonClick={!isExecutive ? openCreate : undefined} />
 
             <div className="stats-grid stats-grid--4">
                 <StatCard label="Total Projects" value={projects.length} icon={FolderKanban} variant="blue" />
@@ -160,9 +171,8 @@ export default function Projects() {
                                     <td>
                                         <ActionMenu actions={[
                                             { icon: <Eye size={15} />, label: 'View Details', onClick: () => setViewTarget(p) },
-                                            { icon: <Pencil size={15} />, label: 'Edit', onClick: () => openEdit(p) },
-                                            { divider: true },
-                                            { icon: <Trash2 size={15} />, label: 'Delete', danger: true, onClick: () => setDeleteTarget(p) },
+                                            ...(!isExecutive ? [{ icon: <Pencil size={15} />, label: 'Edit', onClick: () => openEdit(p) }] : []),
+                                            ...(isAdmin ? [{ divider: true }, { icon: <Trash2 size={15} />, label: 'Delete', danger: true, onClick: () => setDeleteTarget(p) }] : []),
                                         ]} />
                                     </td>
                                 </tr>
@@ -246,6 +256,28 @@ export default function Projects() {
                             <label className="form-group__label">End Date</label>
                             <input type="date" className="form-group__input" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} />
                         </div>
+                    </div>
+                    <div className="form-group">
+                        <label className="form-group__label">Description</label>
+                        <textarea className="form-group__input" rows={3} placeholder="Project description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+                    </div>
+                    {isAdmin && (
+                        <div className="form-group">
+                            <label className="form-group__label">Assigned Manager</label>
+                            <select className="form-group__input" value={form.assigned_manager} onChange={(e) => setForm({ ...form, assigned_manager: e.target.value })}>
+                                <option value="">Select manager (optional)</option>
+                                {managers.map((m) => <option key={m.id} value={m.id}>{m.username}</option>)}
+                            </select>
+                        </div>
+                    )}
+                    <div className="form-group">
+                        <label className="form-group__label">Assigned Executives</label>
+                        <select className="form-group__input" multiple value={form.assigned_executives}
+                            onChange={(e) => setForm({ ...form, assigned_executives: Array.from(e.target.selectedOptions, o => o.value) })}
+                            style={{ minHeight: '80px' }}>
+                            {executives.map((ex) => <option key={ex.id} value={ex.id}>{ex.username}</option>)}
+                        </select>
+                        <small style={{ color: '#6b7280', fontSize: '0.75rem' }}>Hold Ctrl/Cmd to select multiple</small>
                     </div>
                     <div className="form-actions">
                         <button type="button" className="btn-cancel" onClick={() => setShowModal(false)}>Cancel</button>
