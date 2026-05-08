@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, Save } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Save, Pencil } from 'lucide-react';
 import { useToast } from '../components/common/Toast';
 import { api } from '../services/api';
 import { formatCurrency } from '../utils/currency';
+import { useAuth } from '../context/AuthContext';
+import HsnAutocomplete from '../components/common/HsnAutocomplete';
 
 
 const EMPTY_ITEM = {
@@ -35,6 +37,7 @@ export default function EditInvoice() {
     const { id } = useParams();
     const navigate = useNavigate();
     const toast = useToast();
+    const { isAdmin } = useAuth();
 
     const [clients, setClients] = useState([]);
     const [products, setProducts] = useState([]);
@@ -42,6 +45,7 @@ export default function EditInvoice() {
     const [saving, setSaving] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [invoiceNumEditable, setInvoiceNumEditable] = useState(false);
 
     const [form, setForm] = useState({
         client_id: '',
@@ -235,7 +239,14 @@ export default function EditInvoice() {
                     <div className="new-invoice__grid">
                         <div className="new-invoice__field">
                             <label>Invoice Number</label>
-                            <input type="text" value={form.invoice_number} onChange={(e) => updateForm('invoice_number', e.target.value)} />
+                            <div className="new-invoice__field-with-btn">
+                                <input type="text" value={form.invoice_number} disabled={!invoiceNumEditable} onChange={(e) => updateForm('invoice_number', e.target.value)} />
+                                {isAdmin && !invoiceNumEditable && (
+                                    <button type="button" className="new-invoice__edit-btn" onClick={() => setInvoiceNumEditable(true)} title="Edit invoice number">
+                                        <Pencil size={14} />
+                                    </button>
+                                )}
+                            </div>
                         </div>
                         <div className="new-invoice__field">
                             <label>Tax Type</label>
@@ -328,7 +339,21 @@ export default function EditInvoice() {
                                     </select>
                                 </div>
                                 <div className="col-hsn">
-                                    <input type="text" value={item.hsn} onChange={(e) => updateItem(idx, 'hsn', e.target.value)} />
+                                    <HsnAutocomplete
+                                        value={item.hsn}
+                                        onChange={(val) => updateItem(idx, 'hsn', val)}
+                                        onSelect={(hsn) => {
+                                            const updated = [...items];
+                                            updated[idx] = {
+                                                ...updated[idx],
+                                                hsn: hsn.hsnCode,
+                                                product_name: hsn.productName || updated[idx].product_name,
+                                                description: hsn.description || updated[idx].description,
+                                                tax_pct: hsn.gstRate ?? updated[idx].tax_pct,
+                                            };
+                                            setItems(updated);
+                                        }}
+                                    />
                                 </div>
                                 <div className="col-qty">
                                     <input type="number" min="0" step="1" value={item.qty} onChange={(e) => updateItem(idx, 'qty', e.target.value)} />

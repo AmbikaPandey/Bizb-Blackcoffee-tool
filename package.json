@@ -4,10 +4,13 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "concurrently -n backend,frontend -c blue,green \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
-    "start": "concurrently -n backend,frontend -c blue,green \"npm start --prefix backend\" \"npm run dev --prefix frontend\"",
+    "start": "npm start --prefix backend",
     "build": "npm run build --prefix frontend",
     "install:all": "npm install --prefix backend && npm install --prefix frontend",
-    "seed": "npm run seed --prefix backend"
+    "seed": "npm run seed --prefix backend",
+    "seed:prod": "npm run seed:prod --prefix backend",
+    "seed:hsn": "npm run seed:hsn --prefix backend",
+    "reset-db": "npm run reset-db --prefix backend"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"

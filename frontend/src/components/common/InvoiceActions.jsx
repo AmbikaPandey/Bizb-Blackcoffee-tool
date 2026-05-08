@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { MoreVertical, Eye, Download, Pencil, Trash2 } from 'lucide-react';
+import { MoreVertical, Eye, Download, Pencil, Trash2, FileUp } from 'lucide-react';
 
-export default function InvoiceActions({ onView, onEdit, onDelete, onDownload, disabled }) {
+export default function InvoiceActions({ onView, onEdit, onDelete, onDownload, onExportBusy, disabled }) {
     const [open, setOpen] = useState(false);
     const triggerRef = useRef(null);
     const menuRef = useRef(null);
@@ -11,8 +11,14 @@ export default function InvoiceActions({ onView, onEdit, onDelete, onDownload, d
     const calcPosition = useCallback(() => {
         if (!triggerRef.current) return;
         const rect = triggerRef.current.getBoundingClientRect();
+        const menuHeight = 220; // estimated menu height
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const flipUp = spaceBelow < menuHeight + 10;
+
         setPos({
-            top: rect.bottom + window.scrollY + 6,
+            top: flipUp
+                ? rect.top + window.scrollY - menuHeight - 6
+                : rect.bottom + window.scrollY + 6,
             right: document.documentElement.clientWidth - rect.right - window.scrollX,
         });
     }, []);
@@ -64,6 +70,12 @@ export default function InvoiceActions({ onView, onEdit, onDelete, onDownload, d
                 <Pencil size={15} />
                 <span>Edit</span>
             </button>
+            {onExportBusy && (
+                <button className="invoice-actions__item" onClick={() => handleAction(onExportBusy)}>
+                    <FileUp size={15} />
+                    <span>Export to BUSY</span>
+                </button>
+            )}
             <div className="invoice-actions__divider" />
             <button className="invoice-actions__item invoice-actions__item--danger" onClick={() => handleAction(onDelete)}>
                 <Trash2 size={15} />

@@ -10,6 +10,7 @@ import PageLoader from '../components/common/PageLoader';
 import { useToast } from '../components/common/Toast';
 import { api } from '../services/api';
 import { formatCurrency } from '../utils/currency';
+import { FileUp } from 'lucide-react';
 
 const formatDate = (d) => {
     if (!d) return '';
@@ -30,6 +31,9 @@ export default function Invoices() {
     const [deleting, setDeleting] = useState(false);
     const [loading, setLoading] = useState(true);
     const [downloadingId, setDownloadingId] = useState(null);
+    const [selectedIds, setSelectedIds] = useState([]);
+    const [exporting, setExporting] = useState(false);
+    const [busyConfirm, setBusyConfirm] = useState(null); // { type: 'single'|'bulk', id?: string }
 
     useEffect(() => {
         setLoading(true);
@@ -85,6 +89,38 @@ export default function Invoices() {
         }
     };
 
+    // BUSY Export - single invoice
+    const handleExportBusy = async () => {
+        if (!busyConfirm) return;
+        setExporting(true);
+        try {
+            if (busyConfirm.type === 'single') {
+                const result = await api.exportToBusy(busyConfirm.id);
+                toast(`Exported to BUSY: ${result.referenceNo}`);
+                setInvoices(prev => prev.map(inv => inv.id === busyConfirm.id ? { ...inv, busySynced: true } : inv));
+            } else {
+                const result = await api.exportToBusyBulk(selectedIds);
+                toast(`Exported ${result.successCount} of ${selectedIds.length} invoices to BUSY`);
+                setInvoices(prev => prev.map(inv => selectedIds.includes(inv.id) ? { ...inv, busySynced: true } : inv));
+                setSelectedIds([]);
+            }
+        } catch (err) {
+            toast(err.message || 'Export to BUSY failed', 'error');
+        } finally {
+            setExporting(false);
+            setBusyConfirm(null);
+        }
+    };
+
+    const toggleSelect = (id) => {
+        setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+    };
+
+    const toggleSelectAll = () => {
+        if (selectedIds.length === filtered.length) setSelectedIds([]);
+        else setSelectedIds(filtered.map(inv => inv.id));
+    };
+
     if (loading) return <PageLoader />;
 
     return (
@@ -108,11 +144,20 @@ export default function Invoices() {
                     <SearchBar placeholder="Search by invoice number or client..." value={search} onChange={setSearch} />
                     <FilterDropdown label="All Status" options={['Draft', 'Sent', 'Partially Paid', 'Paid', 'Overdue', 'Cancelled']} value={statusFilter} onChange={setStatusFilter} />
                     <FilterDropdown label="All Clients" options={clientNames} value={clientFilter} onChange={setClientFilter} />
+                    {selectedIds.length > 0 && (
+                        <button className="btn btn--sm btn--outline busy-bulk-btn" onClick={() => setBusyConfirm({ type: 'bulk' })} disabled={exporting}>
+                            <FileUp size={14} />
+                            Export {selectedIds.length} to BUSY
+                        </button>
+                    )}
                 </div>
                 <div className="page-card__table">
                     <table>
                         <thead>
                             <tr>
+                                <th style={{ width: 36 }}>
+                                    <input type="checkbox" checked={filtered.length > 0 && selectedIds.length === filtered.length} onChange={toggleSelectAll} />
+                                </th>
                                 <th>Invoice #</th>
                                 <th>Client</th>
                                 <th>Date</th>
@@ -120,18 +165,22 @@ export default function Invoices() {
                                 <th className="text-right">Amount</th>
                                 <th className="text-right">Balance</th>
                                 <th>Status</th>
+                                <th>BUSY</th>
                                 <th style={{ width: 40 }}></th>
                             </tr>
                         </thead>
                         <tbody>
                             {filtered.length === 0 ? (
                                 <tr>
-                                    <td colSpan="8" style={{ textAlign: 'center', padding: '2rem', color: '#9ca3af' }}>
+                                    <td colSpan="10" style={{ textAlign: 'center', padding: '2rem', color: '#9ca3af' }}>
                                         No invoices found. Click "New Invoice" to create one.
                                     </td>
                                 </tr>
                             ) : filtered.map((inv) => (
                                 <tr key={inv.id}>
+                                    <td>
+                                        <input type="checkbox" checked={selectedIds.includes(inv.id)} onChange={() => toggleSelect(inv.id)} />
+                                    </td>
                                     <td className="font-medium">{inv.invoice_number}</td>
                                     <td className="truncate-cell">{inv.client_name}</td>
                                     <td>{formatDate(inv.invoice_date)}</td>
@@ -142,11 +191,17 @@ export default function Invoices() {
                                     </td>
                                     <td><StatusBadge status={inv.status} /></td>
                                     <td>
+                                        <span className={`busy-badge busy-badge--${inv.busySynced ? 'synced' : 'pending'}`}>
+                                            {inv.busySynced ? 'Synced' : 'Pending'}
+                                        </span>
+                                    </td>
+                                    <td>
                                         <InvoiceActions
                                             onView={() => navigate(`/invoices/${inv.id}`)}
                                             onEdit={() => navigate(`/invoices/${inv.id}/edit`)}
                                             onDelete={() => setDeleteTarget(inv)}
                                             onDownload={() => handleDownloadPdf(inv)}
+                                            onExportBusy={() => setBusyConfirm({ type: 'single', id: inv.id })}
                                             disabled={downloadingId === inv.id}
                                         />
                                     </td>
@@ -165,6 +220,18 @@ export default function Invoices() {
                 onConfirm={handleDelete}
                 onCancel={() => setDeleteTarget(null)}
                 loading={deleting}
+            />
+
+            <ConfirmDialog
+                isOpen={!!busyConfirm}
+                title="Export to BUSY"
+                message={busyConfirm?.type === 'bulk'
+                    ? `Export ${selectedIds.length} selected invoices to BUSY Accounting XML?`
+                    : 'Export this invoice to BUSY Accounting XML?'}
+                confirmLabel={exporting ? 'Exporting...' : 'Export'}
+                onConfirm={handleExportBusy}
+                onCancel={() => setBusyConfirm(null)}
+                loading={exporting}
             />
         </div>
     );

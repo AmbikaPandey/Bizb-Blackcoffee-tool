@@ -9,6 +9,35 @@ const WHITE = [255, 255, 255];
 
 const cleanInvoiceNumber = (num) => num ? num.replace(/^(TAX|PRO)-/, '') : '';
 
+const STATE_TO_CODE = {
+    'Jammu & Kashmir': '01', 'Jammu and Kashmir': '01', 'Himachal Pradesh': '02', 'Punjab': '03',
+    'Chandigarh': '04', 'Uttarakhand': '05', 'Haryana': '06', 'Delhi': '07',
+    'Rajasthan': '08', 'Uttar Pradesh': '09', 'Bihar': '10', 'Sikkim': '11',
+    'Arunachal Pradesh': '12', 'Nagaland': '13', 'Manipur': '14', 'Mizoram': '15',
+    'Tripura': '16', 'Meghalaya': '17', 'Assam': '18', 'West Bengal': '19',
+    'Jharkhand': '20', 'Odisha': '21', 'Chhattisgarh': '22', 'Madhya Pradesh': '23',
+    'Gujarat': '24', 'Dadra & Nagar Haveli & Daman & Diu': '26',
+    'Dadra and Nagar Haveli and Daman and Diu': '26', 'Maharashtra': '27',
+    'Karnataka': '29', 'Goa': '30', 'Lakshadweep': '31', 'Kerala': '32',
+    'Tamil Nadu': '33', 'Puducherry': '34', 'Andaman & Nicobar Islands': '35',
+    'Andaman and Nicobar Islands': '35', 'Telangana': '36', 'Andhra Pradesh': '37', 'Ladakh': '38',
+};
+
+function formatPlaceOfSupply(place) {
+    if (!place) return '-';
+    const code = STATE_TO_CODE[place];
+    return code ? `${code}-${place}` : place;
+}
+
+function buildCompanyAddress(c) {
+    const parts = [];
+    if (c.address_line1) parts.push(c.address_line1);
+    if (c.address_line2) parts.push(c.address_line2);
+    if (c.city) parts.push(c.city);
+    if (c.pincode) parts.push(c.pincode);
+    return parts.join(', ');
+}
+
 function fmt(val) {
     return Number(val || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
@@ -133,7 +162,7 @@ export function generateInvoicePdf(invoice, company, bank) {
 
     // Supply detail rows
     const supplyRows = [
-        ['Place of Supply:', invoice.place_of_supply || '-'],
+        ['Place of Supply:', formatPlaceOfSupply(invoice.place_of_supply)],
         ['Reverse Charge:', 'No'],
         ['Transport:', invoice.transport || '-'],
         ['Vehicle No.:', invoice.vehicle_no || '-'],
@@ -161,7 +190,7 @@ export function generateInvoicePdf(invoice, company, bank) {
     doc.setFontSize(8);
     supplyRows.forEach(([label, value]) => {
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(...RED);
+        doc.setTextColor(...BLACK);
         doc.text(label, supplyBoxX + 3, sy);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(...BLACK);
@@ -206,8 +235,8 @@ export function generateInvoicePdf(invoice, company, bank) {
             textColor: BLACK,
         },
         headStyles: {
-            fillColor: RED,
-            textColor: WHITE,
+            fillColor: WHITE,
+            textColor: BLACK,
             fontStyle: 'bold',
             fontSize: 7.5,
             halign: 'center',
@@ -351,7 +380,8 @@ export function generateInvoicePdf(invoice, company, bank) {
     doc.setTextColor(...GRAY);
     doc.setFont('helvetica', 'normal');
     const footerParts = [];
-    if (company.address) footerParts.push(`Registered Office: ${company.address}`);
+    const addr = buildCompanyAddress(company);
+    if (addr) footerParts.push(`Registered Office: ${addr}`);
     if (company.phone) footerParts.push(`m: ${company.phone}`);
     if (company.email) footerParts.push(`e: ${company.email}`);
     doc.text(footerParts.join('  |  '), pw / 2, footerY + 4, { align: 'center', maxWidth: cw });

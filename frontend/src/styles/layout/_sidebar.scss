@@ -91,6 +91,15 @@ $_transition: 280ms cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 0 2px 8px rgba(200, 149, 108, 0.3);
         }
 
+        &-logo {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            flex-shrink: 0;
+            background: wheat url("/logo.png") center / cover no-repeat;
+            background-position: 0 0;
+        }
+
         &-text {
             display: flex;
             flex-direction: column;

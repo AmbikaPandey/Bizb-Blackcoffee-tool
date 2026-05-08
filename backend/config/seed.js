@@ -3,11 +3,12 @@ const mongoose = require('mongoose');
 const Client = require('../models/Client');
 const Product = require('../models/Product');
 const User = require('../models/User');
+const logger = require('../utils/logger');
 
 async function seed() {
   const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/bizb';
   await mongoose.connect(uri);
-  console.log('Connected to MongoDB for seeding...');
+  logger.info('Connected to MongoDB for seeding...');
 
   // Seed clients
   const clientCount = await Client.countDocuments();
@@ -29,9 +30,9 @@ async function seed() {
       { name: 'NSDL IFPT', gstin: '27AAAT9652Q1ZIA', city: 'Mumbai', outstanding: 0 },
       { name: 'MULTI COMMODITY EXCHANGE OF INDIA LIMITED', gstin: '07AADCM0819J1ZI', city: 'New Delhi', outstanding: 0 },
     ]);
-    console.log('Seeded 15 clients');
+    logger.info('Seeded 15 clients');
   } else {
-    console.log(`Clients already exist (${clientCount}), skipping`);
+    logger.info(`Clients already exist (${clientCount}), skipping`);
   }
 
   // Seed products
@@ -44,30 +45,31 @@ async function seed() {
       { name: 'Content Writing', hsn: '998397', rate: 5000, unit: 'Per Article', gst: 18, description: 'Blog posts and articles' },
       { name: 'Video Production', hsn: '998371', rate: 75000, unit: 'Per Video', gst: 18, description: 'Corporate video production' },
     ]);
-    console.log('Seeded 5 products');
+    logger.info('Seeded 5 products');
   } else {
-    console.log(`Products already exist (${productCount}), skipping`);
+    logger.info(`Products already exist (${productCount}), skipping`);
   }
 
   // Seed admin user
   const userCount = await User.countDocuments();
   if (userCount === 0) {
+    const devPassword = process.env.SEED_ADMIN_PASSWORD || 'admin123';
     await User.create({
-      username: 'Ambika',
-      email: 'ambika@bizb.in',
-      password: 'admin123',
+      username: 'Admin',
+      email: 'admin@bizb.in',
+      password: devPassword,
       role: 'Admin',
     });
-    console.log('Seeded admin user (ambika@bizb.in / admin123)');
+    logger.info('Seeded admin user (admin@bizb.in) — change password after login');
   } else {
-    console.log(`Users already exist (${userCount}), skipping`);
+    logger.info(`Users already exist (${userCount}), skipping`);
   }
 
   await mongoose.disconnect();
-  console.log('Seed complete, disconnected.');
+  logger.info('Seed complete, disconnected.');
 }
 
 seed().catch((err) => {
-  console.error('Seed error:', err);
+  logger.error('Seed error: ' + err.message);
   process.exit(1);
 });

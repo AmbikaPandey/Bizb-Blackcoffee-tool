@@ -206,6 +206,37 @@
         }
     }
 
+    &__field-with-btn {
+        display: flex;
+        gap: $space-2;
+        align-items: center;
+
+        input {
+            flex: 1;
+        }
+    }
+
+    &__edit-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border: 1px solid var(--color-border);
+        border-radius: $radius-md;
+        background: var(--color-surface);
+        color: var(--color-text-secondary);
+        cursor: pointer;
+        transition: all $transition-fast;
+        flex-shrink: 0;
+
+        &:hover {
+            background: var(--color-surface-alt);
+            color: $accent;
+            border-color: $accent;
+        }
+    }
+
     // ===========================
     // ADD ITEM BUTTON
     // ===========================

@@ -45,7 +45,7 @@ export default function Sidebar() {
 
             {/* Brand */}
             <div className="sidebar__brand">
-                <div className="sidebar__brand-mark">BC</div>
+                <div className="sidebar__brand-logo" />
                 <div className="sidebar__brand-text">
                     <span className="sidebar__brand-name">BizB</span>
                 </div>

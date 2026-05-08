@@ -8,6 +8,7 @@ import PageLoader from '../components/common/PageLoader';
 import StatusBadge from '../components/common/StatusBadge';
 import ActionMenu from '../components/common/ActionMenu';
 import { useToast } from '../components/common/Toast';
+import HsnAutocomplete from '../components/common/HsnAutocomplete';
 import { api } from '../services/api';
 import { formatCurrency } from '../utils/currency';
 import { uppercaseFormData } from '../utils/formTransform';
@@ -171,7 +172,19 @@ export default function Products() {
                     <div className="form-row form-row--2">
                         <div className="form-group">
                             <label className="form-group__label">HSN/SAC Code</label>
-                            <input type="text" placeholder="e.g. 998361" className="form-group__input" value={form.hsn} onChange={(e) => setForm({ ...form, hsn: e.target.value })} />
+                            <HsnAutocomplete
+                                value={form.hsn}
+                                onChange={(val) => setForm({ ...form, hsn: val })}
+                                onSelect={(hsn) => setForm((prev) => ({
+                                    ...prev,
+                                    hsn: hsn.hsnCode,
+                                    name: prev.name || hsn.productName,
+                                    description: prev.description || hsn.description,
+                                    gst: String(hsn.gstRate ?? prev.gst),
+                                    category: prev.category || hsn.category,
+                                }))}
+                                placeholder="e.g. 998361"
+                            />
                         </div>
                         <div className="form-group">
                             <label className="form-group__label">Rate</label>

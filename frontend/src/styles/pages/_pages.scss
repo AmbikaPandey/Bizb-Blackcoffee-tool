@@ -196,3 +196,51 @@
         }
     }
 }
+
+// BUSY export badges and buttons
+.busy-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.32rem 0.8rem;
+    border-radius: 4px;
+    font-size: 1.12rem;
+    font-weight: $weight-medium;
+    white-space: nowrap;
+
+    &--synced {
+        background: rgba(16, 185, 129, 0.12);
+        color: #10b981;
+    }
+    &--pending {
+        background: rgba(156, 163, 175, 0.12);
+        color: var(--color-text-muted);
+    }
+    &--failed {
+        background: rgba(239, 68, 68, 0.12);
+        color: #ef4444;
+    }
+}
+
+.busy-bulk-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.56rem;
+    padding: 0.64rem 1.2rem;
+    border-radius: 6px;
+    font-size: 1.28rem;
+    font-weight: $weight-medium;
+    border: 1px solid $primary;
+    color: $primary;
+    background: transparent;
+    cursor: pointer;
+    transition: all $transition-fast;
+    white-space: nowrap;
+
+    &:hover {
+        background: $accent-light;
+    }
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}

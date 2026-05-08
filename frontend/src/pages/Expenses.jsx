@@ -240,7 +240,7 @@ export default function Expenses() {
                                 <th>Date</th>
                                 <th className="text-right">Amount</th>
                                 <th>Status</th>
-                                {isAdmin && <th>Payment</th>}
+                                <th>Payment</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -278,18 +278,22 @@ export default function Expenses() {
                                         <td>{exp.date}</td>
                                         <td className="text-right font-medium">{formatCurrency(exp.amount)}</td>
                                         <td><StatusBadge status={exp.status} /></td>
-                                        {isAdmin && (
-                                            <td>
-                                                {exp.status === 'Approved' ? (
+                                        <td>
+                                            {exp.status === 'Approved' ? (
+                                                isAdmin ? (
                                                     <button
                                                         className={`payment-badge payment-badge--${(exp.payment_status || 'unpaid').toLowerCase()}`}
                                                         onClick={() => { setReimbursementTarget(exp); setReimbursementForm({ payment_status: exp.payment_status || 'Unpaid', payment_date: exp.payment_date || new Date().toISOString().slice(0, 10), paid_from_account: exp.paid_from_account || '' }); }}
                                                     >
                                                         {exp.payment_status || 'Unpaid'}
                                                     </button>
-                                                ) : '-'}
-                                            </td>
-                                        )}
+                                                ) : (
+                                                    <span className={`payment-badge payment-badge--${(exp.payment_status || 'unpaid').toLowerCase()}`}>
+                                                        {exp.payment_status || 'Unpaid'}
+                                                    </span>
+                                                )
+                                            ) : '-'}
+                                        </td>
                                         <td>
                                             <ActionMenu actions={[
                                                 ...(isAdmin && exp.status === 'Pending' ? [

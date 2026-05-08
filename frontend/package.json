@@ -10,7 +10,6 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "bizb-dashboard": "file:..",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.7",
     "lucide-react": "^1.8.0",

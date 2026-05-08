@@ -12,10 +12,19 @@ dist
 dist-ssr
 *.local
 .env
+.env.local
+.env.production
 frontend/.env
+frontend/.env.production
 backend/.env
+backend/.env.production
 server/*.bak
 server/bizb.db
+
+# Backend generated
+backend/logs/
+backend/uploads/
+backend/exports/
 
 # Editor directories and files
 .vscode/*

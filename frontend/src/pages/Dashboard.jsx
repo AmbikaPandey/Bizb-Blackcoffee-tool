@@ -64,9 +64,6 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {/* India Client Map */}
-            <IndiaMap />
-
             <div className="dashboard__tables">
                 <div className="dashboard__section">
                     <div className="dashboard__section-header">
@@ -165,6 +162,9 @@ export default function Dashboard() {
                     </tbody>
                 </table>
             </div>
+
+            {/* India Client Map - Last Position */}
+            <IndiaMap />
         </div>
     );
 }

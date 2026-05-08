@@ -6,6 +6,9 @@
     "start": "node index.js",
     "dev": "node --watch index.js",
     "seed": "node config/seed.js",
+    "seed:prod": "node config/seedProduction.js",
+    "seed:hsn": "node config/seedHsn.js",
+    "reset-db": "node config/resetDb.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -14,12 +17,14 @@
   "description": "",
   "dependencies": {
     "bcryptjs": "^3.0.3",
-    "bizb-dashboard": "file:..",
+    "compression": "^1.8.1",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-rate-limit": "^8.4.0",
+    "helmet": "^8.1.0",
     "mongoose": "^9.5.0",
-    "pdfkit": "^0.18.0"
+    "pdfkit": "^0.18.0",
+    "winston": "^3.19.0"
   }
 }

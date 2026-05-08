@@ -33,37 +33,56 @@ export default function IndiaMap() {
     }
 
     useEffect(() => {
-        if (!mapRef.current || typeof globalThis.window === 'undefined') return;
+        if (!mapRef.current) return;
 
-        // Dynamically load Leaflet
-        if (!window.L) {
-            const link = document.createElement('link');
-            link.rel = 'stylesheet';
-            link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-            document.head.appendChild(link);
+        function loadScripts(callback) {
+            // Avoid duplicate script/link injection
+            if (window.L && window.L.markerClusterGroup) {
+                callback();
+                return;
+            }
+            if (!document.querySelector('link[href*="leaflet@1.9.4"]')) {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+                document.head.appendChild(link);
 
-            const markerClusterCss = document.createElement('link');
-            markerClusterCss.rel = 'stylesheet';
-            markerClusterCss.href = 'https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css';
-            document.head.appendChild(markerClusterCss);
+                const mc1 = document.createElement('link');
+                mc1.rel = 'stylesheet';
+                mc1.href = 'https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css';
+                document.head.appendChild(mc1);
 
-            const markerClusterDefaultCss = document.createElement('link');
-            markerClusterDefaultCss.rel = 'stylesheet';
-            markerClusterDefaultCss.href = 'https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css';
-            document.head.appendChild(markerClusterDefaultCss);
+                const mc2 = document.createElement('link');
+                mc2.rel = 'stylesheet';
+                mc2.href = 'https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css';
+                document.head.appendChild(mc2);
+            }
 
-            const script = document.createElement('script');
-            script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-            script.onload = () => {
-                const clusterScript = document.createElement('script');
-                clusterScript.src = 'https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js';
-                clusterScript.onload = () => initMap();
-                document.head.appendChild(clusterScript);
-            };
-            document.head.appendChild(script);
-        } else {
-            initMap();
+            if (!document.querySelector('script[src*="leaflet@1.9.4"]')) {
+                const script = document.createElement('script');
+                script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+                script.onload = () => {
+                    if (!document.querySelector('script[src*="leaflet.markercluster"]')) {
+                        const clusterScript = document.createElement('script');
+                        clusterScript.src = 'https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js';
+                        clusterScript.onload = () => callback();
+                        document.head.appendChild(clusterScript);
+                    } else {
+                        const check = setInterval(() => {
+                            if (window.L && window.L.markerClusterGroup) { clearInterval(check); callback(); }
+                        }, 50);
+                    }
+                };
+                document.head.appendChild(script);
+            } else {
+                // Scripts exist but may still be loading
+                const check = setInterval(() => {
+                    if (window.L && window.L.markerClusterGroup) { clearInterval(check); callback(); }
+                }, 50);
+            }
         }
+
+        loadScripts(() => initMap());
 
         return () => {
             if (mapInstance.current) {
@@ -76,15 +95,40 @@ export default function IndiaMap() {
     function initMap() {
         if (mapInstance.current) return;
         const L = window.L;
-        const map = L.map(mapRef.current).setView([22.5, 82], 5);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors',
-            maxZoom: 18,
+
+        // India bounds - restrict view to India only
+        const indiaBounds = L.latLngBounds(
+            L.latLng(6.5, 68.0),   // SW corner
+            L.latLng(37.5, 97.5)   // NE corner
+        );
+
+        const map = L.map(mapRef.current, {
+            center: [22.5, 82],
+            zoom: 5,
+            minZoom: 4,
+            maxZoom: 12,
+            maxBounds: indiaBounds,
+            maxBoundsViscosity: 1.0,
+        });
+
+        // Use CartoDB Voyager for a cleaner, modern look
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 12,
         }).addTo(map);
+
         mapInstance.current = map;
-        markersRef.current = L.markerClusterGroup();
+        markersRef.current = L.markerClusterGroup({
+            maxClusterRadius: 50,
+            spiderfyOnMaxZoom: true,
+            showCoverageOnHover: false,
+        });
         map.addLayer(markersRef.current);
         updateMarkers();
+
+        // Force Leaflet to recalculate size (fixes tiles not loading when below fold)
+        setTimeout(() => { map.invalidateSize(); }, 200);
     }
 
     useEffect(() => {
@@ -98,12 +142,20 @@ export default function IndiaMap() {
         const L = window.L;
         markersRef.current.clearLayers();
 
+        // Custom marker icon
+        const customIcon = L.divIcon({
+            className: 'india-map-marker',
+            html: '<div style="width:12px;height:12px;background:#3c2415;border:2px solid #fff;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.3)"></div>',
+            iconSize: [12, 12],
+            iconAnchor: [6, 6],
+        });
+
         clients.forEach(c => {
             if (c.latitude && c.longitude) {
-                const marker = L.marker([c.latitude, c.longitude]);
+                const marker = L.marker([c.latitude, c.longitude], { icon: customIcon });
                 marker.bindTooltip(
                     `<strong>${c.name}</strong><br/>${c.service_type ? `Service: ${c.service_type}<br/>` : ''}${c.city ? c.city + ', ' : ''}${c.state || ''}`,
-                    { direction: 'top' }
+                    { direction: 'top', className: 'india-map-tooltip' }
                 );
                 markersRef.current.addLayer(marker);
             }
@@ -111,12 +163,12 @@ export default function IndiaMap() {
     }
 
     return (
-        <div className="dashboard__section">
+        <div className="dashboard__section dashboard__map-section">
             <div className="dashboard__section-header">
-                <h3>Client Distribution Map</h3>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <h3>Client Distribution — India</h3>
+                <div className="dashboard__map-filters">
                     <select
-                        style={{ padding: '0.25rem 0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '0.8rem', background: 'var(--card-bg)' }}
+                        className="dashboard__map-select"
                         value={filters.service_type}
                         onChange={(e) => setFilters(f => ({ ...f, service_type: e.target.value }))}
                     >
@@ -124,7 +176,7 @@ export default function IndiaMap() {
                         {serviceTypes.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                     <select
-                        style={{ padding: '0.25rem 0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '0.8rem', background: 'var(--card-bg)' }}
+                        className="dashboard__map-select"
                         value={filters.state}
                         onChange={(e) => setFilters(f => ({ ...f, state: e.target.value }))}
                     >
@@ -133,16 +185,15 @@ export default function IndiaMap() {
                     </select>
                 </div>
             </div>
-            <div style={{ position: 'relative', height: '420px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+            <div className="dashboard__map-container">
                 {loading && (
-                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 1000, background: 'rgba(255,255,255,0.8)', padding: '0.5rem 1rem', borderRadius: '8px' }}>
-                        Loading...
-                    </div>
+                    <div className="dashboard__map-loading">Loading map...</div>
                 )}
-                <div ref={mapRef} style={{ height: '100%', width: '100%' }} />
+                <div ref={mapRef} className="dashboard__map-canvas" />
             </div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
-                {clients.length} client{clients.length !== 1 ? 's' : ''} with coordinates
+            <div className="dashboard__map-footer">
+                <span className="dashboard__map-dot" />
+                {clients.length} client{clients.length !== 1 ? 's' : ''} mapped
             </div>
         </div>
     );

@@ -12,5 +12,7 @@ const paymentSchema = new mongoose.Schema({
 
 paymentSchema.index({ client_id: 1 });
 paymentSchema.index({ invoice_id: 1 });
+paymentSchema.index({ date: -1 });
+paymentSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model('Payment', paymentSchema);

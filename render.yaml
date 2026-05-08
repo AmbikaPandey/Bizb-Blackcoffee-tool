@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: bizb-api
+    runtime: node
+    region: singapore
+    plan: starter
+    buildCommand: cd backend && npm ci
+    startCommand: cd backend && node index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: SESSION_EXPIRY_HOURS
+        value: "8"
+      - key: CLIENT_URL
+        sync: false
+    healthCheckPath: /api/health
+    autoDeploy: true

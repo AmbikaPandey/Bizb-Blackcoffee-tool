@@ -6,6 +6,7 @@
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: $space-6;
+        margin-top: $space-6;
 
         @include tablet {
             grid-template-columns: 1fr;
@@ -15,6 +16,7 @@
 
     &__section {
         @include card;
+        margin-bottom: $space-4;
 
         &-header {
             @include flex-between;
@@ -102,4 +104,79 @@
         gap: $space-3;
         margin-bottom: $space-4;
     }
+}
+
+// India Map section
+.dashboard__map-section {
+    margin-top: $space-6;
+}
+
+.dashboard__map-filters {
+    display: flex;
+    gap: $space-2;
+}
+
+.dashboard__map-select {
+    padding: $space-2 $space-3;
+    border-radius: $radius-md;
+    border: 1px solid var(--color-border);
+    font-size: $font-xs;
+    font-weight: $weight-medium;
+    background: var(--color-card-bg);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    text-transform: uppercase;
+
+    &:focus {
+        outline: none;
+        border-color: $accent;
+    }
+}
+
+.dashboard__map-container {
+    position: relative;
+    height: 450px;
+    border-radius: $radius-lg;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    background: #f8f6f3;
+}
+
+.dashboard__map-canvas {
+    height: 100%;
+    width: 100%;
+}
+
+.dashboard__map-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.9);
+    padding: $space-2 $space-4;
+    border-radius: $radius-md;
+    font-size: $font-sm;
+    font-weight: $weight-medium;
+    color: var(--color-text-secondary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard__map-footer {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    margin-top: $space-3;
+    font-size: $font-xs;
+    font-weight: $weight-medium;
+    color: var(--color-text-muted);
+}
+
+.dashboard__map-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: $primary;
+    border: 1.5px solid $white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }

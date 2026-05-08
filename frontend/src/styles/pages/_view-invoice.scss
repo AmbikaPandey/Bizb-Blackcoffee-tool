@@ -7,8 +7,8 @@
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
-        margin-bottom: 1.25rem;
-        gap: 1rem;
+        margin-bottom: 2rem;
+        gap: 1.6rem;
         flex-wrap: wrap;
 
         @include mobile {
@@ -19,16 +19,16 @@
     &__topbar-left {
         display: flex;
         flex-direction: column;
-        gap: 0.75rem;
+        gap: 1.2rem;
     }
 
     &__topbar-info {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
+        gap: 1.2rem;
 
         h1 {
-            font-size: 1.375rem;
+            font-size: 2.2rem;
             font-weight: 700;
             color: var(--color-text);
             margin: 0;
@@ -43,7 +43,7 @@
         border: none;
         color: var(--color-text-secondary);
         cursor: pointer;
-        font-size: 0.85rem;
+        font-size: 1.36rem;
         padding: 0;
 
         &:hover {
@@ -53,7 +53,7 @@
 
     &__topbar-actions {
         display: flex;
-        gap: 0.5rem;
+        gap: 0.8rem;
         flex-wrap: wrap;
 
         @include mobile {
@@ -80,7 +80,7 @@
         background: var(--color-card-bg);
         color: var(--color-text);
         cursor: pointer;
-        font-size: 0.825rem;
+        font-size: 1.32rem;
         font-weight: 500;
         transition: all 0.15s;
 
@@ -104,9 +104,9 @@
     &__quick-actions {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
-        margin-bottom: 1.25rem;
-        font-size: 0.85rem;
+        gap: 1.2rem;
+        margin-bottom: 2rem;
+        font-size: 1.36rem;
         color: var(--color-text-secondary);
     }
 
@@ -120,7 +120,7 @@
         padding: 4px 10px;
         color: $danger;
         cursor: pointer;
-        font-size: 0.8rem;
+        font-size: 1.28rem;
         transition: background 0.15s;
 
         &:hover {
@@ -138,7 +138,7 @@
         padding: 4px 10px;
         color: $success;
         cursor: pointer;
-        font-size: 0.8rem;
+        font-size: 1.28rem;
         transition: background 0.15s;
 
         &:hover {
@@ -153,15 +153,16 @@
 
     // Document
     &__document {
-        background: var(--color-card-bg);
+        background: #fff;
         border: 1px solid var(--color-border);
-        border-radius: 12px;
+        border-radius: 4px;
         overflow: hidden;
         padding: 0;
+        color: #000;
     }
 
     &__doc-accent {
-        height: 5px;
+        height: 4px;
         background: $danger;
     }
 
@@ -169,103 +170,130 @@
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
-        padding: 1.5rem 2rem 0;
+        padding: 2.8rem 3.2rem 0.8rem;
 
         @include mobile {
-            padding: 1rem 1rem 0;
+            padding: 1.6rem 1.6rem 0.8rem;
         }
     }
 
     &__doc-company {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
+        gap: 0.96rem;
+    }
 
-        strong {
-            font-size: 1rem;
-            color: var(--color-text);
-        }
+    &__doc-logo-img {
+        max-height: 44px;
+        width: auto;
     }
 
     &__doc-logo {
-        width: 36px;
-        height: 36px;
-        border-radius: 8px;
-        background: $primary;
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: $danger;
         color: #fff;
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: 700;
-        font-size: 1.1rem;
+        font-size: 2rem;
+    }
+
+    &__doc-company-text {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.15;
+
+        strong {
+            font-size: 1.84rem;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            color: #1a1a1a;
+        }
+
+        small {
+            font-size: 0.96rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #666;
+
+            em {
+                font-style: normal;
+                color: $danger;
+                letter-spacing: 0;
+                font-weight: 600;
+            }
+        }
     }
 
     &__doc-type {
         text-align: right;
     }
 
-    &__doc-badge {
-        display: inline-block;
-        background: $danger;
-        color: #fff;
-        padding: 4px 12px;
-        border-radius: 4px;
-        font-size: 0.75rem;
+    &__doc-type-label {
+        color: $danger;
+        font-size: 2rem;
         font-weight: 700;
+        margin: 0;
         letter-spacing: 0.5px;
     }
 
     &__doc-copy {
         display: block;
-        font-size: 0.7rem;
-        color: var(--color-text-secondary);
-        margin-top: 4px;
+        font-size: 1.12rem;
+        color: #888;
+        margin-top: 2px;
         text-align: right;
     }
 
-    // Meta
-    &__doc-meta {
-        display: flex;
-        justify-content: space-between;
-        padding: 0.75rem 2rem;
+    // Meta boxes (Invoice No + Date)
+    &__doc-meta-boxes {
+        margin-top: 1.2rem;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        overflow: hidden;
+        min-width: 140px;
+    }
 
-        @include mobile {
-            flex-direction: column;
-            gap: 0.75rem;
-            padding: 0.75rem 1rem;
+    &__doc-meta-box {
+        padding: 4px 12px;
+        text-align: center;
+
+        &:first-child {
+            border-bottom: 1px solid #ccc;
         }
-    }
-
-    &__doc-meta-right {
-        display: flex;
-        gap: 2rem;
-        text-align: right;
 
         span {
             display: block;
-            font-size: 0.65rem;
-            color: var(--color-text-secondary);
+            font-size: 0.96rem;
+            color: #888;
             letter-spacing: 0.5px;
-            margin-bottom: 2px;
+            text-transform: uppercase;
         }
 
         strong {
-            font-size: 0.85rem;
-            color: var(--color-text);
+            display: block;
+            font-size: 1.52rem;
+            color: #000;
+            font-weight: 700;
         }
     }
 
     &__doc-gstin {
-        padding: 0 2rem 1rem;
-        font-size: 0.8rem;
+        padding: 1.2rem 3.2rem;
+        font-size: 1.28rem;
+        border-bottom: 1px solid #ccc;
 
         @include mobile {
-            padding: 0 1rem 0.75rem;
+            padding: 0.8rem 1.6rem;
         }
-        color: var(--color-text-secondary);
+
+        color: #333;
 
         strong {
-            color: var(--color-text);
+            color: #000;
         }
     }
 
@@ -274,8 +302,7 @@
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 0;
-        border-top: 1px solid var(--color-border);
-        border-bottom: 1px solid var(--color-border);
+        border-bottom: 1px solid #ccc;
 
         @include mobile {
             grid-template-columns: 1fr;
@@ -283,59 +310,67 @@
     }
 
     &__doc-party {
+        border: 1px solid #ccc;
+        border-top: none;
+
         &:first-child {
-            border-right: 1px solid var(--color-border);
+            border-right: none;
+            border-left: none;
 
             @include mobile {
                 border-right: none;
-                border-bottom: 1px solid var(--color-border);
+                border-bottom: 1px solid #ccc;
             }
+        }
+
+        &:last-child {
+            border-right: none;
         }
     }
 
-    &__doc-party-header {
-        padding: 8px 1.5rem;
-        font-size: 0.65rem;
-        font-weight: 700;
-        color: $danger;
-        letter-spacing: 0.5px;
-        background: var(--color-bg-hover);
-        border-bottom: 1px solid var(--color-border);
-    }
-
     &__doc-party-body {
-        padding: 1rem 1.5rem;
+        padding: 1.6rem 2.4rem;
 
         h4 {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--color-text);
+            font-size: 1.44rem;
+            font-weight: 700;
+            color: #000;
             margin: 0 0 4px;
         }
 
         p {
-            font-size: 0.8rem;
-            color: var(--color-text-secondary);
+            font-size: 1.28rem;
+            color: #444;
             margin: 2px 0;
         }
     }
 
     &__doc-transport {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
 
-        span {
-            display: block;
-            font-size: 0.65rem;
-            color: var(--color-text-secondary);
-            margin-bottom: 2px;
-        }
+        > div {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            font-size: 1.28rem;
+            color: #333;
 
-        strong {
-            font-size: 0.8rem;
-            color: var(--color-text);
+            strong {
+                color: #000;
+                font-weight: 700;
+                font-size: 1.25rem;
+                white-space: nowrap;
+            }
         }
+    }
+
+    &__label-red {
+        color: #000;
+        font-weight: 700;
+        font-size: 1.25rem;
+        white-space: nowrap;
     }
 
     // Items table
@@ -351,34 +386,32 @@
         }
 
         th {
-            background: var(--color-bg-hover);
+            background: #fff;
             padding: 8px 12px;
-            font-size: 0.65rem;
+            font-size: 1.12rem;
             font-weight: 700;
-            color: var(--color-text-secondary);
-            letter-spacing: 0.5px;
+            color: #333;
             text-align: left;
-            border-bottom: 1px solid var(--color-border);
+            border: 1px solid #ccc;
         }
 
         td {
             padding: 10px 12px;
-            font-size: 0.825rem;
-            color: var(--color-text);
-            border-bottom: 1px solid var(--color-border);
+            font-size: 1.32rem;
+            color: #000;
+            border: 1px solid #ccc;
         }
 
         .text-right {
             text-align: right;
         }
 
-        .text-primary {
-            color: $primary;
-            font-weight: 500;
+        .text-center {
+            text-align: center;
         }
 
         .font-medium {
-            font-weight: 500;
+            font-weight: 600;
         }
     }
 
@@ -394,99 +427,118 @@
     }
 
     &__doc-bottom-left {
-        padding: 1.5rem;
-        border-right: 1px solid var(--color-border);
+        padding: 2rem 2.4rem;
 
         @include mobile {
-            padding: 1rem;
-            border-right: none;
-            border-bottom: 1px solid var(--color-border);
+            padding: 1.6rem;
+            border-bottom: 1px solid #ccc;
         }
     }
 
     &__doc-bottom-right {
-        padding: 1.5rem;
+        padding: 0;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-
-        @include mobile {
-            padding: 1rem;
-        }
     }
 
     &__doc-words {
-        margin-bottom: 1.25rem;
+        margin-bottom: 2rem;
+        border: 1px solid #ccc;
+        padding: 10px 12px;
+        border-radius: 3px;
 
         span {
             display: block;
-            font-size: 0.65rem;
-            color: var(--color-text-secondary);
+            font-size: 1.04rem;
+            color: #888;
             letter-spacing: 0.5px;
             margin-bottom: 4px;
+            font-weight: 700;
         }
 
         strong {
-            font-size: 0.85rem;
-            color: var(--color-text);
+            font-size: 1.36rem;
+            color: #000;
         }
     }
 
     &__doc-terms {
-        margin-bottom: 1.25rem;
+        margin-bottom: 2rem;
 
         strong {
             display: block;
-            font-size: 0.8rem;
-            color: var(--color-text);
+            font-size: 1.28rem;
+            color: $danger;
+            font-weight: 700;
             margin-bottom: 4px;
         }
 
         p {
-            font-size: 0.75rem;
-            color: var(--color-text-secondary);
+            font-size: 1.2rem;
+            color: #444;
             white-space: pre-line;
             line-height: 1.5;
         }
     }
 
     &__doc-bank {
-        strong {
+        > strong {
             display: block;
-            font-size: 0.8rem;
-            color: var(--color-text);
-            margin-bottom: 4px;
+            font-size: 1.28rem;
+            color: #000;
+            margin-bottom: 6px;
+            font-weight: 700;
         }
 
         p {
-            font-size: 0.75rem;
-            color: var(--color-text-secondary);
+            font-size: 1.2rem;
+            color: #444;
             margin: 2px 0;
 
             strong {
                 display: inline;
                 font-size: inherit;
+                color: #000;
             }
         }
     }
 
     // Summary
     &__doc-summary {
-        margin-bottom: 1.5rem;
+        margin-bottom: 0;
+    }
+
+    &__bullet {
+        font-size: 0.8rem;
+        vertical-align: middle;
+        margin-right: 4px;
+        color: #000;
+
+        &--white {
+            color: #fff;
+        }
     }
 
     &__doc-summary-row {
         display: flex;
         justify-content: space-between;
-        padding: 6px 0;
-        font-size: 0.825rem;
+        align-items: center;
+        padding: 8px 14px;
+        font-size: 1.32rem;
+        border: 1px solid #ccc;
+        border-top: none;
+
+        &:first-child {
+            border-top: 1px solid #ccc;
+        }
 
         span {
-            color: var(--color-text-secondary);
+            color: #333;
         }
 
         strong {
-            color: var(--color-text);
+            color: #000;
         }
     }
 
@@ -494,97 +546,265 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background: $danger;
-        color: #fff;
+        background: #fff;
+        color: #000;
         padding: 10px 14px;
-        border-radius: 8px;
-        margin-top: 8px;
-        font-size: 0.9rem;
+        font-size: 1.44rem;
+        border: 1px solid #ccc;
+        border-top: none;
 
         span {
-            font-weight: 600;
+            font-weight: 700;
             letter-spacing: 0.5px;
-            font-size: 0.75rem;
+            font-size: 1.28rem;
         }
 
         strong {
-            font-size: 1.1rem;
+            font-size: 1.68rem;
+            color: #000;
         }
     }
 
     &__doc-signatory {
         text-align: right;
-        padding-top: 1rem;
+        padding: 1.6rem 2.4rem;
 
         p {
-            font-size: 0.8rem;
-            color: var(--color-text);
-            margin: 0 0 2rem;
+            font-size: 1.28rem;
+            color: #000;
+            margin: 0 0 4.8rem;
+            font-weight: 600;
         }
 
         span {
-            font-size: 0.75rem;
-            color: var(--color-text-secondary);
+            font-size: 1.2rem;
+            color: #888;
+            font-style: italic;
         }
     }
 
     // Footer
     &__doc-footer {
-        padding: 1rem 2rem;
-        border-top: 1px solid var(--color-border);
-        font-size: 0.7rem;
-        color: var(--color-text-secondary);
+        padding: 1.2rem 3.2rem;
+        border-top: 1px solid #ccc;
+        font-size: 1.09rem;
+        color: #888;
         text-align: center;
-        background: var(--color-bg-hover);
 
         @include mobile {
-            padding: 0.75rem 1rem;
+            padding: 1.2rem 1.6rem;
         }
     }
 }
 
 // Print styles
 @media print {
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    @page {
+        size: A4;
+        margin: 8mm;
+    }
+
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
     .view-invoice__topbar,
     .view-invoice__quick-actions,
+    .view-invoice__payments,
     .toast-container,
     .sidebar,
     .header {
         display: none !important;
     }
 
-    .view-invoice__document {
-        border: none;
-        box-shadow: none;
-        border-radius: 0;
+    .layout,
+    .layout__content,
+    .layout__main,
+    .view-invoice {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: visible !important;
     }
 
     .layout__main {
         margin-left: 0 !important;
+    }
+
+    .view-invoice__document {
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
         padding: 0 !important;
+        page-break-inside: avoid;
+    }
+
+    .view-invoice__doc-accent {
+        display: none !important;
+    }
+
+    .view-invoice__doc-header {
+        padding: 0.8rem 1.6rem 0.4rem !important;
+    }
+
+    .view-invoice__doc-logo {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 1.6rem !important;
+    }
+
+    .view-invoice__doc-type-label {
+        font-size: 1.6rem !important;
+    }
+
+    .view-invoice__doc-meta-box {
+        padding: 2px 8px !important;
+
+        strong {
+            font-size: 1.28rem !important;
+        }
+    }
+
+    .view-invoice__doc-gstin {
+        padding: 0.64rem 1.6rem !important;
+        font-size: 1.15rem !important;
+    }
+
+    .view-invoice__doc-party-body {
+        padding: 0.8rem 1.6rem !important;
+
+        h4 {
+            font-size: 1.25rem !important;
+            margin-bottom: 2px !important;
+        }
+
+        p {
+            font-size: 1.12rem !important;
+            margin: 1px 0 !important;
+        }
+    }
+
+    .view-invoice__doc-transport > div {
+        font-size: 1.12rem !important;
+        gap: 4px !important;
+    }
+
+    .view-invoice__label-red {
+        font-size: 1.12rem !important;
+    }
+
+    .view-invoice__doc-items {
+        th {
+            padding: 4px 6px !important;
+            font-size: 0.96rem !important;
+        }
+
+        td {
+            padding: 5px 6px !important;
+            font-size: 1.12rem !important;
+        }
+    }
+
+    .view-invoice__doc-bottom-left {
+        padding: 0.96rem 1.6rem !important;
+    }
+
+    .view-invoice__doc-words {
+        padding: 5px 8px !important;
+        margin-bottom: 0.96rem !important;
+
+        span {
+            font-size: 0.88rem !important;
+        }
+
+        strong {
+            font-size: 1.15rem !important;
+        }
+    }
+
+    .view-invoice__doc-terms {
+        margin-bottom: 0.96rem !important;
+
+        strong {
+            font-size: 1.12rem !important;
+        }
+
+        p {
+            font-size: 1.04rem !important;
+        }
+    }
+
+    .view-invoice__doc-bank {
+        > strong {
+            font-size: 1.12rem !important;
+            margin-bottom: 3px !important;
+        }
+
+        p {
+            font-size: 1.04rem !important;
+        }
+    }
+
+    .view-invoice__doc-summary-row {
+        padding: 4px 10px !important;
+        font-size: 1.15rem !important;
+    }
+
+    .view-invoice__doc-grand-total {
+        padding: 5px 10px !important;
+        font-size: 1.25rem !important;
+
+        strong {
+            font-size: 1.36rem !important;
+        }
+    }
+
+    .view-invoice__doc-signatory {
+        padding: 0.8rem 1.6rem !important;
+
+        p {
+            margin-bottom: 2.4rem !important;
+            font-size: 1.12rem !important;
+        }
+
+        span {
+            font-size: 1.04rem !important;
+        }
+    }
+
+    .view-invoice__doc-footer {
+        padding: 0.64rem 1.6rem !important;
+        font-size: 0.93rem !important;
     }
 }
 
 // Payment sections
 .view-invoice__payments {
     @include card;
-    margin-top: 1.5rem;
+    margin-top: 2.4rem;
 
     h3 {
-        font-size: 1rem;
+        font-size: 1.6rem;
         font-weight: 600;
         color: var(--color-text-heading);
-        margin: 0 0 1rem;
+        margin: 0 0 1.6rem;
     }
 
     table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 0.85rem;
+        font-size: 1.36rem;
 
         th,
         td {
-            padding: 0.5rem 0.75rem;
+            padding: 0.8rem 1.2rem;
             text-align: left;
             border-bottom: 1px solid var(--color-border);
         }
@@ -592,7 +812,7 @@
         th {
             color: var(--color-text-muted);
             font-weight: 600;
-            font-size: 0.75rem;
+            font-size: 1.2rem;
             text-transform: uppercase;
         }
     }
@@ -600,12 +820,12 @@
 
 .view-invoice__payment-info {
     display: flex;
-    gap: 2rem;
-    margin-bottom: 1rem;
-    padding: 0.75rem 1rem;
+    gap: 3.2rem;
+    margin-bottom: 1.6rem;
+    padding: 1.2rem 1.6rem;
     background: var(--color-bg-hover);
     border-radius: 6px;
-    font-size: 0.875rem;
+    font-size: 1.4rem;
     flex-wrap: wrap;
 
     span {
@@ -617,14 +837,80 @@
 }
 
 .view-invoice__payments-total {
-    margin-top: 1rem;
-    padding-top: 0.75rem;
+    margin-top: 1.6rem;
+    padding-top: 1.2rem;
     border-top: 2px solid var(--color-border);
     text-align: right;
-    font-size: 0.875rem;
+    font-size: 1.4rem;
     color: var(--color-text-muted);
 
     strong {
         color: var(--color-text);
+    }
+}
+
+// BUSY sync status panel
+.view-invoice__busy-status {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    padding: 1.2rem 1.6rem;
+    border-radius: 8px;
+    margin-bottom: 1.6rem;
+    font-size: 1.36rem;
+
+    &--synced {
+        background: var(--color-success-light, rgba(16, 185, 129, 0.1));
+        border: 1px solid var(--color-success, #10b981);
+        color: var(--color-success, #10b981);
+    }
+
+    &--failed {
+        background: var(--color-danger-light, rgba(239, 68, 68, 0.1));
+        border: 1px solid var(--color-danger, #ef4444);
+        color: var(--color-danger, #ef4444);
+    }
+}
+
+.view-invoice__busy-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.24rem;
+
+    strong {
+        font-size: 1.36rem;
+    }
+    span {
+        font-size: 1.2rem;
+        opacity: 0.85;
+    }
+}
+
+.view-invoice__busy-error {
+    color: var(--color-danger, #ef4444);
+}
+
+.view-invoice__busy-download,
+.view-invoice__busy-retry {
+    display: flex;
+    align-items: center;
+    gap: 0.56rem;
+    padding: 0.64rem 1.2rem;
+    border-radius: 6px;
+    border: 1px solid currentColor;
+    background: transparent;
+    color: inherit;
+    font-size: 1.2rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.15s;
+
+    &:hover {
+        opacity: 0.8;
+    }
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
     }
 }

@@ -80,6 +80,17 @@ export const api = {
     }
     return res.blob();
   },
+  printInvoicePdf: async (id) => {
+    const token = getToken();
+    const headers = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(`${API_BASE}/invoices/${id}/pdf?mode=print`, { headers });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(err.error || 'Failed to generate print PDF');
+    }
+    return res.blob();
+  },
   createInvoice: (data) => request('/invoices', { method: 'POST', body: JSON.stringify(data) }),
   updateInvoice: (id, data) => request(`/invoices/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   updateInvoiceStatus: (id, status) => request(`/invoices/${id}`, { method: 'PUT', body: JSON.stringify({ status }) }),
@@ -147,5 +158,28 @@ export const api = {
   getReimbursements: (params = {}) => {
     const qs = new URLSearchParams(params).toString();
     return request(`/reports/reimbursements${qs ? `?${qs}` : ''}`);
+  },
+
+  // HSN Codes
+  searchHSN: (q, page = 1, limit = 20) => request(`/hsn/search?q=${encodeURIComponent(q)}&page=${page}&limit=${limit}`),
+  getHSN: (code) => request(`/hsn/${encodeURIComponent(code)}`),
+
+  // BUSY Export
+  exportToBusy: (invoiceId) => request(`/busy/export/${invoiceId}`, { method: 'POST' }),
+  exportToBusyBulk: (invoiceIds) => request('/busy/export-bulk', { method: 'POST', body: JSON.stringify({ invoiceIds }) }),
+  getBusyHistory: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/busy/history${qs ? `?${qs}` : ''}`);
+  },
+  downloadBusyXml: async (invoiceId) => {
+    const token = getToken();
+    const headers = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(`${API_BASE}/busy/download/${invoiceId}`, { headers });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(err.error || 'Failed to download XML');
+    }
+    return res.blob();
   },
 };

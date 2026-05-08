@@ -19,5 +19,7 @@ const clientSchema = new mongoose.Schema({
 
 clientSchema.index({ name: 1 });
 clientSchema.index({ state: 1 });
+clientSchema.index({ gstin: 1 });
+clientSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model('Client', clientSchema);

@@ -107,11 +107,26 @@ router.post('/', authenticate, requireRole('Admin', 'Manager'), async (req, res)
       return res.status(403).json({ error: 'Managers can only create Executives' });
     }
 
+    // Auto-generate employee code with BC- prefix if not provided
+    let finalEmpCode = sanitize(employee_code);
+    if (!finalEmpCode) {
+      const lastUser = await User.findOne({ employee_code: /^BC-\d+$/ })
+        .sort({ employee_code: -1 }).lean();
+      let nextNum = 1;
+      if (lastUser) {
+        const match = lastUser.employee_code.match(/^BC-(\d+)$/);
+        if (match) nextNum = parseInt(match[1], 10) + 1;
+      }
+      finalEmpCode = `BC-${String(nextNum).padStart(3, '0')}`;
+    } else if (!finalEmpCode.startsWith('BC-')) {
+      finalEmpCode = `BC-${finalEmpCode}`;
+    }
+
     const user = await User.create({
       username: sanitize(username), email, password, role: assignedRole,
       contact_number: sanitize(contact_number),
       address: sanitize(address),
-      employee_code: sanitize(employee_code),
+      employee_code: finalEmpCode,
       designation: sanitize(designation),
       pan: sanitize(pan),
       bank_details: bank_details || {},

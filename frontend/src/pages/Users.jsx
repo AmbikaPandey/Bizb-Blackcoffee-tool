@@ -80,11 +80,12 @@ export default function UsersPage() {
         setError('');
         setSaving(true);
         try {
+            const submitData = { ...form, employee_code: form.employee_code ? `BC-${form.employee_code.replace(/^BC-/, '')}` : '' };
             if (editingUser) {
-                const { password, ...data } = form;
+                const { password, ...data } = submitData;
                 await api.updateUser(editingUser.id, data);
             } else {
-                await api.createUser(form);
+                await api.createUser(submitData);
             }
             setShowModal(false);
             setForm(emptyForm);
@@ -249,9 +250,13 @@ export default function UsersPage() {
                     </div>
                     <div className="form-group">
                         <label className="form-group__label">Employee Code</label>
-                        <input type="text" placeholder="EMP-001" className="form-group__input"
-                            value={form.employee_code} onChange={(e) => setForm({ ...form, employee_code: e.target.value })}
-                            disabled={readOnlyForSelf} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0' }}>
+                            <span style={{ padding: '0.5rem 0.75rem', background: 'var(--color-bg-hover)', border: '1px solid var(--color-border)', borderRight: 'none', borderRadius: '0.5rem 0 0 0.5rem', fontSize: '0.875rem', color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>BC-</span>
+                            <input type="text" placeholder="Auto-generated" className="form-group__input" style={{ borderRadius: '0 0.5rem 0.5rem 0' }}
+                                value={form.employee_code.replace(/^BC-/, '')} onChange={(e) => setForm({ ...form, employee_code: e.target.value.replace(/^BC-/, '') })}
+                                disabled={readOnlyForSelf} />
+                        </div>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Leave empty for auto-generation</span>
                     </div>
                     <div className="form-group">
                         <label className="form-group__label">PAN</label>

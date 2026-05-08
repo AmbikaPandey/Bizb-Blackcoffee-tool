@@ -36,10 +36,20 @@ const invoiceSchema = new mongoose.Schema({
   status: { type: String, enum: ['Draft', 'Sent', 'Paid', 'Partially Paid', 'Overdue', 'Cancelled'], default: 'Draft' },
   type: { type: String, enum: ['tax', 'proforma'], default: 'tax' },
   items: [invoiceItemSchema],
+
+  // BUSY Accounting sync fields
+  busySynced: { type: Boolean, default: false },
+  busySyncDate: { type: Date, default: null },
+  busyReferenceNo: { type: String, default: null },
+  busyExportPath: { type: String, default: null },
+  busySyncError: { type: String, default: null },
 }, { timestamps: true });
 
 invoiceSchema.index({ client_id: 1 });
 invoiceSchema.index({ type: 1, status: 1 });
 invoiceSchema.index({ status: 1, credit_period: 1 });
+invoiceSchema.index({ busySynced: 1 });
+invoiceSchema.index({ createdAt: -1 });
+invoiceSchema.index({ invoice_date: -1 });
 
 module.exports = mongoose.model('Invoice', invoiceSchema);

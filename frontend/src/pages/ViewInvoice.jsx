@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Pencil, CreditCard, Printer, Download, X, Check } from 'lucide-react';
+import { ArrowLeft, Pencil, CreditCard, Printer, Download, X, Check, FileUp } from 'lucide-react';
 import StatusBadge from '../components/common/StatusBadge';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import Modal from '../components/common/Modal';
@@ -9,9 +9,39 @@ import { api } from '../services/api';
 import { formatCurrency } from '../utils/currency';
 
 const DEFAULT_COMPANY = {
-    name: '', gstin: '', address: '', phone: '', email: '',
-    bank: '', accountNo: '', ifsc: '', upi: '',
+    name: '', gstin: '', address_line1: '', address_line2: '',
+    city: '', state: '', pincode: '', phone: '', email: '', logo: '',
 };
+
+// Reverse map: state name → GST state code
+const STATE_TO_CODE = {
+    'Jammu & Kashmir': '01', 'Jammu and Kashmir': '01', 'Himachal Pradesh': '02', 'Punjab': '03',
+    'Chandigarh': '04', 'Uttarakhand': '05', 'Haryana': '06', 'Delhi': '07',
+    'Rajasthan': '08', 'Uttar Pradesh': '09', 'Bihar': '10', 'Sikkim': '11',
+    'Arunachal Pradesh': '12', 'Nagaland': '13', 'Manipur': '14', 'Mizoram': '15',
+    'Tripura': '16', 'Meghalaya': '17', 'Assam': '18', 'West Bengal': '19',
+    'Jharkhand': '20', 'Odisha': '21', 'Chhattisgarh': '22', 'Madhya Pradesh': '23',
+    'Gujarat': '24', 'Dadra & Nagar Haveli & Daman & Diu': '26',
+    'Dadra and Nagar Haveli and Daman and Diu': '26', 'Maharashtra': '27',
+    'Karnataka': '29', 'Goa': '30', 'Lakshadweep': '31', 'Kerala': '32',
+    'Tamil Nadu': '33', 'Puducherry': '34', 'Andaman & Nicobar Islands': '35',
+    'Andaman and Nicobar Islands': '35', 'Telangana': '36', 'Andhra Pradesh': '37', 'Ladakh': '38',
+};
+
+function formatPlaceOfSupply(place) {
+    if (!place) return '-';
+    const code = STATE_TO_CODE[place];
+    return code ? `${code}-${place}` : place;
+}
+
+function buildCompanyAddress(c) {
+    const parts = [];
+    if (c.address_line1) parts.push(c.address_line1);
+    if (c.address_line2) parts.push(c.address_line2);
+    if (c.city) parts.push(c.city);
+    if (c.pincode) parts.push(c.pincode);
+    return parts.join(', ');
+}
 
 function formatDate(d) {
     if (!d) return '';
@@ -54,6 +84,7 @@ export default function ViewInvoice() {
     const [paymentForm, setPaymentForm] = useState({ amount: '', date: new Date().toISOString().slice(0, 10), method: 'Bank Transfer', reference: '', notes: '' });
     const [paymentLoading, setPaymentLoading] = useState(false);
     const [pdfLoading, setPdfLoading] = useState(false);
+    const [busyExporting, setBusyExporting] = useState(false);
 
     async function loadInvoice() {
         try {
@@ -97,8 +128,20 @@ export default function ViewInvoice() {
         }
     };
 
-    const handlePrint = () => {
-        window.print();
+    const handlePrint = async () => {
+        if (!invoice) return;
+        try {
+            const blob = await api.printInvoicePdf(id);
+            const url = window.URL.createObjectURL(blob);
+            const printWindow = window.open(url, '_blank');
+            if (printWindow) {
+                printWindow.addEventListener('load', () => {
+                    printWindow.print();
+                });
+            }
+        } catch (err) {
+            toast(err.message || 'Failed to generate print PDF', 'error');
+        }
     };
 
     const handleDownloadPdf = async () => {
@@ -150,6 +193,37 @@ export default function ViewInvoice() {
         }
     };
 
+    const handleExportBusy = async () => {
+        if (busyExporting) return;
+        setBusyExporting(true);
+        try {
+            const result = await api.exportToBusy(id);
+            toast(`Exported to BUSY: ${result.referenceNo}`);
+            setInvoice(prev => ({ ...prev, busySynced: true, busySyncDate: new Date().toISOString(), busyReferenceNo: result.referenceNo }));
+        } catch (err) {
+            toast(err.message || 'Export to BUSY failed', 'error');
+        } finally {
+            setBusyExporting(false);
+        }
+    };
+
+    const handleDownloadBusyXml = async () => {
+        try {
+            const blob = await api.downloadBusyXml(id);
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `INV_${invoice.invoice_number || 'draft'}.xml`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+            toast('XML downloaded');
+        } catch (err) {
+            toast(err.message || 'Failed to download XML', 'error');
+        }
+    };
+
     if (loading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading invoice...</div>;
     if (!invoice) return null;
 
@@ -186,6 +260,14 @@ export default function ViewInvoice() {
                     <button className="view-invoice__action-btn view-invoice__action-btn--primary" onClick={handleDownloadPdf} disabled={pdfLoading}>
                         <Download size={16} /> {pdfLoading ? 'Generating...' : 'Download PDF'}
                     </button>
+                    <button className="view-invoice__action-btn" onClick={handleExportBusy} disabled={busyExporting}>
+                        <FileUp size={16} /> {busyExporting ? 'Exporting...' : 'Export to BUSY'}
+                    </button>
+                    {invoice.busySynced && (
+                        <button className="view-invoice__action-btn" onClick={handleDownloadBusyXml}>
+                            <Download size={16} /> XML
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -204,6 +286,29 @@ export default function ViewInvoice() {
                 </div>
             )}
 
+            {/* BUSY Sync Status */}
+            {(invoice.busySynced || invoice.busySyncError) && (
+                <div className={`view-invoice__busy-status ${invoice.busySynced ? 'view-invoice__busy-status--synced' : 'view-invoice__busy-status--failed'}`}>
+                    <FileUp size={16} />
+                    <div className="view-invoice__busy-info">
+                        <strong>{invoice.busySynced ? 'Exported to BUSY' : 'BUSY Export Failed'}</strong>
+                        {invoice.busySyncDate && <span>Synced: {new Date(invoice.busySyncDate).toLocaleString('en-IN')}</span>}
+                        {invoice.busyReferenceNo && <span>Ref: {invoice.busyReferenceNo}</span>}
+                        {invoice.busySyncError && <span className="view-invoice__busy-error">{invoice.busySyncError}</span>}
+                    </div>
+                    {invoice.busySynced && (
+                        <button className="view-invoice__busy-download" onClick={handleDownloadBusyXml}>
+                            <Download size={14} /> Download XML
+                        </button>
+                    )}
+                    {invoice.busySyncError && (
+                        <button className="view-invoice__busy-retry" onClick={handleExportBusy} disabled={busyExporting}>
+                            <FileUp size={14} /> Retry
+                        </button>
+                    )}
+                </div>
+            )}
+
             {/* Invoice Document */}
             <div className="view-invoice__document" ref={invoiceRef}>
                 <div className="view-invoice__doc-accent" />
@@ -211,21 +316,31 @@ export default function ViewInvoice() {
                 {/* Header */}
                 <div className="view-invoice__doc-header">
                     <div className="view-invoice__doc-company">
-                        <div className="view-invoice__doc-logo">B</div>
-                        <strong>{company.name}</strong>
+                        {company.logo ? (
+                            <img src={company.logo} alt="Logo" className="view-invoice__doc-logo-img" />
+                        ) : (
+                            <>
+                                <div className="view-invoice__doc-logo">B</div>
+                                <div className="view-invoice__doc-company-text">
+                                    <strong>BLACKCOFFEE</strong>
+                                    <small>COMMUNICATION <em>agency</em></small>
+                                </div>
+                            </>
+                        )}
                     </div>
                     <div className="view-invoice__doc-type">
-                        <div className="view-invoice__doc-badge">{invoice.invoice_type || 'TAX INVOICE'}</div>
+                        <h2 className="view-invoice__doc-type-label">{invoice.type === 'proforma' ? 'PROFORMA INVOICE' : 'TAX INVOICE'}</h2>
                         <span className="view-invoice__doc-copy">Original Copy</span>
-                    </div>
-                </div>
-
-                {/* Invoice Meta */}
-                <div className="view-invoice__doc-meta">
-                    <div />
-                    <div className="view-invoice__doc-meta-right">
-                        <div><span>INVOICE NO.</span><strong>{invoice.invoice_number}</strong></div>
-                        <div><span>DATE</span><strong>{formatDate(invoice.invoice_date)}</strong></div>
+                        <div className="view-invoice__doc-meta-boxes">
+                            <div className="view-invoice__doc-meta-box">
+                                <span>INVOICE NO.</span>
+                                <strong>{invoice.invoice_number}</strong>
+                            </div>
+                            <div className="view-invoice__doc-meta-box">
+                                <span>DATE</span>
+                                <strong>{formatDate(invoice.invoice_date)}</strong>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -237,20 +352,22 @@ export default function ViewInvoice() {
                 {/* Bill To + Supply Details */}
                 <div className="view-invoice__doc-parties">
                     <div className="view-invoice__doc-party">
-                        <div className="view-invoice__doc-party-header">BILL TO</div>
                         <div className="view-invoice__doc-party-body">
                             <h4>M/S {invoice.client_name}</h4>
-                            {invoice.client_city && <p>{invoice.client_city}{invoice.client_state ? `, ${invoice.client_state}` : ''}</p>}
+                            {invoice.client_address && <p>{invoice.client_address}</p>}
+                            {invoice.client_city && <p>{invoice.client_city}{invoice.client_state ? `, ${invoice.client_state}` : ''}{invoice.client_pincode ? ` - ${invoice.client_pincode}` : ''}</p>}
                             {invoice.client_gstin && <p>GSTIN: {invoice.client_gstin}</p>}
+                            {invoice.client_phone && <p>Phone: {invoice.client_phone}</p>}
                         </div>
                     </div>
                     <div className="view-invoice__doc-party">
-                        <div className="view-invoice__doc-party-header">SUPPLY & TRANSPORT DETAILS</div>
                         <div className="view-invoice__doc-party-body view-invoice__doc-transport">
-                            <div><span>Place of Supply</span><strong>{invoice.place_of_supply || '-'}</strong></div>
-                            <div><span>Reverse Charge</span><strong>No</strong></div>
-                            <div><span>Transport</span><strong>{invoice.transport || '-'}</strong></div>
-                            <div><span>Vehicle No.</span><strong>{invoice.vehicle_no || '-'}</strong></div>
+                            <div><strong>Place of Supply:</strong> <span>{formatPlaceOfSupply(invoice.place_of_supply)}</span></div>
+                            <div><strong>Reverse Charge:</strong> <span>No</span></div>
+                            <div><strong>Transport:</strong> <span>{invoice.transport || '-'}</span></div>
+                            <div><strong>Vehicle No.:</strong> <span>{invoice.vehicle_no || '-'}</span></div>
+                            <div><strong>GR/RR No.:</strong> <span>{invoice.gr_rr_no || '-'}</span></div>
+                            <div><strong>E-Way Bill:</strong> <span>{invoice.eway_bill || '-'}</span></div>
                         </div>
                     </div>
                 </div>
@@ -260,14 +377,14 @@ export default function ViewInvoice() {
                     <table>
                         <thead>
                             <tr>
-                                <th>#</th>
-                                <th>DESCRIPTION</th>
-                                <th>HSN/SAC</th>
-                                <th>QTY</th>
-                                <th className="text-right">RATE</th>
-                                <th className="text-right">TAXABLE</th>
-                                <th className="text-right">GST</th>
-                                <th className="text-right">AMOUNT</th>
+                                <th className="text-center">Sr.<br />No.</th>
+                                <th>Description</th>
+                                <th className="text-center">HSN/SAC<br />Code</th>
+                                <th className="text-center">Qty</th>
+                                <th className="text-right">Rate</th>
+                                <th className="text-right">Taxable</th>
+                                <th className="text-center">GST</th>
+                                <th className="text-right">Amount</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -280,13 +397,13 @@ export default function ViewInvoice() {
                                 const afterDiscount = lineTotal - lineTotal * (discPct / 100);
                                 return (
                                     <tr key={item.id || i}>
-                                        <td>{i + 1}</td>
+                                        <td className="text-center">{i + 1}</td>
                                         <td className="font-medium">{item.product_name || item.description}</td>
-                                        <td>{item.hsn || '-'}</td>
-                                        <td>{qty} {item.unit}</td>
+                                        <td className="text-center">{item.hsn || '-'}</td>
+                                        <td className="text-center">{qty}</td>
                                         <td className="text-right">{formatCurrency(rate)}</td>
                                         <td className="text-right">{formatCurrency(afterDiscount)}</td>
-                                        <td className="text-right text-primary">{taxPct}%</td>
+                                        <td className="text-center">{taxPct}%</td>
                                         <td className="text-right">{formatCurrency(item.amount)}</td>
                                     </tr>
                                 );
@@ -314,12 +431,12 @@ export default function ViewInvoice() {
 
                         {/* Bank Details */}
                         <div className="view-invoice__doc-bank">
-                            <strong>Bank Details</strong>
+                            <strong>BANK DETAILS</strong>
                             <p><strong>{company.name}</strong></p>
-                            <p>Bank: {bank.bank}</p>
-                            <p>A/C No: {bank.accountNo}</p>
-                            <p>IFSC: {bank.ifsc}</p>
-                            <p>UPI: {bank.upi}</p>
+                            {bank.bank && <p>Bank: {bank.bank}</p>}
+                            {bank.accountNo && <p>A/C No: {bank.accountNo}</p>}
+                            {bank.ifsc && <p>IFSC: {bank.ifsc}</p>}
+                            {bank.upi && <p>UPI: {bank.upi}</p>}
                         </div>
                     </div>
 
@@ -327,22 +444,22 @@ export default function ViewInvoice() {
                         <div className="view-invoice__doc-summary">
                             <div className="view-invoice__doc-summary-row">
                                 <span>Subtotal</span>
-                                <strong>{formatCurrency(subtotal)}</strong>
+                                <strong><span className="view-invoice__bullet">&#9632;</span> {formatCurrency(subtotal)}</strong>
                             </div>
                             {taxType === 'IGST' ? (
                                 <div className="view-invoice__doc-summary-row">
                                     <span>IGST ({items[0]?.tax_pct || 18}%)</span>
-                                    <strong>{formatCurrency(taxableAmount)}</strong>
+                                    <strong><span className="view-invoice__bullet">&#9632;</span> {formatCurrency(taxableAmount)}</strong>
                                 </div>
                             ) : (
                                 <>
                                     <div className="view-invoice__doc-summary-row">
                                         <span>CGST ({(items[0]?.tax_pct || 18) / 2}%)</span>
-                                        <strong>{formatCurrency(taxableAmount / 2)}</strong>
+                                        <strong><span className="view-invoice__bullet">&#9632;</span> {formatCurrency(taxableAmount / 2)}</strong>
                                     </div>
                                     <div className="view-invoice__doc-summary-row">
                                         <span>SGST ({(items[0]?.tax_pct || 18) / 2}%)</span>
-                                        <strong>{formatCurrency(taxableAmount / 2)}</strong>
+                                        <strong><span className="view-invoice__bullet">&#9632;</span> {formatCurrency(taxableAmount / 2)}</strong>
                                     </div>
                                 </>
                             )}
@@ -354,7 +471,7 @@ export default function ViewInvoice() {
                             )}
                             <div className="view-invoice__doc-grand-total">
                                 <span>GRAND TOTAL</span>
-                                <strong>{formatCurrency(Math.round(grandTotal))}</strong>
+                                <strong><span className="view-invoice__bullet">&#9632;</span> {formatCurrency(Math.round(grandTotal))}</strong>
                             </div>
                             {(invoice.amount_paid > 0) && (
                                 <div className="view-invoice__doc-summary-row view-invoice__doc-summary-row--paid">
@@ -378,7 +495,7 @@ export default function ViewInvoice() {
 
                 {/* Footer */}
                 <div className="view-invoice__doc-footer">
-                    Registered Office: {company.address} | m: {company.phone} | e: {company.email}
+                    Registered Office: {buildCompanyAddress(company)} | m: {company.phone} | e: {company.email}
                 </div>
             </div>
 

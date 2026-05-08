@@ -11,11 +11,17 @@ export default function ActionMenu({ actions = [] }) {
     const calcPosition = useCallback(() => {
         if (!triggerRef.current) return;
         const rect = triggerRef.current.getBoundingClientRect();
+        const menuHeight = (actions.filter(a => !a.divider).length * 36) + (actions.filter(a => a.divider).length * 9) + 16;
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const openAbove = spaceBelow < menuHeight + 10;
+
         setPos({
-            top: rect.bottom + window.scrollY + 6,
+            top: openAbove
+                ? rect.top + window.scrollY - menuHeight - 6
+                : rect.bottom + window.scrollY + 6,
             right: document.documentElement.clientWidth - rect.right - window.scrollX,
         });
-    }, []);
+    }, [actions]);
 
     useEffect(() => {
         if (!open) return;

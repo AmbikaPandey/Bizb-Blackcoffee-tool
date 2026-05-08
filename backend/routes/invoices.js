@@ -5,6 +5,7 @@ const { authenticate } = require('../middleware/auth');
 const { getNextInvoiceNumber, processInvoiceItems, recalcClientOutstanding, cleanInvoiceNumber } = require('../helpers/invoiceHelpers');
 const { generateInvoicePdfBuffer, cleanInvoiceNumber: pdfClean } = require('../helpers/pdfGenerator');
 const Setting = require('../models/Setting');
+const logger = require('../utils/logger');
 
 const router = express.Router();
 
@@ -81,18 +82,18 @@ router.get('/:id/pdf', authenticate, async (req, res) => {
       client_phone: invoice.client_id?.phone || '',
     };
 
-    const pdfBuffer = await generateInvoicePdfBuffer(fullInvoice, company, bank);
+    const pdfBuffer = await generateInvoicePdfBuffer(fullInvoice, company, bank, { mode: req.query.mode || 'download' });
     const cleanNum = cleanInvoiceNumber(invoice.invoice_number) || 'draft';
     const filename = `Invoice-${cleanNum}.pdf`;
 
     res.set({
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="${filename}"`,
+      'Content-Disposition': req.query.mode === 'print' ? 'inline' : `attachment; filename="${filename}"`,
       'Content-Length': pdfBuffer.length,
     });
     res.send(pdfBuffer);
   } catch (err) {
-    console.error('PDF generation error:', err);
+    logger.error('PDF generation error: ' + err.message);
     res.status(500).json({ error: 'Failed to generate PDF' });
   }
 });
@@ -169,7 +170,7 @@ router.post('/', authenticate, async (req, res) => {
       client_id: populated.client_id?._id || populated.client_id,
     });
   } catch (err) {
-    console.error('Invoice create error:', err);
+    logger.error('Invoice create error: ' + err.message);
     if (err.code === 11000) return res.status(409).json({ error: 'Invoice number already exists' });
     res.status(500).json({ error: 'Failed to create invoice' });
   }
