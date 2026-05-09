@@ -3,9 +3,7 @@ const mongoose = require('mongoose');
 const clientSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
   gstin: { type: String, default: '' },
-  pan: { type: String, default: '' },
   contact: { type: String, default: '' },
-  service_type: { type: String, default: '', trim: true },
   address: { type: String, default: '' },
   pincode: { type: String, default: '' },
   city: { type: String, default: '' },

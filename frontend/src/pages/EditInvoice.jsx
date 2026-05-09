@@ -202,7 +202,7 @@ export default function EditInvoice() {
         }
     };
 
-    if (loading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading invoice...</div>;
+    if (loading) return <div className="page-loading">Loading invoice...</div>;
 
     return (
         <div className="new-invoice">
@@ -408,7 +408,7 @@ export default function EditInvoice() {
                         <textarea rows="4" placeholder="Additional notes for the client" value={form.notes} onChange={(e) => updateForm('notes', e.target.value)} />
                     </div>
                     <div className="new-invoice__field">
-                        <label>Terms & Conditions</label>
+                        <label>Payment Terms</label>
                         <textarea rows="4" value={form.terms} onChange={(e) => updateForm('terms', e.target.value)} />
                     </div>
                 </div>

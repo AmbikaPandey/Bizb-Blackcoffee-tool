@@ -1,6 +1,6 @@
 const express = require('express');
 const Setting = require('../models/Setting');
-const { authenticate, requireAdmin } = require('../middleware/auth');
+const { authenticate, authorize } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -15,7 +15,7 @@ router.get('/', authenticate, async (req, res) => {
   }
 });
 
-router.put('/', authenticate, requireAdmin, async (req, res) => {
+router.put('/', authenticate, authorize('settings', 'edit'), async (req, res) => {
   try {
     const entries = Object.entries(req.body);
     for (const [key, value] of entries) {

@@ -19,7 +19,7 @@ const emptyForm = { description: '', category: 'Other', amount: '', date: new Da
 
 export default function Expenses() {
     const toast = useToast();
-    const { isAdmin, isExecutive, user: currentUser } = useAuth();
+    const { isAdmin, isExecutive, user: currentUser, can } = useAuth();
     const [search, setSearch] = useState('');
     const [tab, setTab] = useState('all');
     const [categoryFilter, setCategoryFilter] = useState('');
@@ -182,13 +182,8 @@ export default function Expenses() {
 
     return (
         <div>
-            <PageHeader title="Expenses" subtitle="Track expenses and employee reimbursements" buttonLabel="Add Expense" onButtonClick={openCreate} />
-
-            {!isExecutive && (
-                <div className="expense-top-bar">
-                    <button className="btn-export" onClick={handleExportCSV}><Download size={15} /> Export CSV</button>
-                </div>
-            )}
+            <PageHeader title="Expenses" subtitle="Track expenses and employee reimbursements" buttonLabel="Add Expense" onButtonClick={openCreate}
+                actions={can('expenses', 'export') ? <button className="btn-export" onClick={handleExportCSV}><Download size={15} /> Export CSV</button> : null} />
 
             {!isExecutive && (
                 <div className="stats-grid stats-grid--4">

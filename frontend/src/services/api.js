@@ -24,7 +24,10 @@ async function request(url, options = {}) {
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || 'Request failed');
+    const e = new Error(err.error || 'Request failed');
+    if (err.errors) e.errors = err.errors;
+    if (err.detail) e.detail = err.detail;
+    throw e;
   }
   return res.json();
 }
@@ -160,9 +163,20 @@ export const api = {
     return request(`/reports/reimbursements${qs ? `?${qs}` : ''}`);
   },
 
-  // HSN Codes
+  // HSN Codes (legacy lookup)
   searchHSN: (q, page = 1, limit = 20) => request(`/hsn/search?q=${encodeURIComponent(q)}&page=${page}&limit=${limit}`),
   getHSN: (code) => request(`/hsn/${encodeURIComponent(code)}`),
+
+  // HSN/SAC Master
+  getHsnMaster: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/hsn-master${qs ? `?${qs}` : ''}`);
+  },
+  searchHsnMaster: (q, limit = 15) => request(`/hsn-master/search?q=${encodeURIComponent(q)}&limit=${limit}`),
+  createHsnMaster: (data) => request('/hsn-master', { method: 'POST', body: JSON.stringify(data) }),
+  updateHsnMaster: (id, data) => request(`/hsn-master/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteHsnMaster: (id) => request(`/hsn-master/${id}`, { method: 'DELETE' }),
+  importHsnMaster: (records) => request('/hsn-master/import', { method: 'POST', body: JSON.stringify({ records }) }),
 
   // BUSY Export
   exportToBusy: (invoiceId) => request(`/busy/export/${invoiceId}`, { method: 'POST' }),

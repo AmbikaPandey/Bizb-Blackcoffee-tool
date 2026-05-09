@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Shield, ShieldCheck, Eye, Pencil, Trash2, KeyRound, ToggleLeft, ToggleRight, Loader2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Shield, ShieldCheck, Eye, Pencil, Trash2, KeyRound, ToggleLeft, ToggleRight, Loader2, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '../components/common/PageHeader';
 import StatusBadge from '../components/common/StatusBadge';
@@ -9,15 +9,18 @@ import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { lookupIFSC } from '../utils/ifscLookup';
 import { validate, transform } from '../utils/validation';
+import { MODULES, ALL_ACTIONS, getPresetForRole, buildDefaultPermissions } from '../utils/permissions';
 
 const emptyForm = {
     username: '', email: '', password: '', role: 'Executive', pan: '',
     contact_number: '', address: '', employee_code: '', designation: '',
+    pincode: '', office_branch: '',
     bank_details: { account_number: '', ifsc_code: '', bank_name: '', branch_name: '', bank_address: '' },
+    permissions: getPresetForRole('Executive'),
 };
 
 export default function UsersPage() {
-    const { user: currentUser, isAdmin, isManager } = useAuth();
+    const { user: currentUser, isAdmin, can } = useAuth();
     const navigate = useNavigate();
     const [users, setUsers] = useState([]);
     const [showModal, setShowModal] = useState(false);
@@ -30,8 +33,12 @@ export default function UsersPage() {
     const [ifscLoading, setIfscLoading] = useState(false);
     const [ifscError, setIfscError] = useState('');
     const [fieldErrors, setFieldErrors] = useState({});
+    const [permExpanded, setPermExpanded] = useState(false);
+    const permBodyRef = useRef(null);
 
-    const canManageOthers = isAdmin || isManager;
+    const canCreate = can('users', 'create');
+    const canEdit = can('users', 'edit');
+    const canDelete = can('users', 'delete');
     const isSelf = (u) => u.id === currentUser?.id || u._id === currentUser?.id;
     const editingSelf = editingUser && isSelf(editingUser);
     const readOnlyForSelf = editingSelf && !isAdmin;
@@ -56,7 +63,9 @@ export default function UsersPage() {
             username: u.username, email: u.email, password: '', role: u.role, pan: u.pan || '',
             contact_number: u.contact_number || '', address: u.address || '',
             employee_code: u.employee_code || '', designation: u.designation || '',
+            pincode: u.pincode || '', office_branch: u.office_branch || '',
             bank_details: u.bank_details || { account_number: '', ifsc_code: '', bank_name: '', branch_name: '', bank_address: '' },
+            permissions: u.permissions || getPresetForRole(u.role),
         });
         setError('');
         setFieldErrors({});
@@ -75,6 +84,10 @@ export default function UsersPage() {
         }
         if (form.pan && !validate('pan', form.pan).valid) {
             setError('Invalid PAN format (AAAAA9999A)');
+            return;
+        }
+        if (form.pincode && !validate('pincode', form.pincode).valid) {
+            setError('Invalid pincode (must be 6 digits)');
             return;
         }
         setError('');
@@ -136,8 +149,8 @@ export default function UsersPage() {
 
     return (
         <div>
-            <PageHeader title="Users" subtitle={canManageOthers ? "Manage user accounts and permissions" : "Your profile"}
-                buttonLabel={canManageOthers ? "Add User" : undefined} onButtonClick={canManageOthers ? openAddModal : undefined} />
+            <PageHeader title="Users" subtitle={canCreate ? "Manage user accounts and permissions" : "Your profile"}
+                buttonLabel={canCreate ? "Add User" : undefined} onButtonClick={canCreate ? openAddModal : undefined} />
 
             <div className="page-card users-table">
                 <div className="page-card__table">
@@ -154,7 +167,7 @@ export default function UsersPage() {
                         <tbody>
                             {users.length === 0 ? (
                                 <tr>
-                                    <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: '#9ca3af' }}>
+                                    <td colSpan="5" className="empty-cell">
                                         No users found. Click "Add User" to create one.
                                     </td>
                                 </tr>
@@ -179,14 +192,14 @@ export default function UsersPage() {
                                         <td>
                                             <ActionMenu actions={[
                                                 { icon: <Eye size={15} />, label: 'View Details', onClick: () => navigate(`/users/${u.id}`) },
-                                                ...((isAdmin || (isManager && u.role === 'Executive') || isSelf(u)) ? [
+                                                ...((canEdit || isSelf(u)) ? [
                                                     { icon: <Pencil size={15} />, label: 'Edit', onClick: () => openEditModal(u) },
                                                     { icon: <KeyRound size={15} />, label: 'Reset Password', onClick: () => { setPasswordModal(u); setNewPassword(''); setError(''); } },
                                                 ] : []),
                                                 ...(isAdmin ? [
                                                     { icon: u.is_active ? <ToggleRight size={15} /> : <ToggleLeft size={15} />, label: u.is_active ? 'Deactivate' : 'Activate', onClick: () => handleToggleActive(u) },
-                                                    ...(!isSelf(u) ? [{ divider: true }, { icon: <Trash2 size={15} />, label: 'Delete', danger: true, onClick: () => handleDelete(u) }] : []),
                                                 ] : []),
+                                                ...(canDelete && !isSelf(u) ? [{ divider: true }, { icon: <Trash2 size={15} />, label: 'Delete', danger: true, onClick: () => handleDelete(u) }] : []),
                                             ]} />
                                         </td>
                                     </tr>
@@ -201,7 +214,7 @@ export default function UsersPage() {
             <Modal isOpen={showModal} onClose={() => setShowModal(false)}
                 title={editingUser ? 'Edit User' : 'Add New User'}>
                 <form onSubmit={handleSubmit}>
-                    {error && <div style={{ background: '#fef2f2', color: '#dc2626', padding: '0.75rem 1rem', borderRadius: '0.75rem', fontSize: '0.875rem', marginBottom: '1rem' }}>{error}</div>}
+                    {error && <div className="form-error-banner">{error}</div>}
                     <div className="form-group">
                         <label className="form-group__label">Username *</label>
                         <input type="text" placeholder="Enter username" className="form-group__input"
@@ -210,7 +223,7 @@ export default function UsersPage() {
                     </div>
                     <div className="form-group">
                         <label className="form-group__label">Email *</label>
-                        <input type="email" placeholder="user@blackcoffee.in" className="form-group__input"
+                        <input type="email" placeholder="user@blackcoffee.agency" className="form-group__input"
                             value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
                             disabled={readOnlyForSelf} />
                     </div>
@@ -224,11 +237,18 @@ export default function UsersPage() {
                     <div className="form-group">
                         <label className="form-group__label">Role</label>
                         <select className="form-group__select" value={form.role}
-                            onChange={(e) => setForm({ ...form, role: e.target.value })}
+                            onChange={(e) => {
+                                const newRole = e.target.value;
+                                const newPerms = newRole === 'Custom' ? form.permissions : getPresetForRole(newRole);
+                                setForm({ ...form, role: newRole, permissions: newPerms });
+                            }}
                             disabled={!isAdmin || readOnlyForSelf}>
-                            {isAdmin && <option value="Admin">Admin</option>}
-                            {isAdmin && <option value="Manager">Manager</option>}
+                            <option value="Admin">Admin</option>
+                            <option value="Manager">Manager</option>
+                            <option value="Accountant">Accountant</option>
                             <option value="Executive">Executive</option>
+                            <option value="Staff">Staff</option>
+                            <option value="Custom">Custom</option>
                         </select>
                     </div>
                     <div className="form-group">
@@ -250,13 +270,13 @@ export default function UsersPage() {
                     </div>
                     <div className="form-group">
                         <label className="form-group__label">Employee Code</label>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0' }}>
-                            <span style={{ padding: '0.5rem 0.75rem', background: 'var(--color-bg-hover)', border: '1px solid var(--color-border)', borderRight: 'none', borderRadius: '0.5rem 0 0 0.5rem', fontSize: '0.875rem', color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>BC-</span>
-                            <input type="text" placeholder="Auto-generated" className="form-group__input" style={{ borderRadius: '0 0.5rem 0.5rem 0' }}
+                        <div className="input-prefix-group">
+                            <span className="input-prefix-group__prefix">BC-</span>
+                            <input type="text" placeholder="Auto-generated" className="form-group__input"
                                 value={form.employee_code.replace(/^BC-/, '')} onChange={(e) => setForm({ ...form, employee_code: e.target.value.replace(/^BC-/, '') })}
                                 disabled={readOnlyForSelf} />
                         </div>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Leave empty for auto-generation</span>
+                        <span className="form-hint">Leave empty for auto-generation</span>
                     </div>
                     <div className="form-group">
                         <label className="form-group__label">PAN</label>
@@ -275,7 +295,29 @@ export default function UsersPage() {
                         <input type="text" placeholder="Full address" className="form-group__input"
                             value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
                     </div>
-                    <h4 style={{ margin: '1rem 0 0.5rem', fontSize: '0.9rem', fontWeight: 600 }}>Bank Details</h4>
+                    <div className="form-row form-row--2">
+                        <div className="form-group">
+                            <label className="form-group__label">Pincode</label>
+                            <input type="text" placeholder="110001" className={`form-group__input${fieldErrors.pincode ? ' form-group__input--error' : ''}`}
+                                value={form.pincode} maxLength={6}
+                                onChange={(e) => {
+                                    const val = transform('pincode', e.target.value);
+                                    setForm({ ...form, pincode: val });
+                                    if (val && !validate('pincode', val).valid) setFieldErrors(p => ({ ...p, pincode: 'Must be 6 digits' }));
+                                    else setFieldErrors(p => ({ ...p, pincode: '' }));
+                                }} />
+                            {fieldErrors.pincode && <span className="form-group__error">{fieldErrors.pincode}</span>}
+                        </div>
+                        <div className="form-group">
+                            <label className="form-group__label">Office Branch</label>
+                            <select className="form-group__select"
+                                value={form.office_branch} onChange={(e) => setForm({ ...form, office_branch: e.target.value })}>
+                                <option value="">Select Branch</option>
+                                <option value="Delhi">Delhi</option>
+                            </select>
+                        </div>
+                    </div>
+                    <h4 className="form-section-title">Employee Bank Details</h4>
                     <div className="form-group">
                         <label className="form-group__label">Account Number</label>
                         <input type="text" placeholder="Account number" className="form-group__input"
@@ -284,7 +326,7 @@ export default function UsersPage() {
                     <div className="form-row form-row--2">
                         <div className="form-group">
                             <label className="form-group__label">IFSC Code</label>
-                            <div style={{ position: 'relative' }}>
+                            <div className="input-with-spinner">
                                 <input type="text" placeholder="e.g. SBIN0001234" className="form-group__input"
                                     maxLength={11}
                                     value={form.bank_details?.ifsc_code || ''}
@@ -311,9 +353,9 @@ export default function UsersPage() {
                                         }
                                     }}
                                 />
-                                {ifscLoading && <Loader2 size={16} className="spin" style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', color: '#888' }} />}
+                                {ifscLoading && <Loader2 size={16} className="spin input-with-spinner__spinner" />}
                             </div>
-                            {ifscError && <span style={{ color: '#dc2626', fontSize: '0.75rem' }}>{ifscError}</span>}
+                            {ifscError && <span className="field-error">{ifscError}</span>}
                         </div>
                         <div className="form-group">
                             <label className="form-group__label">Bank Name</label>
@@ -333,6 +375,60 @@ export default function UsersPage() {
                                 value={form.bank_details?.bank_address || ''} onChange={(e) => setForm({ ...form, bank_details: { ...form.bank_details, bank_address: e.target.value } })} />
                         </div>
                     </div>
+
+                    {/* Permission Matrix — visible for Admin editing non-Admin users */}
+                    {isAdmin && form.role !== 'Admin' && (
+                        <div className={`permission-matrix ${permExpanded ? 'permission-matrix--expanded' : ''}`}>
+                            <button type="button" className="permission-matrix__toggle" onClick={() => setPermExpanded(!permExpanded)}>
+                                <div className="permission-matrix__toggle-left">
+                                    <Shield size={18} />
+                                    <span className="permission-matrix__title">Permissions</span>
+                                    <span className="permission-matrix__badge">
+                                        {Object.entries(form.permissions || {}).reduce((n, [, acts]) => n + Object.values(acts).filter(Boolean).length, 0)} active
+                                    </span>
+                                </div>
+                                <ChevronDown size={18} className="permission-matrix__chevron" />
+                            </button>
+                            <div className="permission-matrix__body" ref={permBodyRef}
+                                style={{ maxHeight: permExpanded ? permBodyRef.current?.scrollHeight + 'px' : '0' }}>
+                                <div className="permission-matrix__toolbar">
+                                    <button type="button" className="btn-link" onClick={() => setForm({ ...form, permissions: buildDefaultPermissions(true) })}>Select All</button>
+                                    <button type="button" className="btn-link" onClick={() => setForm({ ...form, permissions: buildDefaultPermissions(false) })}>Clear All</button>
+                                </div>
+                                <div className="permission-matrix__table-wrap">
+                                    <table className="permission-matrix__table">
+                                        <thead>
+                                            <tr>
+                                                <th>Module</th>
+                                                {ALL_ACTIONS.map(a => <th key={a}>{a.charAt(0).toUpperCase() + a.slice(1)}</th>)}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {Object.entries(MODULES).map(([mod, def]) => (
+                                                <tr key={mod}>
+                                                    <td className="permission-matrix__module">{def.label}</td>
+                                                    {ALL_ACTIONS.map(action => (
+                                                        <td key={action} className="permission-matrix__check">
+                                                            {def.actions.includes(action) ? (
+                                                                <input type="checkbox" checked={!!form.permissions?.[mod]?.[action]}
+                                                                    onChange={(e) => {
+                                                                        const perms = { ...form.permissions };
+                                                                        perms[mod] = { ...perms[mod], [action]: e.target.checked };
+                                                                        setForm({ ...form, permissions: perms, role: 'Custom' });
+                                                                    }}
+                                                                />
+                                                            ) : <span className="permission-matrix__na">—</span>}
+                                                        </td>
+                                                    ))}
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="form-actions">
                         <button type="button" className="btn-cancel" onClick={() => setShowModal(false)}>Cancel</button>
                         <button type="submit" className="btn-save" disabled={saving}>
@@ -346,7 +442,7 @@ export default function UsersPage() {
             <Modal isOpen={!!passwordModal} onClose={() => setPasswordModal(null)}
                 title={`Reset Password — ${passwordModal?.username}`}>
                 <form onSubmit={handlePasswordReset}>
-                    {error && <div style={{ background: '#fef2f2', color: '#dc2626', padding: '0.75rem 1rem', borderRadius: '0.75rem', fontSize: '0.875rem', marginBottom: '1rem' }}>{error}</div>}
+                    {error && <div className="form-error-banner">{error}</div>}
                     <div className="form-group">
                         <label className="form-group__label">New Password *</label>
                         <input type="password" placeholder="Min 6 characters" className="form-group__input"

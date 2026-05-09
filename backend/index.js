@@ -22,6 +22,7 @@ const settingRoutes = require('./routes/settings');
 const dashboardRoutes = require('./routes/dashboard');
 const reportRoutes = require('./routes/reports');
 const hsnRoutes = require('./routes/hsn');
+const hsnMasterRoutes = require('./routes/hsnMaster');
 const busyRoutes = require('./routes/busy');
 
 const app = express();
@@ -118,6 +119,7 @@ app.use('/api/settings', settingRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/hsn', hsnRoutes);
+app.use('/api/hsn-master', hsnMasterRoutes);
 app.use('/api/busy', busyRoutes);
 
 // Indian States for Place of Supply

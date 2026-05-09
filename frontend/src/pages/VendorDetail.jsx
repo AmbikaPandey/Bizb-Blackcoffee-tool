@@ -69,6 +69,8 @@ export default function VendorDetail() {
                     <div className="vendor-detail__contact">
                         {vendor.contact && <p><strong>Contact Person:</strong> {vendor.contact}</p>}
                         {vendor.phone && <p><Phone size={13} /> <strong>Phone:</strong> {vendor.phone}</p>}
+                        {vendor.contact1 && <p><Phone size={13} /> <strong>Contact 1:</strong> {vendor.contact1}</p>}
+                        {vendor.contact2 && <p><Phone size={13} /> <strong>Contact 2:</strong> {vendor.contact2}</p>}
                         {vendor.email && <p><Mail size={13} /> <strong>Email:</strong> {vendor.email}</p>}
                     </div>
 

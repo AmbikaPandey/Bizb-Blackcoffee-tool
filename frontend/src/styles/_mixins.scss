@@ -53,9 +53,9 @@
     font-size: $font-sm;
     font-family: $font-body;
     color: var(--color-input-text);
-    background: var(--color-input-bg);
+    background-color: var(--color-input-bg);
     outline: none;
-    text-transform: uppercase;
+    // text-transform: uppercase;
     transition:
         border-color 200ms ease,
         box-shadow 200ms ease,
@@ -107,7 +107,7 @@
         box-shadow $transition-fast;
 
     &:hover {
-        background: $coffee-600;
+        background: $primary-dark;
         box-shadow: 0 4px 14px rgba($primary, 0.25);
         transform: translateY(-1px);
     }

@@ -3,7 +3,7 @@ const Project = require('../models/Project');
 const Expense = require('../models/Expense');
 const AuditLog = require('../models/AuditLog');
 const User = require('../models/User');
-const { authenticate, requireRole } = require('../middleware/auth');
+const { authenticate, authorize } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -66,7 +66,7 @@ router.get('/:id', authenticate, async (req, res) => {
 });
 
 // POST create project — Admin and Manager
-router.post('/', authenticate, requireRole('Admin', 'Manager'), async (req, res) => {
+router.post('/', authenticate, authorize('projects', 'create'), async (req, res) => {
   try {
     const { name, client_id, budget, start_date, end_date, status, code, description, assigned_manager, assigned_executives } = req.body;
     if (!name || !name.trim()) return res.status(400).json({ error: 'Project name is required' });
@@ -106,7 +106,7 @@ router.post('/', authenticate, requireRole('Admin', 'Manager'), async (req, res)
 });
 
 // PUT update project — Admin and Manager (own projects)
-router.put('/:id', authenticate, requireRole('Admin', 'Manager'), async (req, res) => {
+router.put('/:id', authenticate, authorize('projects', 'edit'), async (req, res) => {
   try {
     const project = await Project.findById(req.params.id);
     if (!project) return res.status(404).json({ error: 'Project not found' });
@@ -129,7 +129,7 @@ router.put('/:id', authenticate, requireRole('Admin', 'Manager'), async (req, re
 });
 
 // DELETE project — Admin only
-router.delete('/:id', authenticate, requireRole('Admin'), async (req, res) => {
+router.delete('/:id', authenticate, authorize('projects', 'delete'), async (req, res) => {
   try {
     const project = await Project.findById(req.params.id);
     if (!project) return res.status(404).json({ error: 'Project not found' });

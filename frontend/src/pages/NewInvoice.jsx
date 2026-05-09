@@ -34,6 +34,7 @@ function calcItemAmount(item) {
 export default function NewInvoice() {
     const navigate = useNavigate();
     const { isAdmin } = useAuth();
+    // isAdmin check for invoice number override is intentional — only Admin can manually edit auto-generated numbers
 
     const [clients, setClients] = useState([]);
     const [products, setProducts] = useState([]);
@@ -415,7 +416,7 @@ export default function NewInvoice() {
                         />
                     </div>
                     <div className="new-invoice__field">
-                        <label>Terms & Conditions</label>
+                        <label>Payment Terms</label>
                         <textarea
                             rows="4"
                             value={form.terms}

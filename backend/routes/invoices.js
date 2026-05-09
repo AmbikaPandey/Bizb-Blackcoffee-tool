@@ -1,7 +1,7 @@
 const express = require('express');
 const Invoice = require('../models/Invoice');
 const Payment = require('../models/Payment');
-const { authenticate } = require('../middleware/auth');
+const { authenticate, authorize } = require('../middleware/auth');
 const { getNextInvoiceNumber, processInvoiceItems, recalcClientOutstanding, cleanInvoiceNumber } = require('../helpers/invoiceHelpers');
 const { generateInvoicePdfBuffer, cleanInvoiceNumber: pdfClean } = require('../helpers/pdfGenerator');
 const Setting = require('../models/Setting');
@@ -124,7 +124,7 @@ router.get('/:id', authenticate, async (req, res) => {
   }
 });
 
-router.post('/', authenticate, async (req, res) => {
+router.post('/', authenticate, authorize('invoices', 'create'), async (req, res) => {
   try {
     const {
       invoice_number, client_id, invoice_type, tax_type,
@@ -176,7 +176,7 @@ router.post('/', authenticate, async (req, res) => {
   }
 });
 
-router.put('/:id', authenticate, async (req, res) => {
+router.put('/:id', authenticate, authorize('invoices', 'edit'), async (req, res) => {
   try {
     const existing = await Invoice.findById(req.params.id);
     if (!existing) return res.status(404).json({ error: 'Invoice not found' });
@@ -234,7 +234,7 @@ router.put('/:id', authenticate, async (req, res) => {
   }
 });
 
-router.delete('/:id', authenticate, async (req, res) => {
+router.delete('/:id', authenticate, authorize('invoices', 'delete'), async (req, res) => {
   try {
     const invoice = await Invoice.findById(req.params.id);
     if (!invoice) return res.status(404).json({ error: 'Invoice not found' });

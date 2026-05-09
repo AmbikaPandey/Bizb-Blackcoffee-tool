@@ -1,12 +1,12 @@
 const express = require('express');
 const Invoice = require('../models/Invoice');
 const Payment = require('../models/Payment');
-const { authenticate, requireAdmin } = require('../middleware/auth');
+const { authenticate, authorize } = require('../middleware/auth');
 const { reconcileInvoice, recalcClientOutstanding, cleanInvoiceNumber } = require('../helpers/invoiceHelpers');
 
 const router = express.Router();
 
-router.get('/', authenticate, requireAdmin, async (req, res) => {
+router.get('/', authenticate, authorize('payments', 'view'), async (req, res) => {
   try {
     const filter = {};
     if (req.query.invoice_id) filter.invoice_id = req.query.invoice_id;
@@ -28,7 +28,7 @@ router.get('/', authenticate, requireAdmin, async (req, res) => {
   }
 });
 
-router.get('/:id', authenticate, requireAdmin, async (req, res) => {
+router.get('/:id', authenticate, authorize('payments', 'view'), async (req, res) => {
   try {
     const payment = await Payment.findById(req.params.id)
       .populate('client_id', 'name')
@@ -46,7 +46,7 @@ router.get('/:id', authenticate, requireAdmin, async (req, res) => {
   }
 });
 
-router.post('/', authenticate, requireAdmin, async (req, res) => {
+router.post('/', authenticate, authorize('payments', 'create'), async (req, res) => {
   try {
     const { client_id, invoice_id, amount, date, method, reference, notes } = req.body;
     if (!client_id || !amount || !date) {
@@ -84,7 +84,7 @@ router.post('/', authenticate, requireAdmin, async (req, res) => {
   }
 });
 
-router.put('/:id', authenticate, requireAdmin, async (req, res) => {
+router.put('/:id', authenticate, authorize('payments', 'edit'), async (req, res) => {
   try {
     const payment = await Payment.findById(req.params.id);
     if (!payment) return res.status(404).json({ error: 'Payment not found' });
@@ -124,7 +124,7 @@ router.put('/:id', authenticate, requireAdmin, async (req, res) => {
   }
 });
 
-router.delete('/:id', authenticate, requireAdmin, async (req, res) => {
+router.delete('/:id', authenticate, authorize('payments', 'delete'), async (req, res) => {
   try {
     const payment = await Payment.findById(req.params.id);
     if (!payment) return res.status(404).json({ error: 'Payment not found' });

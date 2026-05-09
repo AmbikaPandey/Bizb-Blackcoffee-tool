@@ -3,12 +3,12 @@ const Invoice = require('../models/Invoice');
 const Payment = require('../models/Payment');
 const Expense = require('../models/Expense');
 const Client = require('../models/Client');
-const { authenticate, requireAdmin } = require('../middleware/auth');
+const { authenticate, authorize } = require('../middleware/auth');
 const { cleanInvoiceNumber } = require('../helpers/invoiceHelpers');
 
 const router = express.Router();
 
-router.get('/summary', authenticate, requireAdmin, async (req, res) => {
+router.get('/summary', authenticate, authorize('reports', 'view'), async (req, res) => {
   try {
     const [totalRevenueResult, pendingResult, paidCount, unpaidCount, overdueCount, partialCount] = await Promise.all([
       Invoice.aggregate([
@@ -38,7 +38,7 @@ router.get('/summary', authenticate, requireAdmin, async (req, res) => {
   }
 });
 
-router.get('/monthly', authenticate, requireAdmin, async (req, res) => {
+router.get('/monthly', authenticate, authorize('reports', 'view'), async (req, res) => {
   try {
     const year = parseInt(req.query.year) || new Date().getFullYear();
 
@@ -89,7 +89,7 @@ router.get('/monthly', authenticate, requireAdmin, async (req, res) => {
 });
 
 // ── Ageing Report ──────────────────────────────
-router.get('/ageing', authenticate, requireAdmin, async (req, res) => {
+router.get('/ageing', authenticate, authorize('reports', 'view'), async (req, res) => {
   try {
     const today = new Date();
     const invoices = await Invoice.find({
@@ -135,7 +135,7 @@ router.get('/ageing', authenticate, requireAdmin, async (req, res) => {
 });
 
 // ── GST Summary ──────────────────────────────
-router.get('/gst-summary', authenticate, requireAdmin, async (req, res) => {
+router.get('/gst-summary', authenticate, authorize('reports', 'view'), async (req, res) => {
   try {
     const { from, to } = req.query;
     const filter = { status: { $nin: ['Draft', 'Cancelled'] } };
@@ -178,7 +178,7 @@ router.get('/gst-summary', authenticate, requireAdmin, async (req, res) => {
 });
 
 // ── Client Ledger ──────────────────────────────
-router.get('/client-ledger', authenticate, requireAdmin, async (req, res) => {
+router.get('/client-ledger', authenticate, authorize('reports', 'view'), async (req, res) => {
   try {
     const { client_id, from, to } = req.query;
     if (!client_id) return res.status(400).json({ error: 'client_id is required' });
@@ -228,7 +228,7 @@ router.get('/client-ledger', authenticate, requireAdmin, async (req, res) => {
 });
 
 // ── Employee Reimbursements ──────────────────────────────
-router.get('/reimbursements', authenticate, requireAdmin, async (req, res) => {
+router.get('/reimbursements', authenticate, authorize('reports', 'view'), async (req, res) => {
   try {
     const { from, to } = req.query;
     const filter = {};

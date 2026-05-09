@@ -452,7 +452,7 @@
         @include flex(row, center, flex-start, $space-3);
 
         &__avatar {
-            @include icon-circle($coffee-100, $coffee-600, 32px);
+            @include icon-circle($navy-100, $navy-600, 32px);
             font-size: $font-xs;
             font-weight: $weight-medium;
         }
@@ -1234,4 +1234,287 @@
     &__input--error {
         border-color: $danger !important;
     }
+}
+
+// ── Permission Matrix ──────────────────────────
+.permission-matrix {
+    margin-top: $space-4;
+    border: 1px solid var(--color-border-light);
+    border-radius: $radius-md;
+    overflow: hidden;
+    background: var(--color-bg-card);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    transition:
+        box-shadow 0.3s ease,
+        border-color 0.3s ease;
+
+    &--expanded {
+        border-color: rgba($primary, 0.35);
+        box-shadow: 0 2px 8px rgba($primary, 0.08);
+    }
+
+    // ── Clickable toggle header ──
+    &__toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: $space-3 $space-4;
+        background: var(--color-bg-hover);
+        border: none;
+        cursor: pointer;
+        transition: background 0.2s ease;
+
+        &:hover {
+            background: rgba($primary, 0.06);
+        }
+    }
+
+    &__toggle-left {
+        display: flex;
+        align-items: center;
+        gap: $space-2;
+        color: $primary;
+    }
+
+    &__title {
+        font-size: $font-base;
+        font-weight: $weight-semibold;
+        color: var(--color-text-heading);
+    }
+
+    &__badge {
+        font-size: $font-xs;
+        font-weight: $weight-medium;
+        color: $primary;
+        background: rgba($primary, 0.1);
+        padding: 2px 8px;
+        border-radius: 99px;
+        letter-spacing: 0.3px;
+    }
+
+    &__chevron {
+        color: var(--color-text-muted);
+        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+
+        .permission-matrix--expanded & {
+            transform: rotate(180deg);
+        }
+    }
+
+    // ── Animated collapsible body ──
+    &__body {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    // ── Select All / Clear All toolbar ──
+    &__toolbar {
+        display: flex;
+        justify-content: flex-end;
+        gap: $space-3;
+        padding: $space-2 $space-4;
+        border-bottom: 1px solid var(--color-border-light);
+        background: var(--color-bg-hover);
+    }
+
+    &__table-wrap {
+        overflow-x: auto;
+    }
+
+    &__table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: $font-sm;
+
+        th,
+        td {
+            padding: $space-2 $space-3;
+            text-align: center;
+            border-bottom: 1px solid var(--color-border-light);
+        }
+
+        th {
+            font-weight: $weight-semibold;
+            font-size: $font-xs;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--color-text-muted);
+            background: var(--color-bg-hover);
+        }
+
+        th:first-child,
+        td:first-child {
+            text-align: left;
+            padding-left: $space-4;
+        }
+
+        tr:last-child td {
+            border-bottom: 0;
+        }
+
+        tr {
+            transition: background 0.15s ease;
+        }
+
+        tr:hover {
+            background: rgba($primary, 0.03);
+        }
+    }
+
+    &__module {
+        font-weight: $weight-medium;
+        color: var(--color-text-heading);
+        white-space: nowrap;
+    }
+
+    &__check {
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: $primary;
+            transition: transform 0.15s ease;
+
+            &:hover {
+                transform: scale(1.15);
+            }
+        }
+    }
+
+    &__na {
+        color: var(--color-text-faint);
+        font-size: $font-xs;
+    }
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    color: $primary;
+    cursor: pointer;
+    font-size: $font-xs;
+    font-weight: $weight-medium;
+    padding: $space-1 $space-2;
+    border-radius: $radius-sm;
+
+    &:hover {
+        background: rgba($primary, 0.08);
+        text-decoration: underline;
+    }
+}
+
+// ── Keyword Tags ──
+.keyword-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    max-width: 320px;
+}
+
+.keyword-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: $font-xs;
+    font-weight: $weight-medium;
+    color: var(--color-text-heading);
+    background: rgba($primary, 0.08);
+    border: 1px solid rgba($primary, 0.15);
+    border-radius: 99px;
+    white-space: nowrap;
+    line-height: 1.6;
+}
+
+.keyword-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: $space-2;
+}
+
+// ── Code Badge ──
+.hsn-code-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    font-size: $font-sm;
+    font-weight: $weight-semibold;
+    font-family: "SFMono-Regular", Consolas, monospace;
+    color: var(--color-text-heading);
+    background: var(--color-bg-hover);
+    border: 1px solid var(--color-border-light);
+    border-radius: $radius-sm;
+    letter-spacing: 0.5px;
+}
+
+// ── Type Badge ──
+.type-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    font-size: $font-xs;
+    font-weight: $weight-semibold;
+    border-radius: 99px;
+    letter-spacing: 0.4px;
+
+    &--hsn {
+        color: #1565c0;
+        background: rgba(#1565c0, 0.1);
+    }
+
+    &--sac {
+        color: #7b1fa2;
+        background: rgba(#7b1fa2, 0.1);
+    }
+}
+
+// ── GST Badge ──
+.gst-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: $font-xs;
+    font-weight: $weight-semibold;
+    border-radius: 99px;
+    white-space: nowrap;
+
+    &--0 {
+        color: #388e3c;
+        background: rgba(#388e3c, 0.1);
+    }
+    &--5 {
+        color: #1976d2;
+        background: rgba(#1976d2, 0.1);
+    }
+    &--12 {
+        color: #f57c00;
+        background: rgba(#f57c00, 0.1);
+    }
+    &--18 {
+        color: #7b1fa2;
+        background: rgba(#7b1fa2, 0.1);
+    }
+    &--28 {
+        color: #c62828;
+        background: rgba(#c62828, 0.1);
+    }
+}
+
+// ── Pagination ──
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $space-3;
+    padding: $space-4 0;
+
+    &__info {
+        font-size: $font-sm;
+        color: var(--color-text-muted);
+    }
+}
+
+// ── Form hint text ──
+.form-hint {
+    font-size: $font-xs;
+    color: var(--color-text-muted);
+    font-weight: $weight-regular;
 }

@@ -101,6 +101,20 @@ export default function UserDetail() {
                                 <strong>{user.address}</strong>
                             </div>
                         )}
+                        {user.pincode && (
+                            <div className="user-detail__info-row">
+                                <span></span>
+                                <span>Pincode</span>
+                                <strong className="mono">{user.pincode}</strong>
+                            </div>
+                        )}
+                        {user.office_branch && (
+                            <div className="user-detail__info-row">
+                                <span></span>
+                                <span>Office Branch</span>
+                                <strong>{user.office_branch}</strong>
+                            </div>
+                        )}
                     </div>
 
                     <div className="user-detail__meta">

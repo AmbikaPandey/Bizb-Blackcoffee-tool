@@ -163,7 +163,7 @@
             font-size: $font-sm;
             font-family: $font-body;
             color: var(--color-input-text);
-            background: var(--color-input-bg);
+            background-color: var(--color-input-bg);
             outline: none;
             transition:
                 border-color $transition-fast,
@@ -183,10 +183,11 @@
         select {
             cursor: pointer;
             appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236e7589' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
-            background-position: right $space-3 center;
-            padding-right: $space-8;
+            background-position: right 12px center;
+            background-size: 16px;
+            padding-right: 36px;
         }
 
         textarea {
@@ -323,7 +324,7 @@
             font-size: $font-sm;
             font-family: $font-body;
             color: var(--color-input-text);
-            background: var(--color-input-bg);
+            background-color: var(--color-input-bg);
             outline: none;
             width: 100%;
             transition:
@@ -338,10 +339,11 @@
         select {
             cursor: pointer;
             appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236e7589' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
-            background-position: right $space-2 center;
-            padding-right: $space-6;
+            background-position: right 12px center;
+            background-size: 16px;
+            padding-right: 36px;
         }
 
         input[type="number"] {

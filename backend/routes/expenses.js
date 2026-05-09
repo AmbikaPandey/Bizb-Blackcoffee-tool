@@ -2,7 +2,7 @@ const express = require('express');
 const Expense = require('../models/Expense');
 const Project = require('../models/Project');
 const AuditLog = require('../models/AuditLog');
-const { authenticate, requireRole } = require('../middleware/auth');
+const { authenticate, authorize } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -50,7 +50,7 @@ router.get('/', authenticate, async (req, res) => {
 });
 
 // GET reimbursements for a specific user
-router.get('/user/:userId', authenticate, requireRole('Admin', 'Manager'), async (req, res) => {
+router.get('/user/:userId', authenticate, authorize('expenses', 'view'), async (req, res) => {
   try {
     const expenses = await Expense.find({ submitted_by: req.params.userId, status: { $in: ['Approved', 'Rejected'] } })
       .populate('project_id', 'name')
@@ -68,7 +68,7 @@ router.get('/user/:userId', authenticate, requireRole('Admin', 'Manager'), async
   }
 });
 
-router.get('/stats', authenticate, requireRole('Admin', 'Manager'), async (req, res) => {
+router.get('/stats', authenticate, authorize('expenses', 'view'), async (req, res) => {
   try {
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
@@ -249,7 +249,7 @@ router.put('/:id', authenticate, async (req, res) => {
 });
 
 // DELETE expense — Admin only
-router.delete('/:id', authenticate, requireRole('Admin'), async (req, res) => {
+router.delete('/:id', authenticate, authorize('expenses', 'delete'), async (req, res) => {
   try {
     const expense = await Expense.findByIdAndDelete(req.params.id);
     if (!expense) return res.status(404).json({ error: 'Expense not found' });
@@ -260,7 +260,7 @@ router.delete('/:id', authenticate, requireRole('Admin'), async (req, res) => {
 });
 
 // Export CSV
-router.get('/export/csv', authenticate, requireRole('Admin', 'Manager'), async (req, res) => {
+router.get('/export/csv', authenticate, authorize('expenses', 'export'), async (req, res) => {
   try {
     const expenses = await Expense.find()
       .populate('project_id', 'name')

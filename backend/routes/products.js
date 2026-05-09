@@ -1,7 +1,7 @@
 const express = require('express');
 const Product = require('../models/Product');
 const Vendor = require('../models/Vendor');
-const { authenticate, requireAdmin } = require('../middleware/auth');
+const { authenticate, authorize } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -24,22 +24,27 @@ router.get('/:id', authenticate, async (req, res) => {
   }
 });
 
-router.post('/', authenticate, requireAdmin, async (req, res) => {
+router.post('/', authenticate, authorize('products', 'create'), async (req, res) => {
   try {
     const { name, vendor_id, category, hsn, rate, unit, gst, description, status } = req.body;
     if (!name || !name.trim()) return res.status(400).json({ error: 'Product name is required' });
-    if (!vendor_id) return res.status(400).json({ error: 'Vendor is required' });
-    const vendor = await Vendor.findById(vendor_id);
-    if (!vendor) return res.status(400).json({ error: 'Invalid vendor' });
-    const product = await Product.create({ name: name.trim(), vendor_id, category, hsn, rate, unit, gst, description, status });
+    if (!hsn || !/^\d{4}(\d{2}(\d{2})?)?$/.test(hsn)) return res.status(400).json({ error: 'Valid HSN code is required (4, 6, or 8 digits)' });
+    if (vendor_id) {
+      const vendor = await Vendor.findById(vendor_id);
+      if (!vendor) return res.status(400).json({ error: 'Invalid vendor' });
+    }
+    const product = await Product.create({ name: name.trim(), vendor_id: vendor_id || null, category, hsn, rate, unit, gst, description, status });
     res.status(201).json({ id: product._id, ...product.toObject() });
   } catch (err) {
     res.status(500).json({ error: 'Failed to create product' });
   }
 });
 
-router.put('/:id', authenticate, requireAdmin, async (req, res) => {
+router.put('/:id', authenticate, authorize('products', 'edit'), async (req, res) => {
   try {
+    if (req.body.hsn !== undefined && !/^\d{4}(\d{2}(\d{2})?)?$/.test(req.body.hsn)) {
+      return res.status(400).json({ error: 'Valid HSN code is required (4, 6, or 8 digits)' });
+    }
     if (req.body.vendor_id) {
       const vendor = await Vendor.findById(req.body.vendor_id);
       if (!vendor) return res.status(400).json({ error: 'Invalid vendor' });
@@ -52,7 +57,7 @@ router.put('/:id', authenticate, requireAdmin, async (req, res) => {
   }
 });
 
-router.delete('/:id', authenticate, requireAdmin, async (req, res) => {
+router.delete('/:id', authenticate, authorize('products', 'delete'), async (req, res) => {
   try {
     const product = await Product.findByIdAndDelete(req.params.id);
     if (!product) return res.status(404).json({ error: 'Product not found' });

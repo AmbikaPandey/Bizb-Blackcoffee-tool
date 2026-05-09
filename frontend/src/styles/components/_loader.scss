@@ -39,7 +39,7 @@
     &__mark {
         width: 48px;
         height: 48px;
-        background: linear-gradient(135deg, $accent, $primary-light);
+        background: $primary;
         border-radius: 14px;
         display: flex;
         align-items: center;
@@ -47,7 +47,7 @@
         font-weight: $weight-bold;
         font-size: $font-xl;
         color: $white;
-        box-shadow: 0 4px 16px rgba($accent, 0.3);
+        box-shadow: 0 4px 16px rgba($primary, 0.3);
     }
 
     &__dots {

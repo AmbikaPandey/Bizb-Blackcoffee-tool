@@ -12,6 +12,7 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Clients = lazy(() => import("./pages/Clients"));
 const ClientDetail = lazy(() => import("./pages/ClientDetail"));
 const Products = lazy(() => import("./pages/Products"));
+const HsnMaster = lazy(() => import("./pages/HsnMaster"));
 const Invoices = lazy(() => import("./pages/Invoices"));
 const NewInvoice = lazy(() => import("./pages/NewInvoice"));
 const ViewInvoice = lazy(() => import("./pages/ViewInvoice"));
@@ -46,16 +47,12 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
-function RoleRoute({ children, roles }) {
-  const { user, loading } = useAuth();
+function PermissionRoute({ children, module, action = 'view' }) {
+  const { user, loading, can } = useAuth();
   if (loading) return <AppLoader />;
   if (!user) return <Navigate to="/login" replace />;
-  if (roles && !roles.includes(user.role)) return <Navigate to="/" replace />;
+  if (!can(module, action)) return <Navigate to="/" replace />;
   return children;
-}
-
-function AdminRoute({ children }) {
-  return <RoleRoute roles={['Admin']}>{children}</RoleRoute>;
 }
 
 function PublicRoute({ children }) {
@@ -66,9 +63,12 @@ function PublicRoute({ children }) {
 }
 
 function DefaultRedirect() {
-  const { user } = useAuth();
-  if (user?.role === 'Executive') return <Navigate to="/projects" replace />;
-  return <Navigate to="/dashboard" replace />;
+  const { can } = useAuth();
+  if (can('dashboard', 'view')) return <Navigate to="/dashboard" replace />;
+  if (can('projects', 'view')) return <Navigate to="/projects" replace />;
+  if (can('expenses', 'view')) return <Navigate to="/expenses" replace />;
+  if (can('users', 'view')) return <Navigate to="/users" replace />;
+  return <Navigate to="/login" replace />;
 }
 
 function LoginRedirect() {
@@ -89,23 +89,24 @@ export default function App() {
                 <Route path="/login" element={<PublicRoute><LoginRedirect /></PublicRoute>} />
                 <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
                   <Route index element={<DefaultRedirect />} />
-                  <Route path="dashboard" element={<RoleRoute roles={['Admin', 'Manager']}><Dashboard /></RoleRoute>} />
-                  <Route path="clients" element={<RoleRoute roles={['Admin', 'Manager']}><Clients /></RoleRoute>} />
-                  <Route path="clients/:id" element={<RoleRoute roles={['Admin', 'Manager']}><ClientDetail /></RoleRoute>} />
-                  <Route path="products" element={<AdminRoute><Products /></AdminRoute>} />
-                  <Route path="invoices" element={<RoleRoute roles={['Admin', 'Manager']}><Invoices /></RoleRoute>} />
-                  <Route path="invoices/new" element={<RoleRoute roles={['Admin', 'Manager']}><NewInvoice /></RoleRoute>} />
-                  <Route path="invoices/:id" element={<RoleRoute roles={['Admin', 'Manager']}><ViewInvoice /></RoleRoute>} />
-                  <Route path="invoices/:id/edit" element={<RoleRoute roles={['Admin', 'Manager']}><EditInvoice /></RoleRoute>} />
-                  <Route path="payments" element={<AdminRoute><Payments /></AdminRoute>} />
-                  <Route path="projects" element={<Projects />} />
-                  <Route path="vendors" element={<RoleRoute roles={['Admin', 'Manager']}><Vendors /></RoleRoute>} />
-                  <Route path="vendors/:id" element={<RoleRoute roles={['Admin', 'Manager']}><VendorDetail /></RoleRoute>} />
-                  <Route path="expenses" element={<Expenses />} />
-                  <Route path="reports" element={<AdminRoute><Reports /></AdminRoute>} />
-                  <Route path="settings" element={<AdminRoute><Settings /></AdminRoute>} />
-                  <Route path="users" element={<ProtectedRoute><UsersPage /></ProtectedRoute>} />
-                  <Route path="users/:id" element={<ProtectedRoute><UserDetail /></ProtectedRoute>} />
+                  <Route path="dashboard" element={<PermissionRoute module="dashboard"><Dashboard /></PermissionRoute>} />
+                  <Route path="clients" element={<PermissionRoute module="clients"><Clients /></PermissionRoute>} />
+                  <Route path="clients/:id" element={<PermissionRoute module="clients"><ClientDetail /></PermissionRoute>} />
+                  <Route path="products" element={<PermissionRoute module="products"><Products /></PermissionRoute>} />
+                  <Route path="hsn-master" element={<PermissionRoute module="hsnMaster"><HsnMaster /></PermissionRoute>} />
+                  <Route path="invoices" element={<PermissionRoute module="invoices"><Invoices /></PermissionRoute>} />
+                  <Route path="invoices/new" element={<PermissionRoute module="invoices" action="create"><NewInvoice /></PermissionRoute>} />
+                  <Route path="invoices/:id" element={<PermissionRoute module="invoices"><ViewInvoice /></PermissionRoute>} />
+                  <Route path="invoices/:id/edit" element={<PermissionRoute module="invoices" action="edit"><EditInvoice /></PermissionRoute>} />
+                  <Route path="payments" element={<PermissionRoute module="payments"><Payments /></PermissionRoute>} />
+                  <Route path="projects" element={<PermissionRoute module="projects"><Projects /></PermissionRoute>} />
+                  <Route path="vendors" element={<PermissionRoute module="vendors"><Vendors /></PermissionRoute>} />
+                  <Route path="vendors/:id" element={<PermissionRoute module="vendors"><VendorDetail /></PermissionRoute>} />
+                  <Route path="expenses" element={<PermissionRoute module="expenses"><Expenses /></PermissionRoute>} />
+                  <Route path="reports" element={<PermissionRoute module="reports"><Reports /></PermissionRoute>} />
+                  <Route path="settings" element={<PermissionRoute module="settings"><Settings /></PermissionRoute>} />
+                  <Route path="users" element={<PermissionRoute module="users"><UsersPage /></PermissionRoute>} />
+                  <Route path="users/:id" element={<PermissionRoute module="users"><UserDetail /></PermissionRoute>} />
                 </Route>
               </Routes>
             </Suspense>

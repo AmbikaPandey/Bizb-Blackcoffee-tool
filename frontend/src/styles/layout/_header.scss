@@ -74,7 +74,7 @@
     }
 
     &__avatar {
-        @include icon-circle($coffee-100, $coffee-600, 34px);
+        @include icon-circle($navy-100, $navy-600, 34px);
     }
 
     &__name {
@@ -132,7 +132,7 @@
             margin-top: $space-1;
             padding: 1px $space-2;
             background: $accent-light;
-            color: $primary;
+            color: $accent;
             font-size: $font-xs;
             font-weight: $weight-medium;
             border-radius: 999px;

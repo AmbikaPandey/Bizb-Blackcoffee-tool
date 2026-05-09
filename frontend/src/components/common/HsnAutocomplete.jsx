@@ -11,7 +11,7 @@ import { searchHSN, fetchHSNDetails } from '../../utils/hsnLookup';
  *   placeholder - input placeholder
  *   disabled    - disable the input
  */
-export default function HsnAutocomplete({ value = '', onChange, onSelect, placeholder = 'HSN/SAC', disabled = false }) {
+export default function HsnAutocomplete({ value = '', onChange, onSelect, placeholder = 'HSN/SAC', disabled = false, error = false }) {
     const [query, setQuery] = useState(value);
     const [results, setResults] = useState([]);
     const [open, setOpen] = useState(false);
@@ -19,10 +19,17 @@ export default function HsnAutocomplete({ value = '', onChange, onSelect, placeh
     const [activeIdx, setActiveIdx] = useState(-1);
     const wrapperRef = useRef(null);
     const debounceRef = useRef(null);
+    const blurRef = useRef(null);
     const inputRef = useRef(null);
 
     // Sync external value changes
     useEffect(() => { setQuery(value); }, [value]);
+
+    // Cleanup timers on unmount
+    useEffect(() => () => {
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        if (blurRef.current) clearTimeout(blurRef.current);
+    }, []);
 
     // Close dropdown on outside click
     useEffect(() => {
@@ -68,15 +75,14 @@ export default function HsnAutocomplete({ value = '', onChange, onSelect, placeh
     };
 
     // Fetch full details when user leaves the field with a valid code
-    const handleBlur = async () => {
-        // Small delay to allow click on dropdown
-        setTimeout(async () => {
+    const handleBlur = () => {
+        if (blurRef.current) clearTimeout(blurRef.current);
+        blurRef.current = setTimeout(() => {
             setOpen(false);
             if (query && /^[0-9]{4,8}$/.test(query)) {
-                const details = await fetchHSNDetails(query);
-                if (details) {
-                    onSelect?.(details);
-                }
+                fetchHSNDetails(query).then(details => {
+                    if (details) onSelect?.(details);
+                });
             }
         }, 200);
     };
@@ -98,7 +104,7 @@ export default function HsnAutocomplete({ value = '', onChange, onSelect, placeh
         }
     };
 
-    const isInvalid = query && query.length >= 4 && !/^[0-9]{4,8}$/.test(query);
+    const isInvalid = error || (query && query.length >= 4 && !/^[0-9]{4,8}$/.test(query));
 
     return (
         <div className="hsn-autocomplete" ref={wrapperRef}>
@@ -123,7 +129,7 @@ export default function HsnAutocomplete({ value = '', onChange, onSelect, placeh
                 <ul className="hsn-autocomplete__dropdown">
                     {results.map((item, idx) => (
                         <li
-                            key={item.hsnCode}
+                            key={item.hsnCode + idx}
                             className={`hsn-autocomplete__item ${idx === activeIdx ? 'hsn-autocomplete__item--active' : ''}`}
                             onMouseDown={() => handleSelect(item)}
                             onMouseEnter={() => setActiveIdx(idx)}

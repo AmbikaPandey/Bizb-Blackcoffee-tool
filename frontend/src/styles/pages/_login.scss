@@ -41,14 +41,14 @@
         &-icon {
             width: 56px;
             height: 56px;
-            background: linear-gradient(135deg, $accent, $primary-light);
+            background: $primary;
             border-radius: $radius-xl;
             @include flex-center;
             color: $white;
             font-weight: $weight-bold;
             font-size: $font-xl;
             margin: 0 auto $space-4;
-            box-shadow: 0 4px 14px rgba($accent, 0.3);
+            box-shadow: 0 4px 14px rgba($primary, 0.3);
 
             @include mobile-sm {
                 width: 48px;

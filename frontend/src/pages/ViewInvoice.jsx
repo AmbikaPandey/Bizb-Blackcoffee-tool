@@ -224,7 +224,7 @@ export default function ViewInvoice() {
         }
     };
 
-    if (loading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading invoice...</div>;
+    if (loading) return <div className="page-loading">Loading invoice...</div>;
     if (!invoice) return null;
 
     const items = invoice.items || [];

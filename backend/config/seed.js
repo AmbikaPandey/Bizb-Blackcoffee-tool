@@ -5,6 +5,8 @@ const Product = require('../models/Product');
 const User = require('../models/User');
 const logger = require('../utils/logger');
 
+const { getPresetForRole } = require('./permissions');
+
 async function seed() {
   const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/bizb';
   await mongoose.connect(uri);
@@ -55,10 +57,11 @@ async function seed() {
   if (userCount === 0) {
     const devPassword = process.env.SEED_ADMIN_PASSWORD || 'admin123';
     await User.create({
-      username: 'Admin',
+      username: 'Ajay',
       email: 'admin@bizb.in',
       password: devPassword,
       role: 'Admin',
+      permissions: getPresetForRole('Admin'),
     });
     logger.info('Seeded admin user (admin@bizb.in) — change password after login');
   } else {

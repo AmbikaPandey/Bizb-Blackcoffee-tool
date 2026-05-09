@@ -105,7 +105,10 @@ export default function Invoices() {
                 setSelectedIds([]);
             }
         } catch (err) {
-            toast(err.message || 'Export to BUSY failed', 'error');
+            const msg = err.errors?.length
+                ? `${err.message}: ${err.errors.join(', ')}`
+                : err.detail || err.message || 'Export to BUSY failed';
+            toast(msg, 'error');
         } finally {
             setExporting(false);
             setBusyConfirm(null);
@@ -155,7 +158,7 @@ export default function Invoices() {
                     <table>
                         <thead>
                             <tr>
-                                <th style={{ width: 36 }}>
+                                <th className="col-checkbox">
                                     <input type="checkbox" checked={filtered.length > 0 && selectedIds.length === filtered.length} onChange={toggleSelectAll} />
                                 </th>
                                 <th>Invoice #</th>
@@ -166,13 +169,13 @@ export default function Invoices() {
                                 <th className="text-right">Balance</th>
                                 <th>Status</th>
                                 <th>BUSY</th>
-                                <th style={{ width: 40 }}></th>
+                                <th className="col-action-sm"></th>
                             </tr>
                         </thead>
                         <tbody>
                             {filtered.length === 0 ? (
                                 <tr>
-                                    <td colSpan="10" style={{ textAlign: 'center', padding: '2rem', color: '#9ca3af' }}>
+                                    <td colSpan="10" className="empty-cell">
                                         No invoices found. Click "New Invoice" to create one.
                                     </td>
                                 </tr>

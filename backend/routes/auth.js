@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
 const User = require('../models/User');
 const Session = require('../models/Session');
-const { authenticate, requireAdmin } = require('../middleware/auth');
+const { authenticate, requireAdmin, authorize } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -40,9 +40,13 @@ router.post('/login', loginLimiter, async (req, res) => {
       last_active_at: new Date(),
     });
 
+    const userPerms = user.permissions ? user.permissions.toObject() : {};
     res.json({
       token,
-      user: { id: user._id, username: user.username, email: user.email, role: user.role },
+      user: {
+        id: user._id, username: user.username, email: user.email,
+        role: user.role, permissions: userPerms,
+      },
     });
   } catch (err) {
     res.status(500).json({ error: 'Login failed' });

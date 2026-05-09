@@ -167,7 +167,7 @@ export default function Settings() {
                 onButtonClick={editing ? handleSave : undefined}
             />
 
-            <div className="tabs" style={{ marginBottom: '1.25rem' }}>
+            <div className="tabs">
                 {TABS.map(({ key, label, icon: Icon }) => (
                     <button key={key} onClick={() => setTab(key)} className={`tabs__btn ${tab === key ? 'tabs__btn--active' : ''}`}>
                         <Icon size={16} /> {label}
@@ -335,7 +335,7 @@ export default function Settings() {
 
                     <div className="settings-card">
                         <div className="settings-card__header">
-                            <h3>Default Terms & Conditions</h3>
+                            <h3>Payment Terms</h3>
                             <p>These will appear on all invoices by default</p>
                         </div>
                         <div className="settings-card__body">

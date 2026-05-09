@@ -55,8 +55,19 @@ export function AuthProvider({ children }) {
     const isExecutive = user?.role === 'Executive';
     const hasRole = (...roles) => roles.includes(user?.role);
 
+    /**
+     * Check if the current user has a specific permission.
+     * Admin always returns true.
+     * Usage: can('clients', 'edit')
+     */
+    const can = (module, action) => {
+        if (!user) return false;
+        if (user.role === 'Admin') return true;
+        return !!user.permissions?.[module]?.[action];
+    };
+
     return (
-        <AuthContext.Provider value={{ user, login, logout, loading, isAdmin, isManager, isExecutive, hasRole }}>
+        <AuthContext.Provider value={{ user, login, logout, loading, isAdmin, isManager, isExecutive, hasRole, can }}>
             {children}
         </AuthContext.Provider>
     );

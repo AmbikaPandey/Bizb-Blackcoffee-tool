@@ -7,7 +7,7 @@ const path = require('path');
 const fs = require('fs');
 const Invoice = require('../models/Invoice');
 const Setting = require('../models/Setting');
-const { authenticate } = require('../middleware/auth');
+const { authenticate, authorize } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const { generateBusyInvoiceXML, validateForBusyExport } = require('../utils/busy/xmlGenerator');
 
@@ -47,7 +47,7 @@ async function getFullInvoice(invoiceId) {
  * POST /api/busy/export/:invoiceId
  * Export a single invoice to BUSY XML
  */
-router.post('/export/:invoiceId', authenticate, async (req, res) => {
+router.post('/export/:invoiceId', authenticate, authorize('busyExports', 'export'), async (req, res) => {
   try {
     const { invoiceId } = req.params;
     const fullInvoice = await getFullInvoice(invoiceId);
@@ -108,7 +108,7 @@ router.post('/export/:invoiceId', authenticate, async (req, res) => {
  * Export multiple invoices to BUSY XML
  * Body: { invoiceIds: [id1, id2, ...] }
  */
-router.post('/export-bulk', authenticate, async (req, res) => {
+router.post('/export-bulk', authenticate, authorize('busyExports', 'export'), async (req, res) => {
   try {
     const { invoiceIds } = req.body;
     if (!invoiceIds || !Array.isArray(invoiceIds) || invoiceIds.length === 0) {
@@ -181,7 +181,7 @@ router.post('/export-bulk', authenticate, async (req, res) => {
  * GET /api/busy/history
  * Fetch export history (invoices that have been synced)
  */
-router.get('/history', authenticate, async (req, res) => {
+router.get('/history', authenticate, authorize('busyExports', 'view'), async (req, res) => {
   try {
     const { page = 1, limit = 20, status } = req.query;
     const filter = {};
@@ -228,7 +228,7 @@ router.get('/history', authenticate, async (req, res) => {
  * GET /api/busy/download/:invoiceId
  * Download generated XML file for an invoice
  */
-router.get('/download/:invoiceId', authenticate, async (req, res) => {
+router.get('/download/:invoiceId', authenticate, authorize('busyExports', 'export'), async (req, res) => {
   try {
     const invoice = await Invoice.findById(req.params.invoiceId).select('busyExportPath invoice_number').lean();
     if (!invoice) return res.status(404).json({ error: 'Invoice not found' });

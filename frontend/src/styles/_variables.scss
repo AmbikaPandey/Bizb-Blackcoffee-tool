@@ -1,26 +1,26 @@
 // ===========================
-// COLOR PALETTE — Blackcoffee Agency
+// COLOR PALETTE — BizB Dashboard
 // ===========================
-$primary: #3c2415;
-$primary-dark: #2a1810;
-$primary-light: #5c3a28;
-$accent: #c8956c;
-$accent-light: #faf3ec;
+$primary: #dc3545;
+$primary-dark: #c62828;
+$primary-light: #ef5350;
+$accent: #4f6ef7;
+$accent-light: #eef1fd;
 
 $white: #ffffff;
 $black: #000000;
-$body-bg: #faf7f4;
+$body-bg: #f0f2f8;
 
-$gray-50: #faf8f6;
-$gray-100: #f3f0ec;
-$gray-200: #e8e2db;
-$gray-300: #d4cbc1;
-$gray-400: #a89e94;
-$gray-500: #78706a;
-$gray-600: #5a524c;
-$gray-700: #3e3832;
-$gray-800: #2a2420;
-$gray-900: #1a1512;
+$gray-50: #f8f9fc;
+$gray-100: #f0f2f7;
+$gray-200: #e2e5ef;
+$gray-300: #cdd2df;
+$gray-400: #9ea4b6;
+$gray-500: #64748b;
+$gray-600: #4f5568;
+$gray-700: #363b4e;
+$gray-800: #252836;
+$gray-900: #0f172a;
 
 $success: #2d8659;
 $success-bg: #eef8f2;
@@ -38,20 +38,20 @@ $teal-bg: #eef9f7;
 $orange: #d4740e;
 $orange-bg: #fef5ec;
 
-// Brand accent shades
-$coffee-600: #5c3a28;
-$coffee-500: #6f4a35;
-$coffee-400: #8b6347;
-$coffee-300: #c8956c;
-$coffee-200: #e4c9ad;
-$coffee-100: #f5e8d8;
-$coffee-50: #faf3ec;
+// Brand accent shades (navy)
+$navy-600: #1a1d2e;
+$navy-500: #252840;
+$navy-400: #363b55;
+$navy-300: #4f5575;
+$navy-200: #9ea4bf;
+$navy-100: #dde0ed;
+$navy-50: #eef1fd;
 
 // ===========================
 // TYPOGRAPHY
 // ===========================
-$font-heading: "Poppins", sans-serif;
-$font-body: "Inter", "Roboto", sans-serif;
+$font-heading: "Inter", sans-serif;
+$font-body: "Inter", sans-serif;
 
 $font-xs: 1.2rem;
 $font-sm: 1.4rem;
@@ -110,7 +110,7 @@ $shadow-xl:
 $sidebar-width: 260px;
 $sidebar-collapsed: 72px;
 $header-height: 72px;
-$sidebar-bg: #1e1410;
+$sidebar-bg: #1a1d2e;
 
 // ===========================
 // TRANSITIONS
@@ -138,14 +138,14 @@ $bp-xl: 1280px;
     --color-surface-hover: #{$gray-50};
     --color-surface-alt: #{$gray-100};
     --color-bg-hover: #{$gray-50};
-    --color-row-hover: rgba(200, 149, 108, 0.06);
+    --color-row-hover: rgba(79, 110, 247, 0.06);
 
     // Text
     --color-text-primary: #{$gray-800};
     --color-text-secondary: #{$gray-600};
     --color-text-muted: #{$gray-500};
     --color-text-faint: #{$gray-400};
-    --color-text-heading: #{$primary-dark};
+    --color-text-heading: #{$gray-900};
 
     // Borders
     --color-border: #{$gray-200};
@@ -158,7 +158,7 @@ $bp-xl: 1280px;
     --color-input-text: #{$gray-900};
     --color-input-placeholder: #{$gray-400};
     --color-input-focus: #{$accent};
-    --color-input-focus-ring: rgba(200, 149, 108, 0.2);
+    --color-input-focus-ring: rgba(79, 110, 247, 0.2);
 
     // Cards & Dropdown
     --color-card-bg: #{$white};

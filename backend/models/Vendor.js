@@ -13,6 +13,8 @@ const vendorSchema = new mongoose.Schema({
   gstin: { type: String, default: '' },
   pan: { type: String, default: '' },
   contact: { type: String, default: '' },
+  contact1: { type: String, default: '' },
+  contact2: { type: String, default: '' },
   city: { type: String, default: '' },
   phone: { type: String, default: '' },
   email: { type: String, default: '' },

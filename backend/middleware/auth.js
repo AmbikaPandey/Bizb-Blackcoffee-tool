@@ -18,7 +18,13 @@ async function authenticate(req, res, next) {
   session.last_active_at = new Date();
   await session.save();
 
-  req.user = { id: user._id, username: user.username, email: user.email, role: user.role };
+  req.user = {
+    id: user._id,
+    username: user.username,
+    email: user.email,
+    role: user.role,
+    permissions: user.permissions || {},
+  };
   req.token = token;
   next();
 }
@@ -39,4 +45,25 @@ function requireRole(...roles) {
   };
 }
 
-module.exports = { authenticate, requireAdmin, requireRole };
+/**
+ * Permission-based authorization middleware.
+ * Admin role always bypasses permission checks.
+ * Usage: authorize('clients', 'edit')
+ */
+function authorize(module, action) {
+  return (req, res, next) => {
+    // Admin bypasses all permission checks
+    if (req.user?.role === 'Admin') return next();
+
+    const perms = req.user?.permissions;
+    if (!perms || !perms[module] || !perms[module][action]) {
+      return res.status(403).json({
+        error: 'Permission denied',
+        detail: `You do not have ${action} access to ${module}`,
+      });
+    }
+    next();
+  };
+}
+
+module.exports = { authenticate, requireAdmin, requireRole, authorize };

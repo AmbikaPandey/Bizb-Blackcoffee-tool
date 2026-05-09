@@ -2,12 +2,14 @@ const express = require('express');
 const User = require('../models/User');
 const Expense = require('../models/Expense');
 const AuditLog = require('../models/AuditLog');
-const { authenticate, requireRole } = require('../middleware/auth');
+const { authenticate, authorize } = require('../middleware/auth');
+const { getPresetForRole, sanitizePermissions } = require('../config/permissions');
 
 const router = express.Router();
 
 const PAN_RE = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
 const PHONE_RE = /^[6-9]\d{9}$/;
+const PINCODE_RE = /^\d{6}$/;
 
 function sanitize(str) {
   return typeof str === 'string' ? str.replace(/[<>]/g, '').trim() : '';
@@ -34,7 +36,9 @@ router.get('/', authenticate, async (req, res) => {
       is_active: u.is_active, created_at: u.createdAt,
       contact_number: u.contact_number, designation: u.designation,
       employee_code: u.employee_code, address: u.address, pan: u.pan,
+      pincode: u.pincode, office_branch: u.office_branch,
       bank_details: u.bank_details,
+      permissions: u.permissions || {},
     })));
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch users' });
@@ -84,10 +88,10 @@ router.get('/:id', authenticate, async (req, res) => {
   }
 });
 
-// POST create user — Admin can create any role, Manager can only create Executive
-router.post('/', authenticate, requireRole('Admin', 'Manager'), async (req, res) => {
+// POST create user
+router.post('/', authenticate, authorize('users', 'create'), async (req, res) => {
   try {
-    const { username, email, password, role, contact_number, address, employee_code, designation, bank_details, pan } = req.body;
+    const { username, email, password, role, contact_number, address, employee_code, designation, bank_details, pan, pincode, office_branch, permissions } = req.body;
 
     if (!username || !email || !password) {
       return res.status(400).json({ error: 'Username, email, and password are required' });
@@ -100,6 +104,9 @@ router.post('/', authenticate, requireRole('Admin', 'Manager'), async (req, res)
     }
     if (pan && !PAN_RE.test(pan)) {
       return res.status(400).json({ error: 'Invalid PAN format' });
+    }
+    if (pincode && !PINCODE_RE.test(pincode)) {
+      return res.status(400).json({ error: 'Invalid pincode (must be 6 digits)' });
     }
 
     const assignedRole = req.user.role === 'Manager' ? 'Executive' : (role || 'Executive');
@@ -122,13 +129,21 @@ router.post('/', authenticate, requireRole('Admin', 'Manager'), async (req, res)
       finalEmpCode = `BC-${finalEmpCode}`;
     }
 
+    // Compute permissions: use explicit permissions for Custom role, else use role preset
+    const finalPermissions = assignedRole === 'Custom'
+      ? sanitizePermissions(permissions)
+      : getPresetForRole(assignedRole);
+
     const user = await User.create({
       username: sanitize(username), email, password, role: assignedRole,
+      permissions: finalPermissions,
       contact_number: sanitize(contact_number),
       address: sanitize(address),
       employee_code: finalEmpCode,
       designation: sanitize(designation),
       pan: sanitize(pan),
+      pincode: sanitize(pincode),
+      office_branch: sanitize(office_branch),
       bank_details: bank_details || {},
     });
 
@@ -160,7 +175,7 @@ router.put('/:id', authenticate, async (req, res) => {
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    const { username, email, role, is_active, contact_number, address, employee_code, designation, bank_details, pan } = req.body;
+    const { username, email, role, is_active, contact_number, address, employee_code, designation, bank_details, pan, pincode, office_branch, permissions } = req.body;
 
     if (contact_number && !PHONE_RE.test(contact_number)) {
       return res.status(400).json({ error: 'Invalid phone number (10 digits starting with 6-9)' });
@@ -168,12 +183,17 @@ router.put('/:id', authenticate, async (req, res) => {
     if (pan && !PAN_RE.test(pan)) {
       return res.status(400).json({ error: 'Invalid PAN format' });
     }
+    if (pincode && !PINCODE_RE.test(pincode)) {
+      return res.status(400).json({ error: 'Invalid pincode (must be 6 digits)' });
+    }
 
     // Non-admins editing self: can only change personal fields
     if (isSelf && req.user.role !== 'Admin') {
       if (contact_number !== undefined) target.contact_number = sanitize(contact_number);
       if (address !== undefined) target.address = sanitize(address);
       if (pan !== undefined) target.pan = sanitize(pan);
+      if (pincode !== undefined) target.pincode = sanitize(pincode);
+      if (office_branch !== undefined) target.office_branch = sanitize(office_branch);
       if (bank_details !== undefined) target.bank_details = bank_details;
       if (designation !== undefined) target.designation = sanitize(designation);
       // Cannot change: role, is_active, email, username, employee_code
@@ -186,8 +206,19 @@ router.put('/:id', authenticate, async (req, res) => {
       if (employee_code !== undefined) target.employee_code = sanitize(employee_code);
       if (designation !== undefined) target.designation = sanitize(designation);
       if (pan !== undefined) target.pan = sanitize(pan);
+      if (pincode !== undefined) target.pincode = sanitize(pincode);
+      if (office_branch !== undefined) target.office_branch = sanitize(office_branch);
       if (bank_details !== undefined) target.bank_details = bank_details;
-      if (role !== undefined && req.user.role === 'Admin') target.role = role;
+      if (role !== undefined && req.user.role === 'Admin') {
+        target.role = role;
+        // When role changes, auto-apply preset (unless Custom)
+        if (role !== 'Custom') {
+          target.permissions = getPresetForRole(role);
+        }
+      }
+      if (permissions !== undefined && req.user.role === 'Admin') {
+        target.permissions = sanitizePermissions(permissions);
+      }
     }
 
     await target.save();
@@ -225,8 +256,8 @@ router.put('/:id/password', authenticate, async (req, res) => {
   }
 });
 
-// DELETE user — Admin only
-router.delete('/:id', authenticate, requireRole('Admin'), async (req, res) => {
+// DELETE user
+router.delete('/:id', authenticate, authorize('users', 'delete'), async (req, res) => {
   try {
     if (String(req.user.id) === req.params.id) {
       return res.status(400).json({ error: 'Cannot delete your own account' });

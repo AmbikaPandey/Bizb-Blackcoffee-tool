@@ -2,31 +2,32 @@ import { NavLink, useLocation } from 'react-router-dom';
 import {
     LayoutDashboard, Users, Package, FileText, CreditCard,
     FolderKanban, Building2, Receipt, BarChart3, Settings, UserCog,
-    ChevronLeft, ChevronRight, LogOut
+    ChevronLeft, ChevronRight, LogOut, Hash
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSidebar } from '../../context/SidebarContext';
 
 const navItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['Admin', 'Manager'] },
-    { path: '/clients', label: 'Clients', icon: Users, roles: ['Admin', 'Manager'] },
-    { path: '/products', label: 'Products', icon: Package, roles: ['Admin'] },
-    { path: '/invoices', label: 'Invoices', icon: FileText, roles: ['Admin', 'Manager'] },
-    { path: '/payments', label: 'Payments', icon: CreditCard, roles: ['Admin'] },
-    { path: '/projects', label: 'Projects', icon: FolderKanban, roles: ['Admin', 'Manager', 'Executive'] },
-    { path: '/vendors', label: 'Vendors', icon: Building2, roles: ['Admin', 'Manager'] },
-    { path: '/expenses', label: 'Expenses', icon: Receipt, roles: ['Admin', 'Manager', 'Executive'] },
-    { path: '/reports', label: 'Reports', icon: BarChart3, roles: ['Admin'] },
-    { path: '/settings', label: 'Settings', icon: Settings, roles: ['Admin'] },
-    { path: '/users', label: 'Users', icon: UserCog, roles: ['Admin', 'Manager', 'Executive'] },
+    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, module: 'dashboard' },
+    { path: '/clients', label: 'Clients', icon: Users, module: 'clients' },
+    { path: '/products', label: 'Products', icon: Package, module: 'products' },
+    { path: '/hsn-master', label: 'HSN/SAC Master', icon: Hash, module: 'hsnMaster' },
+    { path: '/invoices', label: 'Invoices', icon: FileText, module: 'invoices' },
+    { path: '/payments', label: 'Payments', icon: CreditCard, module: 'payments' },
+    { path: '/projects', label: 'Projects', icon: FolderKanban, module: 'projects' },
+    { path: '/vendors', label: 'Vendors', icon: Building2, module: 'vendors' },
+    { path: '/expenses', label: 'Expenses', icon: Receipt, module: 'expenses' },
+    { path: '/reports', label: 'Reports', icon: BarChart3, module: 'reports' },
+    { path: '/settings', label: 'Settings', icon: Settings, module: 'settings' },
+    { path: '/users', label: 'Users', icon: UserCog, module: 'users' },
 ];
 
 export default function Sidebar() {
     const location = useLocation();
-    const { user, isAdmin, logout } = useAuth();
+    const { user, logout, can } = useAuth();
     const { collapsed, toggle, mobileOpen, closeMobile } = useSidebar();
 
-    const visibleItems = navItems.filter((item) => !item.roles || item.roles.includes(user?.role));
+    const visibleItems = navItems.filter((item) => can(item.module, 'view'));
 
     const handleNavClick = () => {
         if (window.innerWidth <= 768) closeMobile();

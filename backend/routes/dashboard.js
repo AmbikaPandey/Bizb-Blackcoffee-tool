@@ -3,12 +3,12 @@ const Client = require('../models/Client');
 const Invoice = require('../models/Invoice');
 const Payment = require('../models/Payment');
 const Project = require('../models/Project');
-const { authenticate, requireRole } = require('../middleware/auth');
+const { authenticate, authorize } = require('../middleware/auth');
 const { cleanInvoiceNumber } = require('../helpers/invoiceHelpers');
 
 const router = express.Router();
 
-router.get('/stats', authenticate, requireRole('Admin', 'Manager'), async (req, res) => {
+router.get('/stats', authenticate, authorize('dashboard', 'view'), async (req, res) => {
   try {
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
@@ -78,7 +78,7 @@ router.get('/stats', authenticate, requireRole('Admin', 'Manager'), async (req, 
 });
 
 // Client map data - returns clients with coordinates
-router.get('/client-map', authenticate, requireRole('Admin', 'Manager'), async (req, res) => {
+router.get('/client-map', authenticate, authorize('dashboard', 'view'), async (req, res) => {
   try {
     const filter = { latitude: { $exists: true, $type: 'number' }, longitude: { $exists: true, $type: 'number' } };
     if (req.query.service_type) filter.service_type = req.query.service_type;

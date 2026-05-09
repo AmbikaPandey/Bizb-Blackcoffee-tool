@@ -26,7 +26,7 @@ const formatDuration = (start, end) => {
 
 export default function Projects() {
     const toast = useToast();
-    const { isAdmin, isExecutive } = useAuth();
+    const { isAdmin, isExecutive, can } = useAuth();
     const [projects, setProjects] = useState([]);
     const [clients, setClients] = useState([]);
     const [allUsers, setAllUsers] = useState([]);
@@ -125,7 +125,7 @@ export default function Projects() {
 
     return (
         <div>
-            <PageHeader title="Projects" subtitle="Manage projects and track profitability" buttonLabel={!isExecutive ? "Add Project" : undefined} onButtonClick={!isExecutive ? openCreate : undefined} />
+            <PageHeader title="Projects" subtitle="Manage projects and track profitability" buttonLabel={can('projects', 'create') ? "Add Project" : undefined} onButtonClick={can('projects', 'create') ? openCreate : undefined} />
 
             <div className="stats-grid stats-grid--4">
                 <StatCard label="Total Projects" value={projects.length} icon={FolderKanban} variant="blue" />
@@ -154,7 +154,7 @@ export default function Projects() {
                         <tbody>
                             {filtered.length === 0 ? (
                                 <tr>
-                                    <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: '#9ca3af' }}>
+                                    <td colSpan="6" className="empty-cell">
                                         No projects found. Click "Add Project" to create one.
                                     </td>
                                 </tr>
@@ -162,7 +162,7 @@ export default function Projects() {
                                 <tr key={p.id || p._id}>
                                     <td>
                                         <div className="font-medium">{p.name}</div>
-                                        {p.code && <div className="text-muted" style={{ fontSize: '0.75rem' }}>Code: {p.code}</div>}
+                                        {p.code && <div className="text-muted text-xs">Code: {p.code}</div>}
                                     </td>
                                     <td>{p.client || '-'}</td>
                                     <td><StatusBadge status={p.status} /></td>
@@ -171,8 +171,8 @@ export default function Projects() {
                                     <td>
                                         <ActionMenu actions={[
                                             { icon: <Eye size={15} />, label: 'View Details', onClick: () => setViewTarget(p) },
-                                            ...(!isExecutive ? [{ icon: <Pencil size={15} />, label: 'Edit', onClick: () => openEdit(p) }] : []),
-                                            ...(isAdmin ? [{ divider: true }, { icon: <Trash2 size={15} />, label: 'Delete', danger: true, onClick: () => setDeleteTarget(p) }] : []),
+                                            ...(can('projects', 'edit') ? [{ icon: <Pencil size={15} />, label: 'Edit', onClick: () => openEdit(p) }] : []),
+                                            ...(can('projects', 'delete') ? [{ divider: true }, { icon: <Trash2 size={15} />, label: 'Delete', danger: true, onClick: () => setDeleteTarget(p) }] : []),
                                         ]} />
                                     </td>
                                 </tr>
@@ -272,12 +272,11 @@ export default function Projects() {
                     )}
                     <div className="form-group">
                         <label className="form-group__label">Assigned Executives</label>
-                        <select className="form-group__input" multiple value={form.assigned_executives}
-                            onChange={(e) => setForm({ ...form, assigned_executives: Array.from(e.target.selectedOptions, o => o.value) })}
-                            style={{ minHeight: '80px' }}>
+                        <select className="form-group__input form-group__select--multi" multiple value={form.assigned_executives}
+                            onChange={(e) => setForm({ ...form, assigned_executives: Array.from(e.target.selectedOptions, o => o.value) })}>
                             {executives.map((ex) => <option key={ex.id} value={ex.id}>{ex.username}</option>)}
                         </select>
-                        <small style={{ color: '#6b7280', fontSize: '0.75rem' }}>Hold Ctrl/Cmd to select multiple</small>
+                        <small className="form-hint">Hold Ctrl/Cmd to select multiple</small>
                     </div>
                     <div className="form-actions">
                         <button type="button" className="btn-cancel" onClick={() => setShowModal(false)}>Cancel</button>

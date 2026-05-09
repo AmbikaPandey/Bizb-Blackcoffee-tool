@@ -13,9 +13,9 @@ import { lookupPincode } from '../utils/pincodeLookup';
 import { formatCurrency } from '../utils/currency';
 import { uppercaseFormData } from '../utils/formTransform';
 import { validate, transform } from '../utils/validation';
-import { lookupGST, isValidGSTIN, extractPanFromGstin, getStateFromGstin } from '../utils/gstLookup';
+import { lookupGST, isValidGSTIN } from '../utils/gstLookup';
 
-const emptyForm = { name: '', gstin: '', pan: '', email: '', phone: '', contact: '', service_type: '', address: '', pincode: '', city: '', state: '', latitude: '', longitude: '' };
+const emptyForm = { name: '', gstin: '', email: '', phone: '', contact: '', address: '', pincode: '', city: '', state: '', latitude: '', longitude: '' };
 
 export default function Clients() {
     const toast = useToast();
@@ -49,7 +49,7 @@ export default function Clients() {
 
     function openEdit(c) {
         setEditTarget(c);
-        setForm({ name: c.name || '', gstin: c.gstin || '', pan: c.pan || '', email: c.email || '', phone: c.phone || '', contact: c.contact || '', service_type: c.service_type || '', address: c.address || '', pincode: c.pincode || '', city: c.city || '', state: c.state || '', latitude: c.latitude || '', longitude: c.longitude || '' });
+        setForm({ name: c.name || '', gstin: c.gstin || '', email: c.email || '', phone: c.phone || '', contact: c.contact || '', address: c.address || '', pincode: c.pincode || '', city: c.city || '', state: c.state || '', latitude: c.latitude || '', longitude: c.longitude || '' });
         setErrors({});
         setShowModal(true);
     }
@@ -59,10 +59,8 @@ export default function Clients() {
         if (!form.name.trim()) { toast('Client name is required', 'error'); return; }
         if (form.pincode && !/^\d{6}$/.test(form.pincode)) { toast('Pincode must be 6 digits', 'error'); return; }
         const phoneErr = form.phone ? validate('phone', form.phone) : { valid: true };
-        const panErr = form.pan ? validate('pan', form.pan) : { valid: true };
         const gstErr = form.gstin ? validate('gstin', form.gstin) : { valid: true };
         if (!phoneErr.valid) { toast(phoneErr.error, 'error'); return; }
-        if (!panErr.valid) { toast(panErr.error, 'error'); return; }
         if (!gstErr.valid) { toast(gstErr.error, 'error'); return; }
         setSaving(true);
         try {
@@ -116,7 +114,6 @@ export default function Clients() {
                             <tr>
                                 <th>Client Name</th>
                                 <th>GSTIN</th>
-                                <th>Service Type</th>
                                 <th>Contact</th>
                                 <th>City</th>
                                 <th className="text-right">Outstanding</th>
@@ -128,7 +125,6 @@ export default function Clients() {
                                 <tr key={client.id || client._id}>
                                     <td className="font-medium">{client.name}</td>
                                     <td className="mono">{client.gstin || '-'}</td>
-                                    <td>{client.service_type || '-'}</td>
                                     <td>{client.contact || '-'}</td>
                                     <td>{client.city || '-'}</td>
                                     <td className={`text-right font-medium ${client.outstanding > 0 ? 'balance-red' : ''}`}>
@@ -146,7 +142,7 @@ export default function Clients() {
                                 </tr>
                             ))}
                             {filtered.length === 0 && (
-                                <tr><td colSpan={7} className="text-center">No clients found</td></tr>
+                                <tr><td colSpan={6} className="text-center">No clients found</td></tr>
                             )}
                         </tbody>
                     </table>
@@ -155,20 +151,14 @@ export default function Clients() {
 
             <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editTarget ? 'Edit Client' : 'Add New Client'}>
                 <form onSubmit={handleSubmit}>
-                    <div className="form-row form-row--2">
-                        <div className="form-group">
-                            <label className="form-group__label">Client Name *</label>
-                            <input type="text" placeholder="Enter client name" className="form-group__input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
-                        </div>
-                        <div className="form-group">
-                            <label className="form-group__label">Service Type</label>
-                            <input type="text" placeholder="e.g. IT Services, Consulting" className="form-group__input" value={form.service_type} onChange={(e) => setForm({ ...form, service_type: e.target.value })} />
-                        </div>
+                    <div className="form-group">
+                        <label className="form-group__label">Client Name *</label>
+                        <input type="text" placeholder="Enter client name" className="form-group__input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
                     </div>
                     <div className="form-row form-row--2">
                         <div className="form-group">
                             <label className="form-group__label">GSTIN</label>
-                            <div style={{ position: 'relative' }}>
+                            <div className="input-with-spinner">
                                 <input type="text" placeholder="22AAAAA0000A1Z5" className={`form-group__input${errors.gstin ? ' form-group__input--error' : ''}`} value={form.gstin}
                                     onChange={(e) => {
                                         const val = transform('gstin', e.target.value);
@@ -187,30 +177,15 @@ export default function Clients() {
                                                 name: info.name || prev.name,
                                                 address: info.address || prev.address,
                                                 state: info.state || prev.state,
-                                                pan: info.pan || extractPanFromGstin(prev.gstin) || prev.pan,
                                                 pincode: info.pincode || prev.pincode,
                                             }));
                                         }
                                     }}
                                 />
-                                {gstLoading && <Loader2 size={16} className="spin" style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', color: '#888' }} />}
+                                {gstLoading && <Loader2 size={16} className="spin input-with-spinner__spinner" />}
                             </div>
                             {errors.gstin && <span className="form-group__error">{errors.gstin}</span>}
                         </div>
-                        <div className="form-group">
-                            <label className="form-group__label">PAN</label>
-                            <input type="text" placeholder="AAAAA9999A" className={`form-group__input${errors.pan ? ' form-group__input--error' : ''}`} value={form.pan} maxLength={10}
-                                onChange={(e) => {
-                                    const val = transform('pan', e.target.value);
-                                    setForm({ ...form, pan: val });
-                                    if (val && !validate('pan', val).valid) setErrors(p => ({ ...p, pan: 'Invalid PAN format' }));
-                                    else setErrors(p => ({ ...p, pan: '' }));
-                                }}
-                            />
-                            {errors.pan && <span className="form-group__error">{errors.pan}</span>}
-                        </div>
-                    </div>
-                    <div className="form-row form-row--2">
                         <div className="form-group">
                             <label className="form-group__label">Email</label>
                             <input type="email" placeholder="client@example.com" className="form-group__input" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
@@ -241,7 +216,7 @@ export default function Clients() {
                     <div className="form-row form-row--3">
                         <div className="form-group">
                             <label className="form-group__label">Pincode</label>
-                            <div style={{ position: 'relative' }}>
+                            <div className="input-with-spinner">
                                 <input type="text" placeholder="110001" className="form-group__input" value={form.pincode} maxLength={6} onChange={async (e) => {
                                     const val = e.target.value.replaceAll(/\D/g, '').slice(0, 6);
                                     setForm((prev) => ({ ...prev, pincode: val }));
@@ -252,7 +227,7 @@ export default function Clients() {
                                         if (info) setForm((prev) => ({ ...prev, city: info.city, state: info.state, latitude: info.latitude || prev.latitude, longitude: info.longitude || prev.longitude }));
                                     }
                                 }} />
-                                {pincodeLoading && <Loader2 size={16} className="spin" style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', color: '#888' }} />}
+                                {pincodeLoading && <Loader2 size={16} className="spin input-with-spinner__spinner" />}
                             </div>
                         </div>
                         <div className="form-group">
@@ -275,8 +250,8 @@ export default function Clients() {
                         </div>
                     </div>
                     {form.latitude && form.longitude && (
-                        <div style={{ marginBottom: '1rem' }}>
-                            <button type="button" className="btn-cancel" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem' }} onClick={() => window.open(`https://www.google.com/maps?q=${form.latitude},${form.longitude}`, '_blank')}>
+                        <div className="map-link-wrapper">
+                            <button type="button" className="btn-cancel btn-map-link" onClick={() => window.open(`https://www.google.com/maps?q=${form.latitude},${form.longitude}`, '_blank')}>
                                 <MapPin size={14} /> Locate on Map
                             </button>
                         </div>

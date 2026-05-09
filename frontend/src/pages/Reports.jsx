@@ -26,7 +26,7 @@ function AgeingReport() {
     }, []);
 
     if (loading) return <PageLoader />;
-    if (!data) return <p className="text-center text-muted" style={{ padding: '2rem' }}>Failed to load data</p>;
+    if (!data) return <p className="text-center text-muted empty-message">Failed to load data</p>;
 
     const { buckets, totalOutstanding, clients } = data;
     const bucketLabels = [
@@ -105,7 +105,7 @@ function GstSummary() {
     }, [from, to]);
 
     if (loading) return <PageLoader />;
-    if (!data) return <p className="text-center text-muted" style={{ padding: '2rem' }}>Failed to load data</p>;
+    if (!data) return <p className="text-center text-muted empty-message">Failed to load data</p>;
 
     return (
         <>
@@ -200,7 +200,7 @@ function ClientLedger() {
     return (
         <>
             <div className="reports__filters">
-                <div className="form-group" style={{ minWidth: 250 }}>
+                <div className="form-group form-group--wide">
                     <label className="form-group__label">Client *</label>
                     <select className="form-group__input" value={clientId} onChange={(e) => setClientId(e.target.value)}>
                         <option value="">Select client</option>
@@ -216,7 +216,7 @@ function ClientLedger() {
                     <input type="date" className="form-group__input" value={to} onChange={(e) => setTo(e.target.value)} />
                 </div>
             </div>
-            {!clientId && <p className="text-center text-muted" style={{ padding: '2rem' }}>Select a client to view ledger</p>}
+            {!clientId && <p className="text-center text-muted empty-message">Select a client to view ledger</p>}
             {loading && <PageLoader />}
             {data && !loading && (
                 <div className="page-card">
@@ -236,7 +236,7 @@ function ClientLedger() {
                             </div>
                         </div>
                     </div>
-                    <h4 style={{ padding: '1rem 1.5rem 0' }}>Ledger Entries</h4>
+                    <h4 className="card-section-title">Ledger Entries</h4>
                     <div className="page-card__table">
                         <table>
                             <thead>
@@ -282,7 +282,7 @@ function EmployeeReimbursements() {
     }, []);
 
     if (loading) return <PageLoader />;
-    if (!data) return <p className="text-center text-muted" style={{ padding: '2rem' }}>Failed to load data</p>;
+    if (!data) return <p className="text-center text-muted empty-message">Failed to load data</p>;
 
     return (
         <>
@@ -316,7 +316,7 @@ function EmployeeReimbursements() {
                                     </tr>
                                     {expanded === emp.name && emp.items.map((item) => (
                                         <tr key={item.id} className="reports__detail-row">
-                                            <td style={{ paddingLeft: '2rem' }}>{item.description}</td>
+                                            <td className="indent-cell">{item.description}</td>
                                             <td className="text-right">{formatCurrency(item.amount)}</td>
                                             <td>{formatDate(item.date)}</td>
                                             <td><StatusBadge status={item.status} /></td>

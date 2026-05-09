@@ -1,7 +1,7 @@
 const express = require('express');
 const Vendor = require('../models/Vendor');
 const Product = require('../models/Product');
-const { authenticate, requireRole } = require('../middleware/auth');
+const { authenticate, authorize } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -14,7 +14,7 @@ function sanitize(str) {
   return typeof str === 'string' ? str.replace(/[<>]/g, '').trim() : '';
 }
 
-router.get('/', authenticate, requireRole('Admin', 'Manager'), async (req, res) => {
+router.get('/', authenticate, authorize('vendors', 'view'), async (req, res) => {
   try {
     const vendors = await Vendor.find().populate('created_by', 'username').sort({ name: 1 }).lean();
     res.json(vendors.map((v) => ({
@@ -27,7 +27,7 @@ router.get('/', authenticate, requireRole('Admin', 'Manager'), async (req, res) 
   }
 });
 
-router.get('/:id', authenticate, requireRole('Admin', 'Manager'), async (req, res) => {
+router.get('/:id', authenticate, authorize('vendors', 'view'), async (req, res) => {
   try {
     const vendor = await Vendor.findById(req.params.id).populate('created_by', 'username').lean();
     if (!vendor) return res.status(404).json({ error: 'Vendor not found' });
@@ -46,17 +46,20 @@ router.get('/:id', authenticate, requireRole('Admin', 'Manager'), async (req, re
   }
 });
 
-router.post('/', authenticate, requireRole('Admin', 'Manager'), async (req, res) => {
+router.post('/', authenticate, authorize('vendors', 'create'), async (req, res) => {
   try {
-    const { name, gstin, pan, contact, city, phone, email, state, address, pincode, bank_details } = req.body;
+    const { name, gstin, pan, contact, contact1, contact2, city, phone, email, state, address, pincode, bank_details } = req.body;
     if (!name || !name.trim()) return res.status(400).json({ error: 'Vendor name is required' });
     if (phone && !PHONE_RE.test(phone)) return res.status(400).json({ error: 'Invalid phone number (10 digits starting with 6-9)' });
+    if (contact1 && !PHONE_RE.test(contact1)) return res.status(400).json({ error: 'Invalid Contact 1 (10 digits starting with 6-9)' });
+    if (contact2 && !PHONE_RE.test(contact2)) return res.status(400).json({ error: 'Invalid Contact 2 (10 digits starting with 6-9)' });
     if (pan && !PAN_RE.test(pan)) return res.status(400).json({ error: 'Invalid PAN format' });
     if (gstin && !GSTIN_RE.test(gstin)) return res.status(400).json({ error: 'Invalid GSTIN format' });
 
     const vendor = await Vendor.create({
       name: sanitize(name), gstin: sanitize(gstin), pan: sanitize(pan),
-      contact: sanitize(contact), city: sanitize(city), phone: sanitize(phone),
+      contact: sanitize(contact), contact1: sanitize(contact1), contact2: sanitize(contact2),
+      city: sanitize(city), phone: sanitize(phone),
       email: sanitize(email), state: sanitize(state), address: sanitize(address),
       pincode: sanitize(pincode), bank_details: bank_details || {},
       created_by: req.user.id,
@@ -67,9 +70,11 @@ router.post('/', authenticate, requireRole('Admin', 'Manager'), async (req, res)
   }
 });
 
-router.put('/:id', authenticate, requireRole('Admin', 'Manager'), async (req, res) => {
+router.put('/:id', authenticate, authorize('vendors', 'edit'), async (req, res) => {
   try {
     if (req.body.phone && !PHONE_RE.test(req.body.phone)) return res.status(400).json({ error: 'Invalid phone number (10 digits starting with 6-9)' });
+    if (req.body.contact1 && !PHONE_RE.test(req.body.contact1)) return res.status(400).json({ error: 'Invalid Contact 1 (10 digits starting with 6-9)' });
+    if (req.body.contact2 && !PHONE_RE.test(req.body.contact2)) return res.status(400).json({ error: 'Invalid Contact 2 (10 digits starting with 6-9)' });
     if (req.body.pan && !PAN_RE.test(req.body.pan)) return res.status(400).json({ error: 'Invalid PAN format' });
     if (req.body.gstin && !GSTIN_RE.test(req.body.gstin)) return res.status(400).json({ error: 'Invalid GSTIN format' });
 
@@ -81,7 +86,7 @@ router.put('/:id', authenticate, requireRole('Admin', 'Manager'), async (req, re
   }
 });
 
-router.delete('/:id', authenticate, requireRole('Admin', 'Manager'), async (req, res) => {
+router.delete('/:id', authenticate, authorize('vendors', 'delete'), async (req, res) => {
   try {
     const vendor = await Vendor.findByIdAndDelete(req.params.id);
     if (!vendor) return res.status(404).json({ error: 'Vendor not found' });

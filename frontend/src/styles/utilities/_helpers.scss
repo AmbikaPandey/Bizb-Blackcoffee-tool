@@ -36,6 +36,9 @@
 .text-orange {
     color: $orange;
 }
+.text-xs {
+    font-size: $font-xs;
+}
 .balance-red {
     color: $danger;
     font-weight: 500;
@@ -45,6 +48,131 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+// ── Empty state (table / placeholder) ───────
+.empty-cell {
+    text-align: center;
+    padding: 2rem;
+    color: $gray-400;
+}
+
+.empty-message {
+    text-align: center;
+    padding: 2rem;
+    color: var(--color-text-muted);
+}
+
+// ── Form error banner ───────────────────────
+.form-error-banner {
+    background: $danger-bg;
+    color: $danger;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    font-size: $font-sm;
+    margin-bottom: 1rem;
+}
+
+// ── Input prefix group (e.g. BC- prefix) ────
+.input-prefix-group {
+    display: flex;
+    align-items: center;
+
+    &__prefix {
+        padding: 0.5rem 0.75rem;
+        background: var(--color-bg-hover);
+        border: 1px solid var(--color-border);
+        border-right: none;
+        border-radius: 0.5rem 0 0 0.5rem;
+        font-size: $font-sm;
+        color: var(--color-text-muted);
+        white-space: nowrap;
+    }
+
+    .form-group__input {
+        border-radius: 0 0.5rem 0.5rem 0;
+    }
+}
+
+// ── Form hint (small helper text) ───────────
+.form-hint {
+    font-size: $font-xs;
+    color: var(--color-text-muted);
+}
+
+// ── Form section heading ────────────────────
+.form-section-title {
+    margin: 1rem 0 0.5rem;
+    font-size: 1.3rem;
+    font-weight: $weight-semibold;
+    color: #305cde;
+}
+
+// ── Input with spinner wrapper ──────────────
+.input-with-spinner {
+    position: relative;
+
+    &__spinner {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: $gray-400;
+    }
+}
+
+// ── Inline field error ──────────────────────
+.field-error {
+    color: $danger;
+    font-size: $font-xs;
+}
+
+// ── Map link button wrapper ─────────────────
+.map-link-wrapper {
+    margin-bottom: 1rem;
+}
+
+.btn-map-link {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: $font-sm;
+}
+
+// ── Column width helpers ────────────────────
+.col-checkbox {
+    width: 36px;
+}
+
+.col-action-sm {
+    width: 40px;
+}
+
+// ── Multi-select field ──────────────────────
+.form-group__select--multi {
+    min-height: 80px;
+}
+
+// ── Section heading inside card ─────────────
+.card-section-title {
+    padding: 1rem 1.5rem 0;
+    margin: 0;
+}
+
+// ── Indented row cell ───────────────────────
+.indent-cell {
+    padding-left: 2rem;
+}
+
+// ── Client filter min-width ─────────────────
+.form-group--wide {
+    min-width: 250px;
+}
+
+// ── Loading state placeholder ───────────────
+.page-loading {
+    padding: 2rem;
+    text-align: center;
 }
 
 .spin {

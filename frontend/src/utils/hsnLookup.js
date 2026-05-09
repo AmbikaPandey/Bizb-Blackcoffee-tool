@@ -5,20 +5,35 @@ const hsnCache = new Map();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 /**
- * Fetch HSN details by exact code with caching
- * @param {string} hsnCode - The HSN/SAC code to look up
- * @returns {Promise<object|null>} HSN details or null if not found
+ * Fetch HSN details by exact code with caching.
+ * Tries hsn-master first, then falls back to legacy hsn collection.
  */
 export async function fetchHSNDetails(hsnCode) {
   if (!hsnCode || !/^[0-9]{4,8}$/.test(hsnCode)) return null;
 
-  // Check cache first
   const cached = hsnCache.get(hsnCode);
   if (cached && Date.now() - cached.time < CACHE_TTL) {
     return cached.data;
   }
 
   try {
+    // Search hsn-master by exact code
+    const masterResult = await api.searchHsnMaster(hsnCode, 1);
+    if (masterResult.results?.length) {
+      const r = masterResult.results[0];
+      const data = {
+        hsnCode: r.code || r.hsnCode,
+        productName: r.productName || r.keywords?.join(', ') || '',
+        gstRate: r.gstRate,
+        category: r.category || '',
+        description: r.description || '',
+        type: r.type || 'HSN',
+      };
+      hsnCache.set(hsnCode, { data, time: Date.now() });
+      return data;
+    }
+
+    // Fallback to legacy
     const data = await api.getHSN(hsnCode);
     hsnCache.set(hsnCode, { data, time: Date.now() });
     return data;
@@ -28,17 +43,34 @@ export async function fetchHSNDetails(hsnCode) {
 }
 
 /**
- * Search HSN codes by query (code or product name)
- * @param {string} query - Search term
- * @param {number} limit - Max results
- * @returns {Promise<Array>} Array of matching HSN records
+ * Search HSN codes by query (code or keyword).
+ * Searches hsn-master first, then merges legacy results.
  */
 export async function searchHSN(query, limit = 10) {
   if (!query || query.trim().length < 2) return [];
 
   try {
-    const result = await api.searchHSN(query.trim(), 1, limit);
-    return result.results || [];
+    // Search new hsn-master
+    const masterResult = await api.searchHsnMaster(query.trim(), limit);
+    const masterHits = (masterResult.results || []).map(r => ({
+      id: r.id,
+      hsnCode: r.code || r.hsnCode,
+      productName: r.productName || r.keywords?.join(', ') || '',
+      gstRate: r.gstRate,
+      category: r.category || '',
+      description: r.description || '',
+      type: r.type || 'HSN',
+    }));
+
+    if (masterHits.length >= limit) return masterHits.slice(0, limit);
+
+    // Merge with legacy if not enough results
+    const legacyResult = await api.searchHSN(query.trim(), 1, limit - masterHits.length);
+    const legacyHits = (legacyResult.results || []).filter(
+      lr => !masterHits.some(mh => mh.hsnCode === lr.hsnCode)
+    );
+
+    return [...masterHits, ...legacyHits].slice(0, limit);
   } catch {
     return [];
   }
