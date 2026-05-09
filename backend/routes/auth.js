@@ -28,8 +28,8 @@ router.post('/login', loginLimiter, async (req, res) => {
     }
 
     const token = crypto.randomBytes(32).toString('hex');
-    const expiresHours = parseInt(process.env.SESSION_EXPIRY_HOURS, 10) || 24;
-    const expires_at = new Date(Date.now() + expiresHours * 60 * 60 * 1000);
+    const expiresMinutes = parseInt(process.env.SESSION_EXPIRY_MINUTES, 10) || 20;
+    const expires_at = new Date(Date.now() + expiresMinutes * 60 * 1000);
 
     await Session.create({
       user_id: user._id,

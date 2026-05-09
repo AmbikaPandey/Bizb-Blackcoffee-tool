@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Shield, ShieldCheck, Eye, Pencil, Trash2, KeyRound, ToggleLeft, ToggleRight, Loader2, ChevronDown } from 'lucide-react';
+import { Shield, ShieldCheck, Eye, EyeOff, Pencil, Trash2, KeyRound, ToggleLeft, ToggleRight, Loader2, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '../components/common/PageHeader';
 import StatusBadge from '../components/common/StatusBadge';
@@ -33,6 +33,8 @@ export default function UsersPage() {
     const [ifscLoading, setIfscLoading] = useState(false);
     const [ifscError, setIfscError] = useState('');
     const [fieldErrors, setFieldErrors] = useState({});
+    const [showPassword, setShowPassword] = useState(false);
+    const [showResetPassword, setShowResetPassword] = useState(false);
     const [permExpanded, setPermExpanded] = useState(false);
     const permBodyRef = useRef(null);
 
@@ -194,7 +196,7 @@ export default function UsersPage() {
                                                 { icon: <Eye size={15} />, label: 'View Details', onClick: () => navigate(`/users/${u.id}`) },
                                                 ...((canEdit || isSelf(u)) ? [
                                                     { icon: <Pencil size={15} />, label: 'Edit', onClick: () => openEditModal(u) },
-                                                    { icon: <KeyRound size={15} />, label: 'Reset Password', onClick: () => { setPasswordModal(u); setNewPassword(''); setError(''); } },
+                                                    { icon: <KeyRound size={15} />, label: 'Reset Password', onClick: () => { setPasswordModal(u); setNewPassword(''); setError(''); setShowResetPassword(false); } },
                                                 ] : []),
                                                 ...(isAdmin ? [
                                                     { icon: u.is_active ? <ToggleRight size={15} /> : <ToggleLeft size={15} />, label: u.is_active ? 'Deactivate' : 'Activate', onClick: () => handleToggleActive(u) },
@@ -230,8 +232,13 @@ export default function UsersPage() {
                     {!editingUser && (
                         <div className="form-group">
                             <label className="form-group__label">Password *</label>
-                            <input type="password" placeholder="Enter password" className="form-group__input"
-                                value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+                            <div className="input-with-toggle">
+                                <input type={showPassword ? 'text' : 'password'} placeholder="Enter password" className="form-group__input"
+                                    value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+                                <button type="button" className="input-with-toggle__btn" onClick={() => setShowPassword(v => !v)} tabIndex={-1}>
+                                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                </button>
+                            </div>
                         </div>
                     )}
                     <div className="form-group">
@@ -314,6 +321,7 @@ export default function UsersPage() {
                                 value={form.office_branch} onChange={(e) => setForm({ ...form, office_branch: e.target.value })}>
                                 <option value="">Select Branch</option>
                                 <option value="Delhi">Delhi</option>
+                                <option value="Noida">Noida</option>
                             </select>
                         </div>
                     </div>
@@ -445,8 +453,13 @@ export default function UsersPage() {
                     {error && <div className="form-error-banner">{error}</div>}
                     <div className="form-group">
                         <label className="form-group__label">New Password *</label>
-                        <input type="password" placeholder="Min 6 characters" className="form-group__input"
-                            value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+                        <div className="input-with-toggle">
+                            <input type={showResetPassword ? 'text' : 'password'} placeholder="Min 6 characters" className="form-group__input"
+                                value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+                            <button type="button" className="input-with-toggle__btn" onClick={() => setShowResetPassword(v => !v)} tabIndex={-1}>
+                                {showResetPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
+                        </div>
                     </div>
                     <div className="form-actions">
                         <button type="button" className="btn-cancel" onClick={() => setPasswordModal(null)}>Cancel</button>

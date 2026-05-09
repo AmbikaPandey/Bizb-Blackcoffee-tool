@@ -163,6 +163,38 @@
     }
 }
 
+// ── Password / Input Toggle ──
+.input-with-toggle {
+    position: relative;
+
+    .form-group__input {
+        padding-right: 40px;
+    }
+
+    &__btn {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border: none;
+        border-radius: $radius-md;
+        background: transparent;
+        color: var(--color-text-muted);
+        cursor: pointer;
+        transition: color $transition-fast;
+
+        &:hover {
+            color: var(--color-text-secondary);
+        }
+    }
+}
+
 .category-badge {
     display: inline-block;
     padding: 3px $space-2;

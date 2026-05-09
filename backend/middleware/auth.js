@@ -13,8 +13,8 @@ async function authenticate(req, res, next) {
   if (!user || !user.is_active) return res.status(401).json({ error: 'User not found or inactive' });
 
   // Sliding expiry — extend session on each request
-  const expiresHours = parseInt(process.env.SESSION_EXPIRY_HOURS, 10) || 24;
-  session.expires_at = new Date(Date.now() + expiresHours * 60 * 60 * 1000);
+  const expiresMinutes = parseInt(process.env.SESSION_EXPIRY_MINUTES, 10) || 20;
+  session.expires_at = new Date(Date.now() + expiresMinutes * 60 * 1000);
   session.last_active_at = new Date();
   await session.save();
 
