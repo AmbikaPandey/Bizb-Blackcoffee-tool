@@ -49,6 +49,13 @@
     overflow: hidden;
     text-overflow: ellipsis;
 }
+.cell-sub {
+    display: block;
+    font-size: $font-xs;
+    font-weight: $weight-regular;
+    color: var(--color-text-muted);
+    margin-top: 2px;
+}
 
 // ── Empty state (table / placeholder) ───────
 .empty-cell {

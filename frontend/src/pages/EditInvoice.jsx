@@ -334,7 +334,7 @@ export default function EditInvoice() {
                                     <select value={item.product_id || 'custom'} onChange={(e) => handleProductSelect(idx, e.target.value)}>
                                         <option value="custom">Custom item</option>
                                         {products.map((p) => (
-                                            <option key={p.id} value={p.id}>{p.name}</option>
+                                            <option key={p.id} value={p.id}>{p.name}{p.description ? ` — ${p.description}` : ''}</option>
                                         ))}
                                     </select>
                                 </div>

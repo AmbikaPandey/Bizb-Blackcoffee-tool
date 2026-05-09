@@ -16,6 +16,24 @@ import { uppercaseFormData } from '../utils/formTransform';
 const HSN_RE = /^\d{4}(\d{2}(\d{2})?)?$/;
 const emptyForm = { name: '', vendor_id: '', category: '', hsn: '', rate: '', unit: 'NOS', gst: '18', description: '', status: 'Active' };
 
+const CATEGORY_COLORS = [
+    { bg: '#edf4fa', color: '#2874a6' },
+    { bg: '#f5f1fa', color: '#7d5ba6' },
+    { bg: '#eef9f7', color: '#1a8a7d' },
+    { bg: '#fef5ec', color: '#d4740e' },
+    { bg: '#fdf6eb', color: '#c27a1a' },
+    { bg: '#eef8f2', color: '#2d8659' },
+    { bg: '#fdf0ee', color: '#c0392b' },
+    { bg: '#f0eafb', color: '#6c3483' },
+];
+
+function getCategoryStyle(category) {
+    if (!category) return null;
+    let hash = 0;
+    for (let i = 0; i < category.length; i++) hash = category.charCodeAt(i) + ((hash << 5) - hash);
+    return CATEGORY_COLORS[Math.abs(hash) % CATEGORY_COLORS.length];
+}
+
 export default function Products() {
     const toast = useToast();
     const [search, setSearch] = useState('');
@@ -170,9 +188,16 @@ export default function Products() {
                         <tbody>
                             {filtered.map((p) => (
                                 <tr key={p.id || p._id}>
-                                    <td className="font-medium">{p.name}</td>
+                                    <td className="font-medium">
+                                        {p.name}
+                                        {p.description && <span className="cell-sub">{p.description}</span>}
+                                    </td>
                                     <td>{p.vendor_name || '-'}</td>
-                                    <td>{p.category || '-'}</td>
+                                    <td>
+                                        {p.category
+                                            ? <span className="category-badge" style={{ background: getCategoryStyle(p.category).bg, color: getCategoryStyle(p.category).color }}>{p.category}</span>
+                                            : '-'}
+                                    </td>
                                     <td className="mono">{p.hsn}</td>
                                     <td className="text-right">{formatCurrency(p.rate)}</td>
                                     <td>{p.unit}</td>
