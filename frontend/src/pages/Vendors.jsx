@@ -66,6 +66,7 @@ export default function Vendors() {
     async function handleSubmit(e) {
         e.preventDefault();
         if (!form.name.trim()) { toast('Vendor name is required', 'error'); return; }
+        if (form.gst_status && ['Suspended', 'Cancelled', 'Inactive'].includes(form.gst_status)) { toast(`Cannot save — GST is ${form.gst_status}`, 'error'); return; }
         if (form.phone && !validate('phone', form.phone).valid) { toast('Invalid phone number (10 digits starting with 6-9)', 'error'); return; }
         if (form.contact1 && !validate('phone', form.contact1).valid) { toast('Invalid Contact 1 (10 digits starting with 6-9)', 'error'); return; }
         if (form.contact2 && !validate('phone', form.contact2).valid) { toast('Invalid Contact 2 (10 digits starting with 6-9)', 'error'); return; }
@@ -174,6 +175,12 @@ export default function Vendors() {
                                         const info = await lookupGST(form.gstin);
                                         setGstLoading(false);
                                         if (info) {
+                                            // Block if GST is suspended or cancelled
+                                            if (info.status && ['Suspended', 'Cancelled', 'Inactive'].includes(info.status)) {
+                                                setErrors(p => ({ ...p, gstin: `GST Status: ${info.status} — Cannot add this vendor` }));
+                                                setForm(prev => ({ ...prev, gst_status: info.status }));
+                                                return;
+                                            }
                                             const pincode = info.pincode || form.pincode;
                                             setForm(prev => ({
                                                 ...prev,

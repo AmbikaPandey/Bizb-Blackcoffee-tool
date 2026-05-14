@@ -57,6 +57,7 @@ export default function Clients() {
     async function handleSubmit(e) {
         e.preventDefault();
         if (!form.name.trim()) { toast('Client name is required', 'error'); return; }
+        if (form.gst_status && ['Suspended', 'Cancelled', 'Inactive'].includes(form.gst_status)) { toast(`Cannot save — GST is ${form.gst_status}`, 'error'); return; }
         if (form.pincode && !/^\d{6}$/.test(form.pincode)) { toast('Pincode must be 6 digits', 'error'); return; }
         const phoneErr = form.phone ? validate('phone', form.phone) : { valid: true };
         const gstErr = form.gstin ? validate('gstin', form.gstin) : { valid: true };
@@ -172,6 +173,12 @@ export default function Clients() {
                                         const info = await lookupGST(form.gstin);
                                         setGstLoading(false);
                                         if (info) {
+                                            // Block if GST is suspended or cancelled
+                                            if (info.status && ['Suspended', 'Cancelled', 'Inactive'].includes(info.status)) {
+                                                setErrors(p => ({ ...p, gstin: `GST Status: ${info.status} — Cannot add this client` }));
+                                                setForm(prev => ({ ...prev, gst_status: info.status }));
+                                                return;
+                                            }
                                             const pincode = info.pincode || form.pincode;
                                             setForm(prev => ({
                                                 ...prev,
