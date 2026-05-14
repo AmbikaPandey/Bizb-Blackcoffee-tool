@@ -174,15 +174,31 @@ export default function Vendors() {
                                         const info = await lookupGST(form.gstin);
                                         setGstLoading(false);
                                         if (info) {
+                                            const pincode = info.pincode || form.pincode;
                                             setForm(prev => ({
                                                 ...prev,
                                                 name: info.name || prev.name,
                                                 address: info.address || prev.address,
                                                 state: info.state || prev.state,
                                                 pan: info.pan || extractPanFromGstin(prev.gstin) || prev.pan,
-                                                pincode: info.pincode || prev.pincode,
+                                                pincode,
                                                 city: info.city || prev.city,
                                             }));
+                                            // Trigger pincode lookup for lat/lng if pincode was filled
+                                            if (pincode && pincode.length === 6) {
+                                                setPincodeLoading(true);
+                                                const pInfo = await lookupPincode(pincode);
+                                                setPincodeLoading(false);
+                                                if (pInfo) {
+                                                    setForm(prev => ({
+                                                        ...prev,
+                                                        city: prev.city || pInfo.city,
+                                                        state: prev.state || pInfo.state,
+                                                        latitude: pInfo.latitude || prev.latitude,
+                                                        longitude: pInfo.longitude || prev.longitude,
+                                                    }));
+                                                }
+                                            }
                                         }
                                     }}
                                 />
