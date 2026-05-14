@@ -181,6 +181,7 @@ export default function Vendors() {
                                                 state: info.state || prev.state,
                                                 pan: info.pan || extractPanFromGstin(prev.gstin) || prev.pan,
                                                 pincode: info.pincode || prev.pincode,
+                                                city: info.city || prev.city,
                                             }));
                                         }
                                     }}

@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -24,6 +24,7 @@ const reportRoutes = require('./routes/reports');
 const hsnRoutes = require('./routes/hsn');
 const hsnMasterRoutes = require('./routes/hsnMaster');
 const busyRoutes = require('./routes/busy');
+const gstRoutes = require('./routes/gst');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -121,6 +122,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/hsn', hsnRoutes);
 app.use('/api/hsn-master', hsnMasterRoutes);
 app.use('/api/busy', busyRoutes);
+app.use('/api/gst', gstRoutes);
 
 // Indian States for Place of Supply
 app.get('/api/states', (req, res) => {

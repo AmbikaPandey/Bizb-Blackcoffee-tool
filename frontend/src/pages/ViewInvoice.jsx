@@ -48,6 +48,17 @@ function formatDate(d) {
     return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
 }
 
+function formatShortDate(d) {
+    if (!d) return '';
+    const date = new Date(d);
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${date.getDate().toString().padStart(2, '0')}-${months[date.getMonth()]}-${(date.getFullYear() % 100).toString().padStart(2, '0')}`;
+}
+
+function fmtNum(n) {
+    return Number(n || 0).toLocaleString('en-IN');
+}
+
 function numberToWords(num) {
     if (num === 0) return 'Zero Only';
     const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
@@ -311,8 +322,6 @@ export default function ViewInvoice() {
 
             {/* Invoice Document */}
             <div className="view-invoice__document" ref={invoiceRef}>
-                <div className="view-invoice__doc-accent" />
-
                 {/* Header */}
                 <div className="view-invoice__doc-header">
                     <div className="view-invoice__doc-company">
@@ -320,7 +329,12 @@ export default function ViewInvoice() {
                             <img src={company.logo} alt="Logo" className="view-invoice__doc-logo-img" />
                         ) : (
                             <>
-                                <div className="view-invoice__doc-logo">B</div>
+                                <div className="view-invoice__doc-logo">
+                                    <svg viewBox="0 0 40 40" width="40" height="40" fill="none">
+                                        <rect width="40" height="40" rx="8" fill="#E53935" />
+                                        <text x="50%" y="54%" dominantBaseline="middle" textAnchor="middle" fill="#fff" fontSize="22" fontWeight="bold" fontFamily="Arial, sans-serif">B</text>
+                                    </svg>
+                                </div>
                                 <div className="view-invoice__doc-company-text">
                                     <strong>BLACKCOFFEE</strong>
                                     <small>COMMUNICATION <em>agency</em></small>
@@ -328,46 +342,51 @@ export default function ViewInvoice() {
                             </>
                         )}
                     </div>
-                    <div className="view-invoice__doc-type">
-                        <h2 className="view-invoice__doc-type-label">{invoice.type === 'proforma' ? 'PROFORMA INVOICE' : 'TAX INVOICE'}</h2>
-                        <span className="view-invoice__doc-copy">Original Copy</span>
-                        <div className="view-invoice__doc-meta-boxes">
-                            <div className="view-invoice__doc-meta-box">
-                                <span>INVOICE NO.</span>
+                </div>
+
+                {/* GSTIN + INVOICE Title Row */}
+                <div className="view-invoice__doc-title-row">
+                    <span className="view-invoice__doc-gstin-text">GSTIN: {company.gstin}</span>
+                    <h2 className="view-invoice__doc-title">{invoice.type === 'proforma' ? 'PROFORMA INVOICE' : 'INVOICE'}</h2>
+                    <span className="view-invoice__doc-original">Original Copy</span>
+                </div>
+
+                {/* Bill To + Invoice Details */}
+                <div className="view-invoice__doc-details">
+                    <div className="view-invoice__doc-billto">
+                        <div className="view-invoice__doc-billto-label">BILL TO</div>
+                        <div className="view-invoice__doc-billto-body">
+                            <h4>{invoice.client_name || 'COMPANY NAME'}</h4>
+                            <p>{invoice.client_address || 'Address Line 1'}</p>
+                            {invoice.client_city && <p>{invoice.client_city}{invoice.client_state ? `, ${invoice.client_state}` : ''}</p>}
+                            <p>{invoice.client_state || 'State'} - {invoice.client_pincode || 'Pincode'}</p>
+                            <br />
+                            <p className='highlight'>GSTIN: {invoice.client_gstin || ''}</p>
+                            <p>Contact Person: {invoice.client_contact || ''}</p>
+                        </div>
+                    </div>
+                    <div className="view-invoice__doc-info-panel">
+                        <div className="view-invoice__doc-info-col">
+                            <div className="view-invoice__doc-info-row">
+                                <span className="view-invoice__doc-info-label">Invoice No.</span>
+                                <span className="view-invoice__doc-info-sep">:</span>
                                 <strong>{invoice.invoice_number}</strong>
                             </div>
-                            <div className="view-invoice__doc-meta-box">
-                                <span>DATE</span>
-                                <strong>{formatDate(invoice.invoice_date)}</strong>
+                            <div className="view-invoice__doc-info-row">
+                                <span className="view-invoice__doc-info-label">Dated</span>
+                                <span className="view-invoice__doc-info-sep">:</span>
+                                <strong>{formatShortDate(invoice.invoice_date)}</strong>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* GSTIN */}
-                <div className="view-invoice__doc-gstin">
-                    <strong>GSTIN:</strong> {company.gstin}
-                </div>
-
-                {/* Bill To + Supply Details */}
-                <div className="view-invoice__doc-parties">
-                    <div className="view-invoice__doc-party">
-                        <div className="view-invoice__doc-party-body">
-                            <h4>M/S {invoice.client_name}</h4>
-                            {invoice.client_address && <p>{invoice.client_address}</p>}
-                            {invoice.client_city && <p>{invoice.client_city}{invoice.client_state ? `, ${invoice.client_state}` : ''}{invoice.client_pincode ? ` - ${invoice.client_pincode}` : ''}</p>}
-                            {invoice.client_gstin && <p>GSTIN: {invoice.client_gstin}</p>}
-                            {invoice.client_phone && <p>Phone: {invoice.client_phone}</p>}
-                        </div>
-                    </div>
-                    <div className="view-invoice__doc-party">
-                        <div className="view-invoice__doc-party-body view-invoice__doc-transport">
-                            <div><strong>Place of Supply:</strong> <span>{formatPlaceOfSupply(invoice.place_of_supply)}</span></div>
-                            <div><strong>Reverse Charge:</strong> <span>No</span></div>
-                            <div><strong>Transport:</strong> <span>{invoice.transport || '-'}</span></div>
-                            <div><strong>Vehicle No.:</strong> <span>{invoice.vehicle_no || '-'}</span></div>
-                            <div><strong>GR/RR No.:</strong> <span>{invoice.gr_rr_no || '-'}</span></div>
-                            <div><strong>E-Way Bill:</strong> <span>{invoice.eway_bill || '-'}</span></div>
+                            <div className="view-invoice__doc-info-row">
+                                <span className="view-invoice__doc-info-label">P.O. No.</span>
+                                <span className="view-invoice__doc-info-sep">:</span>
+                                <strong>{invoice.po_number || ''}</strong>
+                            </div>
+                            <div className="view-invoice__doc-info-row">
+                                <span className="view-invoice__doc-info-label">P.O. Date</span>
+                                <span className="view-invoice__doc-info-sep">:</span>
+                                <strong>{invoice.po_date ? formatShortDate(invoice.po_date) : ''}</strong>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -377,34 +396,30 @@ export default function ViewInvoice() {
                     <table>
                         <thead>
                             <tr>
-                                <th className="text-center">Sr.<br />No.</th>
-                                <th>Description</th>
-                                <th className="text-center">HSN/SAC<br />Code</th>
-                                <th className="text-center">Qty</th>
-                                <th className="text-right">Rate</th>
-                                <th className="text-right">Taxable</th>
-                                <th className="text-center">GST</th>
-                                <th className="text-right">Amount</th>
+                                <th className="text-center col-sr">Sr.No.</th>
+                                <th className="col-desc">Description</th>
+                                <th className="text-center col-hsn">HSN/SAC</th>
+                                <th className="text-center col-qty">Qty</th>
+                                <th className="text-right col-rate">Rate</th>
+                                <th className="text-right col-igst">IGST</th>
+                                <th className="text-right col-amt">Amount</th>
                             </tr>
                         </thead>
                         <tbody>
                             {items.map((item, i) => {
                                 const qty = parseFloat(item.qty) || 0;
                                 const rate = parseFloat(item.rate) || 0;
-                                const discPct = parseFloat(item.discount_pct) || 0;
                                 const taxPct = parseFloat(item.tax_pct) || 0;
-                                const lineTotal = qty * rate;
-                                const afterDiscount = lineTotal - lineTotal * (discPct / 100);
+                                const taxAmt = (qty * rate * taxPct) / 100;
                                 return (
                                     <tr key={item.id || i}>
                                         <td className="text-center">{i + 1}</td>
-                                        <td className="font-medium">{item.product_name || item.description}</td>
+                                        <td>{item.product_name || item.description}</td>
                                         <td className="text-center">{item.hsn || '-'}</td>
                                         <td className="text-center">{qty}</td>
-                                        <td className="text-right">{formatCurrency(rate)}</td>
-                                        <td className="text-right">{formatCurrency(afterDiscount)}</td>
-                                        <td className="text-center">{taxPct}%</td>
-                                        <td className="text-right">{formatCurrency(item.amount)}</td>
+                                        <td className="text-right">{fmtNum(rate)}</td>
+                                        <td className="text-right">{fmtNum(taxAmt)}</td>
+                                        <td className="text-right">{fmtNum(item.amount)}</td>
                                     </tr>
                                 );
                             })}
@@ -412,90 +427,130 @@ export default function ViewInvoice() {
                     </table>
                 </div>
 
-                {/* Bottom Section */}
-                <div className="view-invoice__doc-bottom">
-                    <div className="view-invoice__doc-bottom-left">
-                        {/* Amount in Words */}
-                        <div className="view-invoice__doc-words">
-                            <span>AMOUNT IN WORDS</span>
-                            <strong>{numberToWords(Math.round(grandTotal))}</strong>
-                        </div>
-
-                        {/* Payment Terms */}
-                        {invoice.terms && (
-                            <div className="view-invoice__doc-terms">
-                                <strong>Payment Terms</strong>
-                                <p>{invoice.terms}</p>
+                {/* Mid Section: Note + Tax Table | Subtotal + Total */}
+                <div className="view-invoice__doc-mid">
+                    <div className="view-invoice__doc-mid-left">
+                        {invoice.notes && (
+                            <div className="view-invoice__doc-note">
+                                <strong>Note:</strong> {invoice.notes}
                             </div>
                         )}
-
-                        {/* Bank Details */}
-                        <div className="view-invoice__doc-bank">
-                            <strong>BANK DETAILS</strong>
-                            <p><strong>{company.name}</strong></p>
-                            {bank.bank && <p>Bank: {bank.bank}</p>}
-                            {bank.accountNo && <p>A/C No: {bank.accountNo}</p>}
-                            {bank.ifsc && <p>IFSC: {bank.ifsc}</p>}
-                            {bank.upi && <p>UPI: {bank.upi}</p>}
-                        </div>
+                        <table className="view-invoice__doc-tax-table">
+                            <thead>
+                                <tr>
+                                    <th>Tax<br />Rate</th>
+                                    <th>Taxable<br />Amount</th>
+                                    <th>{taxType === 'IGST' ? 'IGST' : 'CGST'}<br />@ {items[0]?.tax_pct || 18}%</th>
+                                    <th>Total<br />Tax</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>{items[0]?.tax_pct || 18}%</td>
+                                    <td>{subtotal.toFixed(2)}</td>
+                                    <td>{taxableAmount.toFixed(2)}</td>
+                                    <td>{taxableAmount.toFixed(2)}</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-
-                    <div className="view-invoice__doc-bottom-right">
+                    <div className="view-invoice__doc-mid-right">
                         <div className="view-invoice__doc-summary">
                             <div className="view-invoice__doc-summary-row">
                                 <span>Subtotal</span>
-                                <strong><span className="view-invoice__bullet">&#9632;</span> {formatCurrency(subtotal)}</strong>
+                                <strong>{fmtNum(subtotal)}</strong>
                             </div>
                             {taxType === 'IGST' ? (
                                 <div className="view-invoice__doc-summary-row">
-                                    <span>IGST ({items[0]?.tax_pct || 18}%)</span>
-                                    <strong><span className="view-invoice__bullet">&#9632;</span> {formatCurrency(taxableAmount)}</strong>
+                                    <span>IGST @{items[0]?.tax_pct || 18}%</span>
+                                    <strong>{fmtNum(taxableAmount)}</strong>
                                 </div>
                             ) : (
                                 <>
                                     <div className="view-invoice__doc-summary-row">
-                                        <span>CGST ({(items[0]?.tax_pct || 18) / 2}%)</span>
-                                        <strong><span className="view-invoice__bullet">&#9632;</span> {formatCurrency(taxableAmount / 2)}</strong>
+                                        <span>CGST @{(items[0]?.tax_pct || 18) / 2}%</span>
+                                        <strong>{fmtNum(taxableAmount / 2)}</strong>
                                     </div>
                                     <div className="view-invoice__doc-summary-row">
-                                        <span>SGST ({(items[0]?.tax_pct || 18) / 2}%)</span>
-                                        <strong><span className="view-invoice__bullet">&#9632;</span> {formatCurrency(taxableAmount / 2)}</strong>
+                                        <span>SGST @{(items[0]?.tax_pct || 18) / 2}%</span>
+                                        <strong>{fmtNum(taxableAmount / 2)}</strong>
                                     </div>
                                 </>
                             )}
                             {roundOff !== 0 && (
                                 <div className="view-invoice__doc-summary-row">
                                     <span>Round Off</span>
-                                    <strong>{formatCurrency(roundOff)}</strong>
+                                    <strong>{fmtNum(roundOff)}</strong>
                                 </div>
                             )}
-                            <div className="view-invoice__doc-grand-total">
-                                <span>GRAND TOTAL</span>
-                                <strong><span className="view-invoice__bullet">&#9632;</span> {formatCurrency(Math.round(grandTotal))}</strong>
+                            <div className="view-invoice__doc-total-row">
+                                <span>TOTAL</span>
+                                <strong>{fmtNum(Math.round(grandTotal))}</strong>
                             </div>
                             {(invoice.amount_paid > 0) && (
                                 <div className="view-invoice__doc-summary-row view-invoice__doc-summary-row--paid">
                                     <span>Amount Paid</span>
-                                    <strong className="text-success">{formatCurrency(invoice.amount_paid)}</strong>
+                                    <strong className="text-success">-{fmtNum(invoice.amount_paid)}</strong>
                                 </div>
                             )}
                             {(invoice.balance > 0 && invoice.amount_paid > 0) && (
                                 <div className="view-invoice__doc-summary-row view-invoice__doc-summary-row--balance">
                                     <span>Balance Due</span>
-                                    <strong className="balance-red">{formatCurrency(invoice.balance)}</strong>
+                                    <strong className="balance-red">{fmtNum(invoice.balance)}</strong>
                                 </div>
                             )}
                         </div>
-                        <div className="view-invoice__doc-signatory">
-                            <p>For {company.name}</p>
-                            <span>Authorised Signatory</span>
+                        <div className="view-invoice__doc-words">
+                            {numberToWords(Math.round(grandTotal)).replace('Rupees ', '')}<br />Rupees Only
                         </div>
                     </div>
                 </div>
 
+                {/* Bank Details + Signatory */}
+                <div className="view-invoice__doc-bank-sign">
+                    <div className="view-invoice__doc-bank">
+                        <span className="view-invoice__doc-bank-heading">Bank Details:</span>
+                        <p className="view-invoice__doc-bank-name">{company.name}</p>
+                        {bank.accountNo && <p>A/c No.: {bank.accountNo}</p>}
+                        {bank.ifsc && <p>IFSC: {bank.ifsc}</p>}
+                        {bank.bank && <p>{bank.bank}</p>}
+                        {bank.upi && <p>UPI: {bank.upi}</p>}
+                    </div>
+                    <div className="view-invoice__doc-signatory">
+                        <p className="view-invoice__doc-sign-for">For <strong>{company.name}</strong></p>
+                        <div className="view-invoice__doc-sign-space" />
+                        <p className="view-invoice__doc-sign-label">Authorised Signatory</p>
+                    </div>
+                </div>
+
+                {/* Payment Terms */}
+                {invoice.terms && (
+                    <div className="view-invoice__doc-terms">
+                        <strong>Payment Terms:</strong>
+                        <p>{invoice.terms}</p>
+                    </div>
+                )}
+
                 {/* Footer */}
                 <div className="view-invoice__doc-footer">
-                    Registered Office: {buildCompanyAddress(company)} | m: {company.phone} | e: {company.email}
+                    <div className="view-invoice__doc-footer-item">
+                        <span className="view-invoice__doc-footer-icon">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="#E53935"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z" /></svg>
+                        </span>
+                        <span><strong>Registered Office:</strong><br />{buildCompanyAddress(company)}</span>
+                    </div>
+                    <div className="view-invoice__doc-footer-item">
+                        <span className="view-invoice__doc-footer-icon">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="#E53935"><path d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 011 1V20a1 1 0 01-1 1A17 17 0 013 4a1 1 0 011-1h3.5a1 1 0 011 1c0 1.25.2 2.46.57 3.58a1 1 0 01-.24 1.01l-2.2 2.2z" /></svg>
+                        </span>
+                        <span>{company.phone}</span>
+                    </div>
+                    <div className="view-invoice__doc-footer-item">
+                        <span className="view-invoice__doc-footer-icon">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="#E53935"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" /></svg>
+                        </span>
+                        <span>{company.email}</span>
+                    </div>
                 </div>
             </div>
 

@@ -37,13 +37,36 @@ export function getStateFromGstin(gstin) {
 }
 
 /**
- * Look up GST details from public API.
- * Returns { name, address, state, registration_type } or null on failure.
+ * Look up GST details — tries backend Sandbox API first, then free API fallback.
+ * Returns { name, address, state, registration_type, pincode, pan, trade_name } or null on failure.
  */
 export async function lookupGST(gstin) {
   if (!isValidGSTIN(gstin)) return null;
 
-  // Try the free GST search API
+  // 1. Try backend Sandbox GST API (preferred)
+  try {
+    const { api } = await import('../services/api');
+    const data = await api.lookupGST(gstin);
+    if (data && (data.name || data.trade_name)) {
+      return {
+        name: data.trade_name || data.name || '',
+        address: data.address || '',
+        state: data.state || getStateFromGstin(gstin),
+        registration_type: data.registration_type || '',
+        pincode: data.pincode || '',
+        pan: data.pan || extractPanFromGstin(gstin),
+        trade_name: data.trade_name || '',
+        legal_name: data.name || '',
+        status: data.status || '',
+        state_code: data.state_code || gstin.substring(0, 2),
+        city: data.city || '',
+      };
+    }
+  } catch {
+    // Sandbox API unavailable, fall through to free API
+  }
+
+  // 2. Fallback — free GST search API
   try {
     const res = await fetch(`https://sheet.gstincheck.co.in/check/${gstin}`, {
       signal: AbortSignal.timeout(8000),
@@ -57,6 +80,10 @@ export async function lookupGST(gstin) {
           state: data.data?.pradr?.addr?.stcd || getStateFromGstin(gstin),
           registration_type: data.data?.dty || '',
           pincode: data.data?.pradr?.addr?.pncd || '',
+          pan: extractPanFromGstin(gstin),
+          trade_name: data.data?.tradeNam || '',
+          legal_name: data.data?.lgnm || '',
+          city: data.data?.pradr?.addr?.dst || '',
         };
       }
     }
@@ -64,7 +91,7 @@ export async function lookupGST(gstin) {
     // API failed, fall back to offline extraction
   }
 
-  // Offline fallback — extract what we can from the GSTIN itself
+  // 3. Offline fallback — extract what we can from the GSTIN itself
   return {
     name: '',
     address: '',

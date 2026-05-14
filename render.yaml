@@ -15,5 +15,7 @@ services:
         value: "8"
       - key: CLIENT_URL
         sync: false
+      - key: RAPIDAPI_KEY
+        sync: false
     healthCheckPath: /api/health
     autoDeploy: true

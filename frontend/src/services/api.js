@@ -196,4 +196,7 @@ export const api = {
     }
     return res.blob();
   },
+
+  // GST Lookup
+  lookupGST: (gstin) => request(`/gst/lookup/${encodeURIComponent(gstin)}`),
 };

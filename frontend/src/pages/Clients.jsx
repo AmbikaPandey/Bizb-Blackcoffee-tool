@@ -178,6 +178,7 @@ export default function Clients() {
                                                 address: info.address || prev.address,
                                                 state: info.state || prev.state,
                                                 pincode: info.pincode || prev.pincode,
+                                                city: info.city || prev.city,
                                             }));
                                         }
                                     }}

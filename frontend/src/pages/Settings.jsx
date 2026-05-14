@@ -6,6 +6,7 @@ import { useToast } from '../components/common/Toast';
 import { api } from '../services/api';
 import { lookupPincode } from '../utils/pincodeLookup';
 import { lookupIFSC } from '../utils/ifscLookup';
+import { lookupGST, isValidGSTIN, extractPanFromGstin } from '../utils/gstLookup';
 import { uppercaseFormData } from '../utils/formTransform';
 import { validate, getHint, transform } from '../utils/validation';
 
@@ -210,7 +211,24 @@ export default function Settings() {
                         </div>
                         <div className="settings-card__row">
                             <ValidatedField label="GSTIN" field="gstin" value={company.gstin} disabled={disabled} maxLength={15}
-                                onChange={(v) => setCompany((prev) => ({ ...prev, gstin: v }))} />
+                                onChange={(v) => setCompany((prev) => ({ ...prev, gstin: v }))}
+                                onSideEffect={async (v) => {
+                                    if (v.length === 15 && isValidGSTIN(v)) {
+                                        const info = await lookupGST(v);
+                                        if (info) {
+                                            setCompany((prev) => ({
+                                                ...prev,
+                                                name: info.name || prev.name,
+                                                pan: info.pan || extractPanFromGstin(v) || prev.pan,
+                                                address_line1: info.address || prev.address_line1,
+                                                city: info.city || prev.city,
+                                                state: info.state || prev.state,
+                                                pincode: info.pincode || prev.pincode,
+                                                state_code: info.state_code || v.substring(0, 2),
+                                            }));
+                                        }
+                                    }
+                                }} />
                             <ValidatedField label="PAN" field="pan" value={company.pan} disabled={disabled} maxLength={10}
                                 onChange={(v) => setCompany((prev) => ({ ...prev, pan: v }))} />
                         </div>
