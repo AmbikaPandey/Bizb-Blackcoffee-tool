@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../../services/api';
+import FilterDropdown from './FilterDropdown';
 
 export default function IndiaMap() {
     const mapRef = useRef(null);
@@ -167,22 +168,18 @@ export default function IndiaMap() {
             <div className="dashboard__section-header">
                 <h3>Client Distribution — India</h3>
                 <div className="dashboard__map-filters">
-                    <select
-                        className="dashboard__map-select"
+                    <FilterDropdown
+                        label="All Services"
+                        options={serviceTypes}
                         value={filters.service_type}
-                        onChange={(e) => setFilters(f => ({ ...f, service_type: e.target.value }))}
-                    >
-                        <option value="">All Services</option>
-                        {serviceTypes.map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                    <select
-                        className="dashboard__map-select"
+                        onChange={(val) => setFilters(f => ({ ...f, service_type: val }))}
+                    />
+                    <FilterDropdown
+                        label="All States"
+                        options={states}
                         value={filters.state}
-                        onChange={(e) => setFilters(f => ({ ...f, state: e.target.value }))}
-                    >
-                        <option value="">All States</option>
-                        {states.map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
+                        onChange={(val) => setFilters(f => ({ ...f, state: val }))}
+                    />
                 </div>
             </div>
             <div className="dashboard__map-container">
