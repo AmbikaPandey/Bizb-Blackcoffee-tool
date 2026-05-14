@@ -11,6 +11,7 @@ const bankDetailsSchema = new mongoose.Schema({
 const vendorSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
   gstin: { type: String, default: '' },
+  gst_status: { type: String, default: '' },
   pan: { type: String, default: '' },
   contact: { type: String, default: '' },
   contact1: { type: String, default: '' },

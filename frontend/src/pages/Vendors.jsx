@@ -16,7 +16,7 @@ import { validate, transform } from '../utils/validation';
 import { lookupGST, isValidGSTIN, extractPanFromGstin } from '../utils/gstLookup';
 
 const emptyForm = {
-    name: '', gstin: '', pan: '', contact: '', contact1: '', contact2: '', pincode: '', city: '', phone: '', email: '', state: '', address: '',
+    name: '', gstin: '', gst_status: '', pan: '', contact: '', contact1: '', contact2: '', pincode: '', city: '', phone: '', email: '', state: '', address: '',
     bank_details: { account_number: '', ifsc_code: '', bank_name: '', branch_name: '', bank_address: '' },
 };
 
@@ -53,7 +53,7 @@ export default function Vendors() {
     function openEdit(v) {
         setEditTarget(v);
         setForm({
-            name: v.name || '', gstin: v.gstin || '', pan: v.pan || '', contact: v.contact || '',
+            name: v.name || '', gstin: v.gstin || '', gst_status: v.gst_status || '', pan: v.pan || '', contact: v.contact || '',
             contact1: v.contact1 || '', contact2: v.contact2 || '',
             pincode: v.pincode || '', city: v.city || '', phone: v.phone || '', email: v.email || '',
             state: v.state || '', address: v.address || '',
@@ -180,12 +180,15 @@ export default function Vendors() {
                                                 name: info.name || prev.name,
                                                 address: info.address || prev.address,
                                                 state: info.state || prev.state,
+                                                gst_status: info.status || prev.gst_status,
                                                 pan: info.pan || extractPanFromGstin(prev.gstin) || prev.pan,
                                                 pincode,
                                                 city: info.city || prev.city,
+                                                latitude: info.latitude || prev.latitude,
+                                                longitude: info.longitude || prev.longitude,
                                             }));
-                                            // Trigger pincode lookup for lat/lng if pincode was filled
-                                            if (pincode && pincode.length === 6) {
+                                            // Trigger pincode lookup for lat/lng only if GST didn't provide them
+                                            if (pincode && pincode.length === 6 && !info.latitude) {
                                                 setPincodeLoading(true);
                                                 const pInfo = await lookupPincode(pincode);
                                                 setPincodeLoading(false);

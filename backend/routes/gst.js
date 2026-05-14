@@ -80,6 +80,8 @@ function parseGSTResponse(raw) {
     city,
     state,
     pincode,
+    latitude: a.latitude || '',
+    longitude: a.longitude || '',
     pan: d.gstin ? d.gstin.substring(2, 12) : '',
     status: d.gstin_status || d.sts || '',
     registration_type: d.taxpayer_type || d.dty || '',

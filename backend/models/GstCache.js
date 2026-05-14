@@ -9,6 +9,8 @@ const gstCacheSchema = new mongoose.Schema({
     city: String,
     state: String,
     pincode: String,
+    latitude: String,
+    longitude: String,
     pan: String,
     status: String,
     registration_type: String,

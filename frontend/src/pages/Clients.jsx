@@ -15,7 +15,7 @@ import { uppercaseFormData } from '../utils/formTransform';
 import { validate, transform } from '../utils/validation';
 import { lookupGST, isValidGSTIN } from '../utils/gstLookup';
 
-const emptyForm = { name: '', gstin: '', email: '', phone: '', contact: '', address: '', pincode: '', city: '', state: '', latitude: '', longitude: '' };
+const emptyForm = { name: '', gstin: '', gst_status: '', email: '', phone: '', contact: '', address: '', pincode: '', city: '', state: '', latitude: '', longitude: '' };
 
 export default function Clients() {
     const toast = useToast();
@@ -49,7 +49,7 @@ export default function Clients() {
 
     function openEdit(c) {
         setEditTarget(c);
-        setForm({ name: c.name || '', gstin: c.gstin || '', email: c.email || '', phone: c.phone || '', contact: c.contact || '', address: c.address || '', pincode: c.pincode || '', city: c.city || '', state: c.state || '', latitude: c.latitude || '', longitude: c.longitude || '' });
+        setForm({ name: c.name || '', gstin: c.gstin || '', gst_status: c.gst_status || '', email: c.email || '', phone: c.phone || '', contact: c.contact || '', address: c.address || '', pincode: c.pincode || '', city: c.city || '', state: c.state || '', latitude: c.latitude || '', longitude: c.longitude || '' });
         setErrors({});
         setShowModal(true);
     }
@@ -178,11 +178,14 @@ export default function Clients() {
                                                 name: info.name || prev.name,
                                                 address: info.address || prev.address,
                                                 state: info.state || prev.state,
+                                                gst_status: info.status || prev.gst_status,
                                                 pincode,
                                                 city: info.city || prev.city,
+                                                latitude: info.latitude || prev.latitude,
+                                                longitude: info.longitude || prev.longitude,
                                             }));
-                                            // Trigger pincode lookup for lat/lng if pincode was filled
-                                            if (pincode && pincode.length === 6) {
+                                            // Trigger pincode lookup for lat/lng only if GST didn't provide them
+                                            if (pincode && pincode.length === 6 && !info.latitude) {
                                                 setPincodeLoading(true);
                                                 const pInfo = await lookupPincode(pincode);
                                                 setPincodeLoading(false);
