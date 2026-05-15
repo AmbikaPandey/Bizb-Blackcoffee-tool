@@ -45,8 +45,10 @@ export default function Login() {
             <div className="login__container">
                 <div className="login__brand">
                     <div className="login__brand-icon">BC</div>
-                    <h1>Blackcoffee</h1>
-                    <p>Blackcoffee Agency Portal</p>
+                    <div className='login__brand-name'>
+                        <h1>BizB</h1>
+                        <p>Blackcoffee Business Management Tool</p>
+                    </div>
                 </div>
 
                 <div className="login__card">

@@ -32,7 +32,8 @@
 
     &__brand {
         text-align: center;
-        margin-bottom: $space-8;
+        margin-bottom: 2.2rem;
+        display: flex;
 
         @include mobile {
             margin-bottom: $space-5;
@@ -47,7 +48,7 @@
             color: $white;
             font-weight: $weight-bold;
             font-size: $font-xl;
-            margin: 0 auto $space-4;
+            margin: 0 20px $space-4 20px;
             box-shadow: 0 4px 14px rgba($primary, 0.3);
 
             @include mobile-sm {
@@ -56,11 +57,18 @@
                 font-size: $font-lg;
             }
         }
+        &-name {
+            display: flex;
+            align-items: flex-start;
+            flex-direction: column;
+        }
 
         h1 {
-            font-size: $font-2xl;
+            font-size: 3.2rem;
             color: var(--color-text-heading);
+            font-family: Inter, sans-serif;
             margin-bottom: $space-1;
+            font-weight: 800;
 
             @include mobile {
                 font-size: $font-xl;
@@ -68,8 +76,9 @@
         }
 
         p {
-            color: var(--color-text-muted);
+            color: var(--color-text-secondary);
             font-size: $font-sm;
+            font-weight: 500;
         }
     }
 
@@ -184,7 +193,8 @@
     &__footer {
         text-align: center;
         font-size: $font-xs;
-        color: var(--color-text-faint);
+        color: var(--color-text-secondary);
+        font-weight: 500;
         margin-top: $space-6;
     }
 }
