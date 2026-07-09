@@ -127,7 +127,7 @@ export default function Vendors() {
                         </thead>
                         <tbody>
                             {filtered.map((v) => (
-                                <tr key={v.id || v._id}>
+                                <tr key={v.id || v._id} className="clickable-row" onClick={() => navigate(`/vendors/${v.id || v._id}`)}>
                                     <td className="font-medium">{v.name}</td>
                                     <td className="mono">{v.gstin || '-'}</td>
                                     <td>{v.contact || '-'}</td>
@@ -137,9 +137,9 @@ export default function Vendors() {
                                     <td>
                                         <ActionMenu actions={[
                                             { icon: <Eye size={15} />, label: 'View Details', onClick: () => navigate(`/vendors/${v.id || v._id}`) },
-                                            { icon: <Pencil size={15} />, label: 'Edit', onClick: () => openEdit(v) },
+                                            { icon: <Pencil size={15} />, label: 'Edit', onClick: (e) => { e.stopPropagation(); openEdit(v); } },
                                             { divider: true },
-                                            { icon: <Trash2 size={15} />, label: 'Delete', danger: true, onClick: () => setDeleteTarget(v) },
+                                            { icon: <Trash2 size={15} />, label: 'Delete', danger: true, onClick: (e) => { e.stopPropagation(); setDeleteTarget(v); } },
                                         ]} />
                                     </td>
                                 </tr>

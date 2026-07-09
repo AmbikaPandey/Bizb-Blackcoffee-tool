@@ -12,17 +12,17 @@ router.get('/summary', authenticate, authorize('reports', 'view'), async (req, r
   try {
     const [totalRevenueResult, pendingResult, paidCount, unpaidCount, overdueCount, partialCount] = await Promise.all([
       Invoice.aggregate([
-        { $match: { status: 'Paid' } },
+        { $match: { type: 'tax', status: 'Paid' } },
         { $group: { _id: null, total: { $sum: '$grand_total' } } },
       ]),
       Invoice.aggregate([
-        { $match: { status: { $nin: ['Paid', 'Cancelled'] } } },
+        { $match: { type: 'tax', status: { $nin: ['Paid', 'Cancelled'] } } },
         { $group: { _id: null, total: { $sum: '$balance' } } },
       ]),
-      Invoice.countDocuments({ status: 'Paid' }),
-      Invoice.countDocuments({ status: { $in: ['Draft', 'Sent'] } }),
-      Invoice.countDocuments({ status: 'Overdue' }),
-      Invoice.countDocuments({ status: 'Partially Paid' }),
+      Invoice.countDocuments({ type: 'tax', status: 'Paid' }),
+      Invoice.countDocuments({ type: 'tax', status: { $in: ['Draft', 'Sent'] } }),
+      Invoice.countDocuments({ type: 'tax', status: 'Overdue' }),
+      Invoice.countDocuments({ type: 'tax', status: 'Partially Paid' }),
     ]);
 
     res.json({
@@ -44,7 +44,7 @@ router.get('/monthly', authenticate, authorize('reports', 'view'), async (req, r
 
     const [invoiceData, paymentData, expenseData] = await Promise.all([
       Invoice.aggregate([
-        { $match: { invoice_date: { $gte: `${year}-01-01`, $lt: `${year + 1}-01-01` }, status: { $ne: 'Cancelled' } } },
+        { $match: { type: 'tax', invoice_date: { $gte: `${year}-01-01`, $lt: `${year + 1}-01-01` }, status: { $ne: 'Cancelled' } } },
         { $group: {
           _id: { $substr: ['$invoice_date', 5, 2] },
           invoiced: { $sum: '$grand_total' },
@@ -93,6 +93,7 @@ router.get('/ageing', authenticate, authorize('reports', 'view'), async (req, re
   try {
     const today = new Date();
     const invoices = await Invoice.find({
+      type: 'tax',
       status: { $nin: ['Paid', 'Cancelled'] },
       balance: { $gt: 0 },
     }).populate('client_id', 'name').lean();
@@ -138,7 +139,7 @@ router.get('/ageing', authenticate, authorize('reports', 'view'), async (req, re
 router.get('/gst-summary', authenticate, authorize('reports', 'view'), async (req, res) => {
   try {
     const { from, to } = req.query;
-    const filter = { status: { $nin: ['Draft', 'Cancelled'] } };
+    const filter = { type: 'tax', status: { $nin: ['Draft', 'Cancelled'] } };
     if (from) filter.invoice_date = { ...(filter.invoice_date || {}), $gte: from };
     if (to) filter.invoice_date = { ...(filter.invoice_date || {}), $lte: to };
 

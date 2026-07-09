@@ -52,11 +52,23 @@ export default function ClientDetail() {
                             </div>
                         </div>
                     )}
-                    {(client.phone || client.email || client.contact) && (
+                    {(client.phone || client.email || client.contact || (client.contacts && client.contacts.length > 0)) && (
                         <div className="client-detail__contact">
                             {client.contact && <p><strong>Contact:</strong> {client.contact}</p>}
                             {client.phone && <p><strong>Phone:</strong> {client.phone}</p>}
                             {client.email && <p><strong>Email:</strong> {client.email}</p>}
+                            {client.contacts && client.contacts.length > 0 && (
+                                <div className="client-detail__contacts-list">
+                                    <strong>Contact Persons:</strong>
+                                    {client.contacts.map((ct, i) => (
+                                        <div key={ct._id || i} className="client-detail__contact-item">
+                                            <span>{ct.name}{ct.designation ? ` (${ct.designation})` : ''}</span>
+                                            {ct.phone && <span> · {ct.phone}</span>}
+                                            {ct.email && <span> · {ct.email}</span>}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

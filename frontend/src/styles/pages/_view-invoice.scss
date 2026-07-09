@@ -393,11 +393,42 @@
         }
 
         td {
+            &.col-hsn {
+                width: 110px;
+            }
+            &.col-qty {
+                width: 50px;
+            }
+            &.col-rate {
+                width: 80px;
+            }
+            &.col-igst {
+                width: 70px;
+            }
+            &.col-amt {
+                width: 90px;
+            }
+        }
+
+        td {
             padding: 10px 12px;
             font-size: 1.28rem;
             color: #000;
             border: 1px solid #ccc;
             background: #fff;
+
+            .item-name {
+                display: block;
+                font-weight: 600;
+            }
+
+            .item-desc {
+                display: block;
+                font-size: 1.1rem;
+                color: #555;
+                margin-top: 2px;
+                white-space: pre-line;
+            }
         }
 
         .text-right {

@@ -362,13 +362,14 @@ export default function ViewInvoice() {
                             <p>{invoice.client_state || 'State'} - {invoice.client_pincode || 'Pincode'}</p>
                             <br />
                             <p className='highlight'>GSTIN: {invoice.client_gstin || ''}</p>
-                            <p>Contact Person: {invoice.client_contact || ''}</p>
+                            <p>Contact Person: {invoice.contact_person?.name || invoice.client_contact || ''}</p>
+                            {invoice.contact_person?.phone && <p>Phone: {invoice.contact_person.phone}</p>}
                         </div>
                     </div>
                     <div className="view-invoice__doc-info-panel">
                         <div className="view-invoice__doc-info-col">
                             <div className="view-invoice__doc-info-row">
-                                <span className="view-invoice__doc-info-label">Invoice No.</span>
+                                <span className="view-invoice__doc-info-label">{invoice.type === 'proforma' ? 'PI No.' : 'Invoice No.'}</span>
                                 <span className="view-invoice__doc-info-sep">:</span>
                                 <strong>{invoice.invoice_number}</strong>
                             </div>
@@ -414,7 +415,12 @@ export default function ViewInvoice() {
                                 return (
                                     <tr key={item.id || i}>
                                         <td className="text-center">{i + 1}</td>
-                                        <td>{item.product_name || item.description}</td>
+                                        <td>
+                                            <span className="item-name">{item.product_name || item.description}</span>
+                                            {item.product_name && item.description && (
+                                                <span className="item-desc">{item.description}</span>
+                                            )}
+                                        </td>
                                         <td className="text-center">{item.hsn || '-'}</td>
                                         <td className="text-center">{qty}</td>
                                         <td className="text-right">{fmtNum(rate)}</td>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2, Save, Pencil } from 'lucide-react';
 import { api } from '../services/api';
 import { formatCurrency } from '../utils/currency';
@@ -33,8 +33,11 @@ function calcItemAmount(item) {
 
 export default function NewInvoice() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { isAdmin } = useAuth();
     // isAdmin check for invoice number override is intentional — only Admin can manually edit auto-generated numbers
+
+    const isProformaMode = searchParams.get('type') === 'proforma';
 
     const [clients, setClients] = useState([]);
     const [products, setProducts] = useState([]);
@@ -43,16 +46,19 @@ export default function NewInvoice() {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const [invoiceNumEditable, setInvoiceNumEditable] = useState(false);
+    const [selectedContactId, setSelectedContactId] = useState('');
 
     const [form, setForm] = useState({
         client_id: '',
-        invoice_type: 'Tax Invoice',
+        invoice_type: isProformaMode ? 'Proforma' : 'Tax Invoice',
         invoice_number: '',
         tax_type: 'IGST',
         invoice_date: new Date().toISOString().split('T')[0],
         credit_period: '',
         place_of_supply: '',
         po_number: '',
+        po_date: '',
+        contact_person: null,
         transport: '',
         vehicle_no: '',
         gr_rr_no: '',
@@ -61,6 +67,28 @@ export default function NewInvoice() {
         terms: '1. Payment is due within 30 days.\n2. Please include invoice number in payment reference.',
     });
 
+    // Derived: contacts for selected client
+    const selectedClient = clients.find((c) => String(c.id || c._id) === String(form.client_id));
+    const clientContacts = selectedClient?.contacts || [];
+
+    // When contact person selection changes, store snapshot
+    const handleContactPersonChange = (contactId) => {
+        setSelectedContactId(contactId);
+        if (!contactId) {
+            updateForm('contact_person', null);
+            return;
+        }
+        const cp = clientContacts.find((c) => String(c._id) === contactId);
+        if (cp) updateForm('contact_person', { _id: cp._id, name: cp.name, phone: cp.phone, email: cp.email, designation: cp.designation });
+    };
+
+    // Reset contact person when client changes
+    useEffect(() => {
+        setSelectedContactId('');
+        updateForm('contact_person', null);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [form.client_id]);
+
     const [items, setItems] = useState([{ ...EMPTY_ITEM }]);
 
     useEffect(() => {
@@ -68,7 +96,7 @@ export default function NewInvoice() {
             api.getClients(),
             api.getProducts(),
             api.getStates(),
-            api.getNextInvoiceNumber('tax'),
+            api.getNextInvoiceNumber(isProformaMode ? 'proforma' : 'tax'),
         ]).then(([c, p, s, n]) => {
             setClients(c);
             setProducts(p);
@@ -170,6 +198,7 @@ export default function NewInvoice() {
                 ...form,
                 invoice_number: form.invoice_number || null,
                 type: form.invoice_type === 'Proforma' ? 'proforma' : 'tax',
+                po_date: form.invoice_type === 'Tax Invoice' ? (form.po_date || null) : null,
                 items: items.map((item) => ({
                     ...item,
                     amount: calcItemAmount(item),
@@ -183,6 +212,10 @@ export default function NewInvoice() {
         }
     };
 
+    let submitLabel = 'Create Invoice';
+    if (saving) { submitLabel = 'Creating...'; }
+    else if (form.invoice_type === 'Proforma') { submitLabel = 'Create Proforma'; }
+
     return (
         <div className="new-invoice">
             {/* Header */}
@@ -191,7 +224,7 @@ export default function NewInvoice() {
                     <ArrowLeft size={18} />
                     Back
                 </button>
-                <h1>New Invoice</h1>
+                <h1>{form.invoice_type === 'Proforma' ? 'New Proforma Invoice' : 'New Invoice'}</h1>
             </div>
 
             {error && <div className="new-invoice__error">{error}</div>}
@@ -218,9 +251,24 @@ export default function NewInvoice() {
                             </select>
                         </div>
                     </div>
+                    {/* Contact Person selector — shown when client has contacts */}
+                    {clientContacts.length > 0 && (
+                        <div className="new-invoice__grid">
+                            <div className="new-invoice__field">
+                                <label>Contact Person</label>
+                                <select value={selectedContactId} onChange={(e) => handleContactPersonChange(e.target.value)}>
+                                    <option value="">— Select contact person —</option>
+                                    {clientContacts.map((ct) => (
+                                        <option key={ct._id} value={ct._id}>{ct.name}{ct.designation ? ` (${ct.designation})` : ''}{ct.phone ? ` · ${ct.phone}` : ''}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="new-invoice__field" />
+                        </div>
+                    )}
                     <div className="new-invoice__grid">
                         <div className="new-invoice__field">
-                            <label>Invoice Number</label>
+                            <label>{form.invoice_type === 'Proforma' ? 'PI No.' : 'Invoice Number'}</label>
                             <div className="new-invoice__field-with-btn">
                                 <input
                                     type="text"
@@ -274,6 +322,19 @@ export default function NewInvoice() {
                             />
                         </div>
                     </div>
+                    {form.invoice_type === 'Tax Invoice' && (
+                        <div className="new-invoice__grid">
+                            <div className="new-invoice__field">
+                                <label>PO Date</label>
+                                <input
+                                    type="date"
+                                    value={form.po_date}
+                                    onChange={(e) => updateForm('po_date', e.target.value)}
+                                />
+                            </div>
+                            <div className="new-invoice__field" />
+                        </div>
+                    )}
                 </div>
 
                 <div className="new-invoice__card new-invoice__card--transport">
@@ -449,7 +510,7 @@ export default function NewInvoice() {
                 </button>
                 <button className="new-invoice__submit-btn" onClick={handleSubmit} disabled={saving}>
                     <Save size={18} />
-                    {saving ? 'Creating...' : 'Create Invoice'}
+                    {submitLabel}
                 </button>
             </div>
         </div>

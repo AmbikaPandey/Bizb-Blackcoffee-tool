@@ -22,6 +22,26 @@
         }
     }
 
+    &__convert-btn {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: $space-2;
+        padding: $space-2 $space-4;
+        font-size: $font-sm;
+        font-weight: $weight-semibold;
+        color: #fff;
+        background: $primary;
+        border: none;
+        border-radius: $radius-lg;
+        cursor: pointer;
+        transition: background $transition-fast;
+
+        &:hover {
+            background: darken($primary, 8%);
+        }
+    }
+
     &__back {
         display: flex;
         align-items: center;

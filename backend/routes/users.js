@@ -8,7 +8,7 @@ const { getPresetForRole, sanitizePermissions } = require('../config/permissions
 const router = express.Router();
 
 const PAN_RE = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
-const PHONE_RE = /^[6-9]\d{9}$/;
+const PHONE_RE = /^[+\d][\d\s\-().]{5,17}$/;;
 const PINCODE_RE = /^\d{6}$/;
 
 function sanitize(str) {

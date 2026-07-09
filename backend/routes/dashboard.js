@@ -17,12 +17,12 @@ router.get('/stats', authenticate, authorize('dashboard', 'view'), async (req, r
       Client.countDocuments(),
       Invoice.countDocuments(),
       Invoice.aggregate([
-        { $match: { status: { $nin: ['Paid', 'Cancelled'] } } },
+        { $match: { type: 'tax', status: { $nin: ['Paid', 'Cancelled'] } } },
         { $group: { _id: null, total: { $sum: '$balance' } } },
       ]),
-      Invoice.countDocuments({ status: 'Overdue' }),
+      Invoice.countDocuments({ type: 'tax', status: 'Overdue' }),
       Invoice.aggregate([
-        { $match: { status: 'Paid', invoice_date: { $gte: monthStart } } },
+        { $match: { type: 'tax', status: 'Paid', invoice_date: { $gte: monthStart } } },
         { $group: { _id: null, total: { $sum: '$grand_total' } } },
       ]),
       Payment.aggregate([
@@ -30,11 +30,11 @@ router.get('/stats', authenticate, authorize('dashboard', 'view'), async (req, r
         { $group: { _id: null, total: { $sum: '$amount' } } },
       ]),
       Invoice.aggregate([
-        { $match: { status: 'Paid' } },
+        { $match: { type: 'tax', status: 'Paid' } },
         { $group: { _id: null, total: { $sum: '$grand_total' } } },
       ]),
-      Invoice.find().populate('client_id', 'name').sort({ _id: -1 }).limit(5).lean(),
-      Invoice.find({ status: { $in: ['Draft', 'Sent', 'Overdue', 'Partially Paid'] }, credit_period: { $ne: null } })
+      Invoice.find({ type: 'tax' }).populate('client_id', 'name').sort({ _id: -1 }).limit(5).lean(),
+      Invoice.find({ type: 'tax', status: { $in: ['Draft', 'Sent', 'Overdue', 'Partially Paid'] }, credit_period: { $ne: null } })
         .populate('client_id', 'name').sort({ invoice_date: 1 }).limit(5).lean(),
       Payment.find().populate('client_id', 'name').populate('invoice_id', 'invoice_number').sort({ _id: -1 }).limit(10).lean(),
       Project.countDocuments({ status: { $regex: /^active$/i } }),

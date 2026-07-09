@@ -22,6 +22,17 @@ const invoiceSchema = new mongoose.Schema({
   credit_period: { type: Number, default: null },
   place_of_supply: { type: String, default: null },
   po_number: { type: String, default: null },
+  po_date: { type: String, default: null },
+  contact_person: {
+    type: new mongoose.Schema({
+      _id: { type: mongoose.Schema.Types.ObjectId },
+      name: { type: String, default: '' },
+      phone: { type: String, default: '' },
+      email: { type: String, default: '' },
+      designation: { type: String, default: '' },
+    }, { _id: false }),
+    default: null,
+  },
   transport: { type: String, default: null },
   vehicle_no: { type: String, default: null },
   gr_rr_no: { type: String, default: null },

@@ -70,6 +70,8 @@ router.get('/:id/pdf', authenticate, async (req, res) => {
     const bank = settingsMap.bank || {};
 
     // Build full invoice object with client details
+    // Use stored contact_person if available (preserves snapshot at invoice creation)
+    const cp = invoice.contact_person;
     const fullInvoice = {
       ...invoice,
       client_name: invoice.client_id?.name || '',
@@ -77,9 +79,9 @@ router.get('/:id/pdf', authenticate, async (req, res) => {
       client_address: invoice.client_id?.address || '',
       client_city: invoice.client_id?.city || '',
       client_state: invoice.client_id?.state || '',
-      client_contact: invoice.client_id?.contact || '',
-      client_email: invoice.client_id?.email || '',
-      client_phone: invoice.client_id?.phone || '',
+      client_contact: cp?.name || invoice.client_id?.contact || '',
+      client_email: cp?.email || invoice.client_id?.email || '',
+      client_phone: cp?.phone || invoice.client_id?.phone || '',
     };
 
     const pdfBuffer = await generateInvoicePdfBuffer(fullInvoice, company, bank, { mode: req.query.mode || 'download' });
@@ -101,7 +103,7 @@ router.get('/:id/pdf', authenticate, async (req, res) => {
 router.get('/:id', authenticate, async (req, res) => {
   try {
     const invoice = await Invoice.findById(req.params.id)
-      .populate('client_id', 'name gstin address city state contact email phone')
+      .populate('client_id', 'name gstin address city state contact email phone contacts')
       .lean();
     if (!invoice) return res.status(404).json({ error: 'Invoice not found' });
 
@@ -117,6 +119,7 @@ router.get('/:id', authenticate, async (req, res) => {
       client_contact: invoice.client_id?.contact || '',
       client_email: invoice.client_id?.email || '',
       client_phone: invoice.client_id?.phone || '',
+      client_contacts: invoice.client_id?.contacts || [],
       client_id: invoice.client_id?._id || invoice.client_id,
     });
   } catch (err) {
@@ -128,7 +131,7 @@ router.post('/', authenticate, authorize('invoices', 'create'), async (req, res)
   try {
     const {
       invoice_number, client_id, invoice_type, tax_type,
-      invoice_date, credit_period, place_of_supply, po_number,
+      invoice_date, credit_period, place_of_supply, po_number, po_date, contact_person,
       transport, vehicle_no, gr_rr_no, eway_bill,
       notes, terms, items, type,
     } = req.body;
@@ -148,6 +151,8 @@ router.post('/', authenticate, authorize('invoices', 'create'), async (req, res)
       invoice_date, credit_period: credit_period || null,
       place_of_supply: place_of_supply || null,
       po_number: po_number || null,
+      po_date: po_date || null,
+      contact_person: contact_person || null,
       transport: transport || null,
       vehicle_no: vehicle_no || null,
       gr_rr_no: gr_rr_no || null,
@@ -183,9 +188,9 @@ router.put('/:id', authenticate, authorize('invoices', 'edit'), async (req, res)
 
     const {
       status, client_id, invoice_type, tax_type,
-      invoice_date, credit_period, place_of_supply, po_number,
+      invoice_date, credit_period, place_of_supply, po_number, po_date, contact_person,
       transport, vehicle_no, gr_rr_no, eway_bill,
-      notes, terms, items,
+      notes, terms, items, type,
     } = req.body;
 
     if (status && !items) {
@@ -202,11 +207,14 @@ router.put('/:id', authenticate, authorize('invoices', 'edit'), async (req, res)
 
     existing.client_id = client_id;
     existing.invoice_type = invoice_type || 'Tax Invoice';
+    if (type) existing.type = type;
     existing.tax_type = tax_type || 'IGST';
     existing.invoice_date = invoice_date;
     existing.credit_period = credit_period || null;
     existing.place_of_supply = place_of_supply || null;
     existing.po_number = po_number || null;
+    existing.po_date = po_date || null;
+    if (contact_person !== undefined) existing.contact_person = contact_person || null;
     existing.transport = transport || null;
     existing.vehicle_no = vehicle_no || null;
     existing.gr_rr_no = gr_rr_no || null;

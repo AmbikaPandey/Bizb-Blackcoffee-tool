@@ -18,10 +18,13 @@ const RULES = {
         transform: (v) => v.trim(),
     },
     phone: {
-        pattern: /^[6-9]\d{9}$/,
-        hint: '10-digit mobile number',
-        error: 'Invalid phone number (10 digits starting with 6-9)',
-        transform: (v) => v.replace(/\D/g, '').slice(0, 10),
+        // Accepts mobile (10 digit starting 6-9), landlines with STD code, +91 prefix,
+        // and common formatting chars (spaces, hyphens, parentheses).
+        // After stripping formatting, the digit count must be 7–13.
+        pattern: /^[+\d][\d\s\-().]{5,17}$/,
+        hint: 'e.g., 9876543210, 044-23456789, +91 98765 43210',
+        error: 'Invalid phone number',
+        transform: (v) => v.replace(/[^\d\s\-+().]/g, '').slice(0, 19),
     },
     ifsc: {
         pattern: /^[A-Z]{4}0[A-Z0-9]{6}$/,

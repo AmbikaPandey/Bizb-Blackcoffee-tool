@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Eye, Pencil, Trash2, Loader2, MapPin } from 'lucide-react';
+import { Eye, Pencil, Trash2, Loader2, MapPin, Plus, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '../components/common/PageHeader';
 import SearchBar from '../components/common/SearchBar';
@@ -15,7 +15,9 @@ import { uppercaseFormData } from '../utils/formTransform';
 import { validate, transform } from '../utils/validation';
 import { lookupGST, isValidGSTIN } from '../utils/gstLookup';
 
-const emptyForm = { name: '', gstin: '', gst_status: '', email: '', phone: '', contact: '', address: '', pincode: '', city: '', state: '', latitude: '', longitude: '' };
+const emptyForm = { name: '', gstin: '', gst_status: '', email: '', phone: '', contact: '', contacts: [], address: '', pincode: '', city: '', state: '', latitude: '', longitude: '' };
+
+const emptyContact = { name: '', phone: '', email: '', designation: '' };
 
 export default function Clients() {
     const toast = useToast();
@@ -49,7 +51,7 @@ export default function Clients() {
 
     function openEdit(c) {
         setEditTarget(c);
-        setForm({ name: c.name || '', gstin: c.gstin || '', gst_status: c.gst_status || '', email: c.email || '', phone: c.phone || '', contact: c.contact || '', address: c.address || '', pincode: c.pincode || '', city: c.city || '', state: c.state || '', latitude: c.latitude || '', longitude: c.longitude || '' });
+        setForm({ name: c.name || '', gstin: c.gstin || '', gst_status: c.gst_status || '', email: c.email || '', phone: c.phone || '', contact: c.contact || '', contacts: c.contacts ? c.contacts.map((ct) => ({ name: ct.name || '', phone: ct.phone || '', email: ct.email || '', designation: ct.designation || '', _id: ct._id })) : [], address: c.address || '', pincode: c.pincode || '', city: c.city || '', state: c.state || '', latitude: c.latitude || '', longitude: c.longitude || '' });
         setErrors({});
         setShowModal(true);
     }
@@ -93,6 +95,18 @@ export default function Clients() {
         } catch (err) { toast(err.message || 'Failed to delete client', 'error'); }
     }
 
+    function updateContact(idx, field, value) {
+        setForm((p) => {
+            const updated = [...p.contacts];
+            updated[idx] = { ...updated[idx], [field]: value };
+            return { ...p, contacts: updated };
+        });
+    }
+
+    function removeContact(idx) {
+        setForm((p) => ({ ...p, contacts: p.contacts.filter((_, i) => i !== idx) }));
+    }
+
     const filtered = clients.filter((c) =>
         c.name?.toLowerCase().includes(search.toLowerCase()) ||
         (c.gstin || '').toLowerCase().includes(search.toLowerCase()) ||
@@ -123,7 +137,7 @@ export default function Clients() {
                         </thead>
                         <tbody>
                             {filtered.map((client) => (
-                                <tr key={client.id || client._id}>
+                                <tr key={client.id || client._id} className="clickable-row" onClick={() => navigate(`/clients/${client.id || client._id}`)}>
                                     <td className="font-medium">{client.name}</td>
                                     <td className="mono">{client.gstin || '-'}</td>
                                     <td>{client.contact || '-'}</td>
@@ -134,10 +148,10 @@ export default function Clients() {
                                     <td>
                                         <ActionMenu actions={[
                                             { icon: <Eye size={15} />, label: 'View Details', onClick: () => navigate(`/clients/${client.id || client._id}`) },
-                                            { icon: <Pencil size={15} />, label: 'Edit', onClick: () => openEdit(client) },
+                                            { icon: <Pencil size={15} />, label: 'Edit', onClick: (e) => { e.stopPropagation(); openEdit(client); } },
                                             ...(client.latitude && client.longitude ? [{ icon: <MapPin size={15} />, label: 'Locate on Map', onClick: () => window.open(`https://www.google.com/maps?q=${client.latitude},${client.longitude}`, '_blank') }] : []),
                                             { divider: true },
-                                            { icon: <Trash2 size={15} />, label: 'Delete', danger: true, onClick: () => setDeleteTarget(client) },
+                                            { icon: <Trash2 size={15} />, label: 'Delete', danger: true, onClick: (e) => { e.stopPropagation(); setDeleteTarget(client); } },
                                         ]} />
                                     </td>
                                 </tr>
@@ -220,8 +234,12 @@ export default function Clients() {
                     </div>
                     <div className="form-row form-row--2">
                         <div className="form-group">
+                            <label className="form-group__label">Contact Person</label>
+                            <input type="text" placeholder="Contact name" className="form-group__input" value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })} />
+                        </div>
+                        <div className="form-group">
                             <label className="form-group__label">Phone</label>
-                            <input type="tel" placeholder="9876543210" className={`form-group__input${errors.phone ? ' form-group__input--error' : ''}`} value={form.phone} maxLength={10}
+                            <input type="tel" placeholder="9876543210 or 044-23456789" className={`form-group__input${errors.phone ? ' form-group__input--error' : ''}`} value={form.phone}
                                 onChange={(e) => {
                                     const val = transform('phone', e.target.value);
                                     setForm({ ...form, phone: val });
@@ -231,10 +249,25 @@ export default function Clients() {
                             />
                             {errors.phone && <span className="form-group__error">{errors.phone}</span>}
                         </div>
-                        <div className="form-group">
-                            <label className="form-group__label">Contact Person</label>
-                            <input type="text" placeholder="Contact name" className="form-group__input" value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })} />
+                    </div>
+
+                    {/* Multiple Contact Persons */}
+                    <div className="form-group">
+                        <div className="form-group__label-row">
+                            <label className="form-group__label">Additional Contact Persons</label>
+                            <button type="button" className="btn-add-contact" onClick={() => setForm((prev) => ({ ...prev, contacts: [...prev.contacts, { ...emptyContact }] }))}>
+                                <Plus size={13} /> Add Contact
+                            </button>
                         </div>
+                        {form.contacts.map((ct, idx) => (
+                            <div key={ct._id || `new-${idx}`} className="contact-person-row">
+                                <input type="text" placeholder="Name" className="form-group__input" value={ct.name} onChange={(e) => updateContact(idx, 'name', e.target.value)} />
+                                <input type="text" placeholder="Designation" className="form-group__input" value={ct.designation} onChange={(e) => updateContact(idx, 'designation', e.target.value)} />
+                                <input type="tel" placeholder="Phone" className="form-group__input" maxLength={10} value={ct.phone} onChange={(e) => updateContact(idx, 'phone', e.target.value)} />
+                                <input type="email" placeholder="Email (optional)" className="form-group__input" value={ct.email} onChange={(e) => updateContact(idx, 'email', e.target.value)} />
+                                <button type="button" className="btn-remove-contact" onClick={() => removeContact(idx)}><X size={14} /></button>
+                            </div>
+                        ))}
                     </div>
                     <div className="form-group">
                         <label className="form-group__label">Address</label>

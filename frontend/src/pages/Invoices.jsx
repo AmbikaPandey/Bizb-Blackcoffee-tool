@@ -128,7 +128,7 @@ export default function Invoices() {
 
     return (
         <div>
-            <PageHeader title="Invoices" subtitle="Manage tax and proforma invoices" buttonLabel="New Invoice" onButtonClick={() => navigate('/invoices/new')} />
+            <PageHeader title="Invoices" subtitle="Manage tax and proforma invoices" buttonLabel={tab === 'proforma' ? 'New Proforma Invoice' : 'New Invoice'} onButtonClick={() => navigate(tab === 'proforma' ? '/invoices/new?type=proforma' : '/invoices/new')} />
 
             <div className="tabs">
                 {['tax', 'proforma'].map((t) => (
@@ -180,8 +180,8 @@ export default function Invoices() {
                                     </td>
                                 </tr>
                             ) : filtered.map((inv) => (
-                                <tr key={inv.id}>
-                                    <td>
+                                <tr key={inv.id} className="clickable-row" onClick={() => navigate(`/invoices/${inv.id}`)}>
+                                    <td onClick={(e) => e.stopPropagation()}>
                                         <input type="checkbox" checked={selectedIds.includes(inv.id)} onChange={() => toggleSelect(inv.id)} />
                                     </td>
                                     <td className="font-medium">{inv.invoice_number}</td>
@@ -198,7 +198,7 @@ export default function Invoices() {
                                             {inv.busySynced ? 'Synced' : 'Pending'}
                                         </span>
                                     </td>
-                                    <td>
+                                    <td onClick={(e) => e.stopPropagation()}>
                                         <InvoiceActions
                                             onView={() => navigate(`/invoices/${inv.id}`)}
                                             onEdit={() => navigate(`/invoices/${inv.id}/edit`)}

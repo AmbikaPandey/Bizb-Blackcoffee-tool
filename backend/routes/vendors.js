@@ -7,7 +7,7 @@ const router = express.Router();
 
 // Validation helpers
 const PAN_RE = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
-const PHONE_RE = /^[6-9]\d{9}$/;
+const PHONE_RE = /^[+\d][\d\s\-().]{5,17}$/;;
 const GSTIN_RE = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
 
 function sanitize(str) {
@@ -50,9 +50,9 @@ router.post('/', authenticate, authorize('vendors', 'create'), async (req, res) 
   try {
     const { name, gstin, pan, contact, contact1, contact2, city, phone, email, state, address, pincode, bank_details } = req.body;
     if (!name || !name.trim()) return res.status(400).json({ error: 'Vendor name is required' });
-    if (phone && !PHONE_RE.test(phone)) return res.status(400).json({ error: 'Invalid phone number (10 digits starting with 6-9)' });
-    if (contact1 && !PHONE_RE.test(contact1)) return res.status(400).json({ error: 'Invalid Contact 1 (10 digits starting with 6-9)' });
-    if (contact2 && !PHONE_RE.test(contact2)) return res.status(400).json({ error: 'Invalid Contact 2 (10 digits starting with 6-9)' });
+    if (phone && !PHONE_RE.test(phone)) return res.status(400).json({ error: 'Invalid phone number' });
+    if (contact1 && !PHONE_RE.test(contact1)) return res.status(400).json({ error: 'Invalid Contact 1 number' });
+    if (contact2 && !PHONE_RE.test(contact2)) return res.status(400).json({ error: 'Invalid Contact 2 number' });
     if (pan && !PAN_RE.test(pan)) return res.status(400).json({ error: 'Invalid PAN format' });
     if (gstin && !GSTIN_RE.test(gstin)) return res.status(400).json({ error: 'Invalid GSTIN format' });
 
@@ -72,9 +72,9 @@ router.post('/', authenticate, authorize('vendors', 'create'), async (req, res) 
 
 router.put('/:id', authenticate, authorize('vendors', 'edit'), async (req, res) => {
   try {
-    if (req.body.phone && !PHONE_RE.test(req.body.phone)) return res.status(400).json({ error: 'Invalid phone number (10 digits starting with 6-9)' });
-    if (req.body.contact1 && !PHONE_RE.test(req.body.contact1)) return res.status(400).json({ error: 'Invalid Contact 1 (10 digits starting with 6-9)' });
-    if (req.body.contact2 && !PHONE_RE.test(req.body.contact2)) return res.status(400).json({ error: 'Invalid Contact 2 (10 digits starting with 6-9)' });
+    if (req.body.phone && !PHONE_RE.test(req.body.phone)) return res.status(400).json({ error: 'Invalid phone number' });
+    if (req.body.contact1 && !PHONE_RE.test(req.body.contact1)) return res.status(400).json({ error: 'Invalid Contact 1 number' });
+    if (req.body.contact2 && !PHONE_RE.test(req.body.contact2)) return res.status(400).json({ error: 'Invalid Contact 2 number' });
     if (req.body.pan && !PAN_RE.test(req.body.pan)) return res.status(400).json({ error: 'Invalid PAN format' });
     if (req.body.gstin && !GSTIN_RE.test(req.body.gstin)) return res.status(400).json({ error: 'Invalid GSTIN format' });
 

@@ -1222,6 +1222,15 @@
     }
 }
 
+// ── Clickable table row ────────────────────
+tr.clickable-row {
+    cursor: pointer;
+
+    &:hover td {
+        background: var(--color-bg-hover, rgba(0, 0, 0, 0.03));
+    }
+}
+
 // ── Form validation error ──────────────────
 .form-group {
     &__error {
@@ -1233,6 +1242,62 @@
 
     &__input--error {
         border-color: $danger !important;
+    }
+
+    &__label-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: $space-2;
+    }
+}
+
+.btn-add-contact {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: $font-xs;
+    font-weight: 600;
+    color: $primary;
+    background: none;
+    border: 1px dashed $primary;
+    border-radius: $radius-sm;
+    padding: 3px 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+
+    &:hover {
+        background: rgba($primary, 0.06);
+    }
+}
+
+.btn-remove-contact {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: $radius-sm;
+    background: var(--color-bg-hover);
+    color: $danger;
+    cursor: pointer;
+
+    &:hover {
+        background: rgba($danger, 0.1);
+    }
+}
+
+.contact-person-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr auto;
+    gap: $space-2;
+    align-items: center;
+    margin-bottom: $space-2;
+
+    @media (max-width: 768px) {
+        grid-template-columns: 1fr 1fr auto;
     }
 }
 

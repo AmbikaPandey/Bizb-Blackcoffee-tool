@@ -46,6 +46,7 @@ export default function EditInvoice() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [invoiceNumEditable, setInvoiceNumEditable] = useState(false);
+    const [selectedContactId, setSelectedContactId] = useState('');
 
     const [form, setForm] = useState({
         client_id: '',
@@ -56,6 +57,8 @@ export default function EditInvoice() {
         credit_period: '',
         place_of_supply: '',
         po_number: '',
+        po_date: '',
+        contact_person: null,
         transport: '',
         vehicle_no: '',
         gr_rr_no: '',
@@ -65,6 +68,11 @@ export default function EditInvoice() {
     });
 
     const [items, setItems] = useState([{ ...EMPTY_ITEM }]);
+    const [originalType, setOriginalType] = useState('');
+
+    // Derived: contacts for selected client
+    const selectedClient = clients.find((c) => String(c.id || c._id) === String(form.client_id));
+    const clientContacts = selectedClient?.contacts || [];
 
     useEffect(() => {
         Promise.all([
@@ -76,15 +84,19 @@ export default function EditInvoice() {
             setClients(c);
             setProducts(p);
             setStates(s);
+            const invType = inv.invoice_type || 'Tax Invoice';
+            setOriginalType(invType);
             setForm({
                 client_id: inv.client_id || '',
-                invoice_type: inv.invoice_type || 'Tax Invoice',
+                invoice_type: invType,
                 invoice_number: inv.invoice_number || '',
                 tax_type: inv.tax_type || 'IGST',
                 invoice_date: inv.invoice_date || '',
                 credit_period: inv.credit_period != null ? String(inv.credit_period) : '',
                 place_of_supply: inv.place_of_supply || '',
                 po_number: inv.po_number || '',
+                po_date: inv.po_date || '',
+                contact_person: inv.contact_person || null,
                 transport: inv.transport || '',
                 vehicle_no: inv.vehicle_no || '',
                 gr_rr_no: inv.gr_rr_no || '',
@@ -92,6 +104,7 @@ export default function EditInvoice() {
                 notes: inv.notes || '',
                 terms: inv.terms || '',
             });
+            if (inv.contact_person?._id) setSelectedContactId(String(inv.contact_person._id));
             setItems(inv.items && inv.items.length > 0 ? inv.items.map((item) => ({
                 product_id: item.product_id || '',
                 product_name: item.product_name || '',
@@ -111,6 +124,22 @@ export default function EditInvoice() {
     const updateForm = (field, value) => {
         setForm((prev) => ({ ...prev, [field]: value }));
     };
+
+    const handleContactPersonChange = (contactId) => {
+        setSelectedContactId(contactId);
+        if (!contactId) { updateForm('contact_person', null); return; }
+        const cp = clientContacts.find((c) => String(c._id) === contactId);
+        if (cp) updateForm('contact_person', { _id: cp._id, name: cp.name, phone: cp.phone, email: cp.email, designation: cp.designation });
+    };
+
+    // When converting Proforma → Tax Invoice, auto-assign next tax invoice number
+    useEffect(() => {
+        if (originalType === 'Proforma' && form.invoice_type === 'Tax Invoice') {
+            api.getNextInvoiceNumber('tax').then((n) => {
+                setForm((prev) => ({ ...prev, invoice_number: n.number }));
+            }).catch(() => { });
+        }
+    }, [form.invoice_type, originalType]);
 
     const updateItem = useCallback((index, field, value) => {
         setItems((prev) => {
@@ -188,12 +217,13 @@ export default function EditInvoice() {
             await api.updateInvoice(id, {
                 ...form,
                 type: form.invoice_type === 'Proforma' ? 'proforma' : 'tax',
+                po_date: form.invoice_type === 'Tax Invoice' ? (form.po_date || null) : null,
                 items: items.map((item) => ({
                     ...item,
                     amount: calcItemAmount(item),
                 })),
             });
-            toast('Invoice updated successfully');
+            toast(form.invoice_type === 'Proforma' ? 'Proforma updated successfully' : 'Invoice updated successfully');
             navigate(`/invoices/${id}`);
         } catch (err) {
             setError(err.message || 'Failed to update invoice');
@@ -201,6 +231,14 @@ export default function EditInvoice() {
             setSaving(false);
         }
     };
+
+    let submitLabel = 'Save Tax Invoice';
+    if (saving) { submitLabel = 'Saving...'; }
+    else if (form.invoice_type === 'Proforma') { submitLabel = 'Save Proforma'; }
+
+    const pageTitle = form.invoice_type === 'Proforma'
+        ? `Edit Proforma — ${form.invoice_number}`
+        : `Edit Tax Invoice — ${form.invoice_number}`;
 
     if (loading) return <div className="page-loading">Loading invoice...</div>;
 
@@ -210,7 +248,16 @@ export default function EditInvoice() {
                 <button className="new-invoice__back" onClick={() => navigate(`/invoices/${id}`)}>
                     <ArrowLeft size={18} /> Back
                 </button>
-                <h1>Edit Invoice — {form.invoice_number}</h1>
+                <h1>{pageTitle}</h1>
+                {originalType === 'Proforma' && form.invoice_type === 'Proforma' && (
+                    <button
+                        type="button"
+                        className="new-invoice__convert-btn"
+                        onClick={() => updateForm('invoice_type', 'Tax Invoice')}
+                    >
+                        Convert to Tax Invoice
+                    </button>
+                )}
             </div>
 
             {error && <div className="new-invoice__error">{error}</div>}
@@ -236,9 +283,24 @@ export default function EditInvoice() {
                             </select>
                         </div>
                     </div>
+                    {/* Contact Person selector — shown when client has contacts */}
+                    {clientContacts.length > 0 && (
+                        <div className="new-invoice__grid">
+                            <div className="new-invoice__field">
+                                <label>Contact Person</label>
+                                <select value={selectedContactId} onChange={(e) => handleContactPersonChange(e.target.value)}>
+                                    <option value="">— Select contact person —</option>
+                                    {clientContacts.map((ct) => (
+                                        <option key={ct._id} value={ct._id}>{ct.name}{ct.designation ? ` (${ct.designation})` : ''}{ct.phone ? ` · ${ct.phone}` : ''}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="new-invoice__field" />
+                        </div>
+                    )}
                     <div className="new-invoice__grid">
                         <div className="new-invoice__field">
-                            <label>Invoice Number</label>
+                            <label>{form.invoice_type === 'Proforma' ? 'PI No.' : 'Invoice Number'}</label>
                             <div className="new-invoice__field-with-btn">
                                 <input type="text" value={form.invoice_number} disabled={!invoiceNumEditable} onChange={(e) => updateForm('invoice_number', e.target.value)} />
                                 {isAdmin && !invoiceNumEditable && (
@@ -281,6 +343,15 @@ export default function EditInvoice() {
                             <input type="text" placeholder="Purchase order number" value={form.po_number} onChange={(e) => updateForm('po_number', e.target.value)} />
                         </div>
                     </div>
+                    {form.invoice_type === 'Tax Invoice' && (
+                        <div className="new-invoice__grid">
+                            <div className="new-invoice__field">
+                                <label>PO Date</label>
+                                <input type="date" value={form.po_date} onChange={(e) => updateForm('po_date', e.target.value)} />
+                            </div>
+                            <div className="new-invoice__field" />
+                        </div>
+                    )}
                 </div>
 
                 <div className="new-invoice__card new-invoice__card--transport">
@@ -436,7 +507,7 @@ export default function EditInvoice() {
                 </button>
                 <button className="new-invoice__submit-btn" onClick={handleSubmit} disabled={saving}>
                     <Save size={18} />
-                    {saving ? 'Saving...' : 'Save Changes'}
+                    {submitLabel}
                 </button>
             </div>
         </div>

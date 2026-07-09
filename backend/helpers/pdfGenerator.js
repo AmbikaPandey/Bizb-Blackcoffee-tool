@@ -193,7 +193,12 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       doc.font('Helvetica-Bold').fontSize(9).fillColor(BLACK);
       doc.text(`GSTIN: ${invoice.client_gstin || ''}`, m + 6, y); y += 20;
       doc.font('Helvetica').fontSize(9).fillColor(BLACK);
-      doc.text(`Contact Person: ${invoice.client_contact || ''}`, m + 6, y);
+      if (invoice.client_contact) {
+        doc.text(`Contact Person: ${invoice.client_contact}`, m + 6, y); y += 14;
+      }
+      if (invoice.client_phone) {
+        doc.text(`Phone: ${invoice.client_phone}`, m + 6, y); y += 14;
+      }
 
       // No vertical divider — clean layout
       const infoRowH = 13;
@@ -207,7 +212,7 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       let iY = detailsTop + 8;
 
       const infoRows = [
-        ['Invoice No.', cleanInvoiceNumber(invoice.invoice_number) || ''],
+        [invoice.type === 'proforma' ? 'PI No.' : 'Invoice No.', cleanInvoiceNumber(invoice.invoice_number) || ''],
         ['Dated', formatShortDate(invoice.invoice_date)],
         ['P.O. No.', invoice.po_number || ''],
         ['P.O. Date', invoice.po_date ? formatShortDate(invoice.po_date) : ''],
@@ -302,8 +307,13 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
         ];
 
         const descWidth = colWidths[1] - cellPadX * 2;
-        const descHeight = doc.heightOfString(rowData[1], { width: descWidth, fontSize: 7.5 });
-        const rowH = Math.max(20, descHeight + cellPadY * 2);
+        // Measure combined height: product_name (bold 7.5) + description (regular 6.5) if both present
+        const hasDesc = item.product_name && item.description;
+        const nameText = item.product_name || item.description || '';
+        const descText = hasDesc ? item.description : '';
+        const nameH = doc.heightOfString(nameText, { width: descWidth, fontSize: 7.5 });
+        const descH = hasDesc ? doc.heightOfString(descText, { width: descWidth, fontSize: 6.5 }) + 2 : 0;
+        const rowH = Math.max(20, nameH + descH + cellPadY * 2);
 
         const bottomLimit = 130;
         if (y + rowH > ph - bottomLimit) {
@@ -321,9 +331,20 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
         let rx = tableX;
         rowData.forEach((cell, ci) => {
           const align = (ci >= 4) ? 'right' : (ci === 0 || ci === 2 || ci === 3 ? 'center' : 'left');
-          doc.font('Helvetica-Bold').fontSize(7.5).fillColor(BLACK);
           const textY = y + (rowH - 7.5) / 2;
-          doc.text(cell, rx + cellPadX, textY, { width: colWidths[ci] - cellPadX * 2, align });
+          if (ci === 1 && hasDesc) {
+            // Product name bold, then description smaller below
+            const nameY = y + cellPadY;
+            doc.font('Helvetica-Bold').fontSize(7.5).fillColor(BLACK);
+            doc.text(nameText, rx + cellPadX, nameY, { width: colWidths[ci] - cellPadX * 2, align: 'left' });
+            const actualNameH = doc.heightOfString(nameText, { width: colWidths[ci] - cellPadX * 2, fontSize: 7.5 });
+            doc.font('Helvetica').fontSize(6.5).fillColor('#555555');
+            doc.text(descText, rx + cellPadX, nameY + actualNameH + 2, { width: colWidths[ci] - cellPadX * 2, align: 'left' });
+            doc.fillColor(BLACK);
+          } else {
+            doc.font('Helvetica-Bold').fontSize(7.5).fillColor(BLACK);
+            doc.text(cell, rx + cellPadX, textY, { width: colWidths[ci] - cellPadX * 2, align });
+          }
           rx += colWidths[ci];
         });
 
