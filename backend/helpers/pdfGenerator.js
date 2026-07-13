@@ -98,9 +98,20 @@ function drawBox(doc, x, y, w, h, fill) {
  */
 function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}) {
   const isPrint = options.mode === 'print';
+
+  // Register Roboto fonts — place TTF files in backend/assets/fonts/
+  const fontsDir = path.join(__dirname, '..', 'assets', 'fonts');
+  const regularPath = path.join(fontsDir, 'Roboto-Regular.ttf');
+  const boldPath    = path.join(fontsDir, 'Roboto-Bold.ttf');
+  const italicPath  = path.join(fontsDir, 'Roboto-Italic.ttf');
+
   return new Promise((resolve, reject) => {
     try {
       const doc = new PDFDocument({ size: 'A4', margin: 40, bufferPages: true });
+
+      if (fs.existsSync(regularPath)) doc.registerFont('Roboto',        regularPath);
+      if (fs.existsSync(boldPath))    doc.registerFont('Roboto-Bold',   boldPath);
+      if (fs.existsSync(italicPath))  doc.registerFont('Roboto-Italic', italicPath);
       const chunks = [];
 
       doc.on('data', (chunk) => chunks.push(chunk));
@@ -148,15 +159,15 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
 
       // ── GSTIN + INVOICE TITLE ROW ────────────────
       // No top border — letterhead provides visual separation
-      doc.font('Helvetica-Bold').fontSize(9).fillColor(BLACK);
+      doc.font('Roboto-Bold').fontSize(9).fillColor(BLACK);
       doc.text(`GSTIN: ${company.gstin || ''}`, m + 6, y);
 
       const invoiceLabel = invoice.type === 'proforma' ? 'PROFORMA INVOICE' : 'INVOICE';
-      doc.font('Helvetica-Bold').fontSize(16).fillColor(BLACK);
+      doc.font('Roboto-Bold').fontSize(16).fillColor(BLACK);
       const labelW = doc.widthOfString(invoiceLabel);
       doc.text(invoiceLabel, (pw - labelW) / 2, y - 4);
 
-      doc.font('Helvetica').fontSize(7).fillColor(BLACK);
+      doc.font('Roboto').fontSize(7).fillColor(BLACK);
       doc.text('Original Copy', pw - m - 60, y, { width: 54, align: 'right' });
 
       y += 22;
@@ -174,14 +185,14 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       const detailsTop = y;
 
       // Bill To (left)
-      doc.font('Helvetica-Bold').fontSize(8).fillColor(BLACK);
+      doc.font('Roboto-Bold').fontSize(8).fillColor(BLACK);
       doc.text('BILL TO', m + 6, y + 4);
 
       y += 17;
-      doc.font('Helvetica-Bold').fontSize(11).fillColor(BLACK);
+      doc.font('Roboto-Bold').fontSize(11).fillColor(BLACK);
       doc.text(invoice.client_name || 'COMPANY NAME', m + 6, y);
       y += 16;
-      doc.font('Helvetica').fontSize(9).fillColor(BLACK);
+      doc.font('Roboto').fontSize(9).fillColor(BLACK);
       if (invoice.client_address) {
         const addrH = doc.heightOfString(invoice.client_address, { width: billToW - 12 });
         doc.text(invoice.client_address, m + 6, y, { width: billToW - 12 });
@@ -190,9 +201,9 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       const cityState = [invoice.client_city, invoice.client_state].filter(Boolean).join(', ');
       if (cityState) { doc.text(cityState, m + 6, y); y += 25; }
       if (invoice.client_pincode) { doc.text(`${invoice.client_state || 'State'} - ${invoice.client_pincode}`, m + 6, y); y += 25; }
-      doc.font('Helvetica-Bold').fontSize(9).fillColor(BLACK);
+      doc.font('Roboto-Bold').fontSize(9).fillColor(BLACK);
       doc.text(`GSTIN: ${invoice.client_gstin || ''}`, m + 6, y); y += 20;
-      doc.font('Helvetica').fontSize(9).fillColor(BLACK);
+      doc.font('Roboto').fontSize(9).fillColor(BLACK);
       if (invoice.client_contact) {
         doc.text(`Contact Person: ${invoice.client_contact}`, m + 6, y); y += 14;
       }
@@ -223,19 +234,19 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       const infoValW = (pw - m) - infoValX; // right edge = pw - m
 
       infoRows.forEach(([label, value]) => {
-        doc.font('Helvetica').fontSize(9).fillColor(BLACK);
+        doc.font('Roboto').fontSize(9).fillColor(BLACK);
         doc.text(label, infoX, iY, { width: infoLabelW, align: 'right' });
         doc.fillColor(BLACK).text(':', colonX, iY);
-        doc.font('Helvetica-Bold').fillColor(BLACK);
+        doc.font('Roboto-Bold').fillColor(BLACK);
         doc.text(value, infoValX, iY, { width: infoValW, align: 'right' });
         iY += infoRowH;
       });
 
       // E-way Bill row
-      doc.font('Helvetica').fontSize(9).fillColor(BLACK);
+      doc.font('Roboto').fontSize(9).fillColor(BLACK);
       doc.text('E-way Bill No.', infoX, iY, { width: infoLabelW, align: 'right' });
       doc.fillColor(BLACK).text(':', colonX, iY);
-      doc.font('Helvetica').fillColor(BLACK);
+      doc.font('Roboto').fillColor(BLACK);
       doc.text(invoice.eway_bill || '', infoValX, iY, { width: infoValW, align: 'right' });
 
       y = sectionBottom;
@@ -278,7 +289,7 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       doc.restore();
 
       // Header text — no column separators
-      doc.font('Helvetica-Bold').fontSize(8).fillColor(BLACK);
+      doc.font('Roboto-Bold').fontSize(8).fillColor(BLACK);
       let hx = tableX;
       headers.forEach((h, i) => {
         const align = (i >= 4) ? 'right' : (i === 0 || i === 2 || i === 3 ? 'center' : 'left');
@@ -335,14 +346,14 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
           if (ci === 1 && hasDesc) {
             // Product name bold, then description smaller below
             const nameY = y + cellPadY;
-            doc.font('Helvetica-Bold').fontSize(7.5).fillColor(BLACK);
+            doc.font('Roboto-Bold').fontSize(7.5).fillColor(BLACK);
             doc.text(nameText, rx + cellPadX, nameY, { width: colWidths[ci] - cellPadX * 2, align: 'left' });
             const actualNameH = doc.heightOfString(nameText, { width: colWidths[ci] - cellPadX * 2, fontSize: 7.5 });
-            doc.font('Helvetica').fontSize(6.5).fillColor('#555555');
+            doc.font('Roboto').fontSize(6.5).fillColor('#555555');
             doc.text(descText, rx + cellPadX, nameY + actualNameH + 2, { width: colWidths[ci] - cellPadX * 2, align: 'left' });
             doc.fillColor(BLACK);
           } else {
-            doc.font('Helvetica-Bold').fontSize(7.5).fillColor(BLACK);
+            doc.font('Roboto-Bold').fontSize(7.5).fillColor(BLACK);
             doc.text(cell, rx + cellPadX, textY, { width: colWidths[ci] - cellPadX * 2, align });
           }
           rx += colWidths[ci];
@@ -379,9 +390,9 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       const taxColW = taxTableW / 4;
 
       if (invoice.notes) {
-        doc.font('Helvetica-Bold').fontSize(7).fillColor(RED);
+        doc.font('Roboto-Bold').fontSize(7).fillColor(RED);
         doc.text('Note: ', tableX, leftY, { continued: true, width: taxTableW });
-        doc.font('Helvetica').fillColor(BLACK);
+        doc.font('Roboto').fillColor(BLACK);
         doc.text(invoice.notes, { continued: false, width: taxTableW });
         leftY += doc.heightOfString('Note: ' + invoice.notes, { width: taxTableW }) + 6;
       }
@@ -396,7 +407,7 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       doc.restore();
 
       let txX = taxTableX;
-      doc.font('Helvetica-Bold').fontSize(6.5).fillColor(BLACK);
+      doc.font('Roboto-Bold').fontSize(6.5).fillColor(BLACK);
       taxHeaders.forEach((h, i) => {
         doc.text(h, txX + 4, leftY + 3, { width: taxColW - 8, align: 'center', lineGap: 1 });
         if (i < taxHeaders.length - 1) {
@@ -411,7 +422,7 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       txX = taxTableX;
       doc.save().rect(taxTableX, leftY, taxTableW, 16).fill(WHITE).restore();
       const taxData = [`${items[0]?.tax_pct || 18}%`, fmtDec(subtotal), fmtDec(taxTotal), fmtDec(taxTotal)];
-      doc.font('Helvetica').fontSize(7.5).fillColor(BLACK);
+      doc.font('Roboto').fontSize(7.5).fillColor(BLACK);
       taxData.forEach((val, i) => {
         doc.text(val, txX + 4, leftY + 4, { width: taxColW - 8, align: 'center' });
         if (i < taxData.length - 1) {
@@ -438,7 +449,7 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
         doc.save().rect(midRightX, rY, midRightW, summaryRowH).fill(WHITE).restore();
         doc.strokeColor('#DDE3E7').lineWidth(0.4)
           .moveTo(midRightX, rY + summaryRowH).lineTo(midRightX + midRightW, rY + summaryRowH).stroke();
-        doc.font(bold ? 'Helvetica-Bold' : 'Helvetica').fontSize(8).fillColor(BLACK);
+        doc.font(bold ? 'Roboto-Bold' : 'Roboto').fontSize(8).fillColor(BLACK);
         doc.text(label, midRightX + 10, rY + (summaryRowH - 10) / 2 + 1);
         doc.text(value, midRightX + midRightW - 70, rY + (summaryRowH - 10) / 2 + 1, { width: 60, align: 'right' });
         rY += summaryRowH;
@@ -459,7 +470,7 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       doc.save().roundedRect(midRightX, rY - 1, midRightW, totalRowH + 1, 4).clip();
       doc.rect(midRightX, rY - 1, midRightW, totalRowH + 1).fill(TABLE_HEADER);
       doc.restore();
-      doc.font('Helvetica-Bold').fontSize(9).fillColor(BLACK);
+      doc.font('Roboto-Bold').fontSize(9).fillColor(BLACK);
       doc.text('TOTAL', midRightX + 10, rY + (totalRowH - 10) / 2);
       doc.text(fmt(Math.round(grandTotal)), midRightX + midRightW - 70, rY + (totalRowH - 10) / 2, { width: 60, align: 'right' });
       rY += totalRowH;
@@ -471,7 +482,7 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       }
 
       // Amount in words — single line
-      doc.font('Helvetica').fontSize(7.5).fillColor(BLACK);
+      doc.font('Roboto').fontSize(7.5).fillColor(BLACK);
       const wordsText = numberToWords(Math.round(grandTotal));
       doc.text(wordsText, midRightX + 6, rY + 8, { width: midRightW - 12, align: 'right' });
 
@@ -486,13 +497,13 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       y += 6;
 
       // Bank Details (left)
-      doc.font('Helvetica').fontSize(7).fillColor(BLACK);
+      doc.font('Roboto').fontSize(7).fillColor(BLACK);
       doc.text('Bank Details:', m + 6, y);
       y += 10;
-      doc.font('Helvetica-Bold').fontSize(8).fillColor(BLACK);
+      doc.font('Roboto-Bold').fontSize(8).fillColor(BLACK);
       doc.text(company.name || '', m + 6, y);
       y += 10;
-      doc.font('Helvetica-Bold').fontSize(7).fillColor(BLACK);
+      doc.font('Roboto-Bold').fontSize(7).fillColor(BLACK);
       if (bank.accountNo) { doc.text(`A/c No.: ${bank.accountNo}`, m + 6, y); y += 10; }
       if (bank.ifsc) { doc.text(`IFSC: ${bank.ifsc}`, m + 6, y); y += 10; }
       if (bank.bank) { doc.text(bank.bank, m + 6, y); y += 10; }
@@ -500,9 +511,24 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
 
       // Signatory (right)
       const sigStartY = y - 40;
-      doc.font('Helvetica-Bold').fontSize(7.5).fillColor(BLACK);
+      doc.font('Roboto-Bold').fontSize(7.5).fillColor(BLACK);
       doc.text(`For ${company.name || ''}`, midRightX, sigStartY, { width: midRightW - 6, align: 'right' });
-      doc.font('Helvetica').fontSize(7).fillColor(BLACK);
+
+      // Digital signature image (if provided)
+      if (company.signature) {
+        try {
+          const sigData = company.signature.replace(/^data:image\/[a-z+]+;base64,/, '');
+          const sigBuffer = Buffer.from(sigData, 'base64');
+          const sigW = 90;
+          const sigH = 30;
+          doc.image(sigBuffer, midRightX + midRightW - sigW - 6, sigStartY + 8, {
+            fit: [sigW, sigH],
+            align: 'right',
+          });
+        } catch (_) { /* skip if image fails */ }
+      }
+
+      doc.font('Roboto').fontSize(7).fillColor(BLACK);
       doc.text('Authorised Signatory', midRightX, sigStartY + 32, { width: midRightW - 6, align: 'right' });
 
       y += 6;
@@ -513,10 +539,10 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
 
       if (invoice.terms) {
         let ptY = footerTopY - 30;
-        doc.font('Helvetica-Bold').fontSize(7.5).fillColor(BLACK);
+        doc.font('Roboto-Bold').fontSize(7.5).fillColor(BLACK);
         doc.text('Payment Terms:', m + 6, ptY);
         ptY += 11;
-        doc.font('Helvetica').fontSize(7).fillColor(BLACK);
+        doc.font('Roboto').fontSize(7).fillColor(BLACK);
         doc.text(invoice.terms, m + 6, ptY, { width: cw - 12 });
       }
 
@@ -525,7 +551,7 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       const pages = doc.bufferedPageRange();
       for (let i = 0; i < pages.count; i++) {
         doc.switchToPage(i);
-        doc.font('Helvetica').fontSize(5).fillColor(GRAY);
+        doc.font('Roboto').fontSize(5).fillColor(GRAY);
         doc.text(`Page ${i + 1} of ${pages.count}`, m, ph - 46, { width: cw, align: 'center' });
       }
 

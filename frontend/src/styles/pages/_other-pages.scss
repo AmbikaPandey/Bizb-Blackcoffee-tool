@@ -299,6 +299,54 @@
             background: var(--color-bg-hover);
         }
     }
+
+    &__sig-section {
+        margin-bottom: $space-4;
+    }
+
+    &__sig-label {
+        display: block;
+        font-size: $font-sm;
+        font-weight: $weight-semibold;
+        color: var(--color-text-secondary);
+        margin-bottom: $space-2;
+    }
+
+    &__sig-wrap {
+        display: flex;
+        align-items: center;
+        gap: $space-3;
+        flex-wrap: wrap;
+    }
+
+    &__sig-img {
+        max-height: 64px;
+        max-width: 200px;
+        object-fit: contain;
+        border: 1px solid var(--color-border);
+        border-radius: $radius-md;
+        background: #fff;
+        padding: 4px;
+    }
+
+    &__sig-actions {
+        display: flex;
+        align-items: center;
+        gap: $space-2;
+    }
+
+    &__sig-empty {
+        font-size: $font-sm;
+        color: var(--color-text-secondary);
+        font-style: italic;
+        margin: 0;
+    }
+
+    &__sig-hint {
+        font-size: $font-xs;
+        color: var(--color-text-secondary);
+        margin-top: $space-1;
+    }
 }
 
 // ── Toggle Switch ─────────────────────────────
@@ -770,7 +818,7 @@
     }
 
     &__summary-card {
-        max-width: 420px;
+        max-width: 320px;
     }
 
     &__summary-row {

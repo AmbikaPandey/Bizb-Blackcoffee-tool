@@ -323,10 +323,12 @@ export default function EditInvoice() {
                             <label>Invoice Date</label>
                             <input type="date" value={form.invoice_date} onChange={(e) => updateForm('invoice_date', e.target.value)} />
                         </div>
-                        <div className="new-invoice__field">
-                            <label>Credit Period (Days)</label>
-                            <input type="number" min="0" value={form.credit_period} placeholder="e.g. 30" onChange={(e) => updateForm('credit_period', e.target.value)} />
-                        </div>
+                        {form.invoice_type !== 'Proforma' && (
+                            <div className="new-invoice__field">
+                                <label>Credit Period (Days)</label>
+                                <input type="number" min="0" value={form.credit_period} placeholder="e.g. 30" onChange={(e) => updateForm('credit_period', e.target.value)} />
+                            </div>
+                        )}
                     </div>
                     <div className="new-invoice__grid">
                         <div className="new-invoice__field">

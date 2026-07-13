@@ -18,7 +18,7 @@ const TABS = [
 
 const INIT_COMPANY = {
     name: '', gstin: '', pan: '', address_line1: '', address_line2: '',
-    city: '', state: '', pincode: '', state_code: '', phone: '', email: '', logo: '',
+    city: '', state: '', pincode: '', state_code: '', phone: '', email: '', logo: '', signature: '',
 };
 const INIT_BANK = { bank: '', accountNo: '', ifsc: '', upi: '' };
 const INIT_INVOICE = { prefix: 'BC', proforma_prefix: 'PI', receipt_prefix: 'REC', round_off: true, terms: '' };
@@ -69,6 +69,7 @@ export default function Settings() {
     const [saving, setSaving] = useState(false);
     const [editing, setEditing] = useState(false);
     const logoInputRef = useRef(null);
+    const signatureInputRef = useRef(null);
 
     const [company, setCompany] = useState(INIT_COMPANY);
     const [bank, setBank] = useState(INIT_BANK);
@@ -107,6 +108,18 @@ export default function Settings() {
         const reader = new FileReader();
         reader.onload = () => setCompany((prev) => ({ ...prev, logo: reader.result }));
         reader.readAsDataURL(file);
+    };
+
+    const handleSignatureUpload = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const allowed = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'];
+        if (!allowed.includes(file.type)) { toast('Signature must be PNG, JPG, JPEG, or SVG', 'error'); return; }
+        if (file.size > 200 * 1024) { toast('Signature must be under 200KB', 'error'); return; }
+        const reader = new FileReader();
+        reader.onload = () => setCompany((prev) => ({ ...prev, signature: reader.result }));
+        reader.readAsDataURL(file);
+        e.target.value = '';
     };
 
     const hasValidationErrors = () => {
@@ -204,6 +217,36 @@ export default function Settings() {
                         {!editing && company.logo && (
                             <img src={company.logo} alt="Logo" className="settings-card__logo-img" />
                         )}
+
+                        {/* ── Digital Signature ── */}
+                        <div className="settings-card__sig-section">
+                            <label className="settings-card__sig-label">Digital Signature</label>
+                            {company.signature ? (
+                                <div className="settings-card__sig-wrap">
+                                    <img src={company.signature} alt="Signature" className="settings-card__sig-img" />
+                                    {editing && (
+                                        <div className="settings-card__sig-actions">
+                                            <button type="button" className="settings-card__upload-btn" onClick={() => signatureInputRef.current?.click()}>
+                                                <Upload size={14} /> Replace Signature
+                                            </button>
+                                            <button type="button" className="settings-card__logo-remove" onClick={() => setCompany((prev) => ({ ...prev, signature: '' }))}>
+                                                <X size={12} />
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : null}
+                            {!company.signature && editing && (
+                                <button type="button" className="settings-card__upload-btn" onClick={() => signatureInputRef.current?.click()}>
+                                    <Upload size={14} /> Upload Signature
+                                </button>
+                            )}
+                            {!company.signature && !editing && (
+                                <p className="settings-card__sig-empty">No signature uploaded</p>
+                            )}
+                            <input ref={signatureInputRef} type="file" accept="image/png,image/jpeg,image/jpg,image/svg+xml" hidden onChange={handleSignatureUpload} />
+                            {editing && <p className="settings-card__sig-hint">PNG, JPG, JPEG or SVG · max 200 KB · appears on invoices</p>}
+                        </div>
 
                         <div className="settings-card__field settings-card__field--full">
                             <label>Company Name</label>

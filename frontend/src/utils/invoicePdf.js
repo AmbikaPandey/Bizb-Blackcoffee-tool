@@ -77,8 +77,39 @@ function drawBox(doc, x, y, w, h) {
     doc.rect(x, y, w, h);
 }
 
-export function generateInvoicePdf(invoice, company, bank) {
+// Load Roboto from Google Fonts and register with jsPDF (cached after first call)
+let _robotoLoaded = false;
+async function ensureRoboto(doc) {
+    if (_robotoLoaded) return;
+    const toBase64 = (ab) => {
+        const arr = new Uint8Array(ab);
+        let s = '';
+        for (const byte of arr) s += String.fromCodePoint(byte);
+        return btoa(s);
+    };
+    try {
+        const [rR, rB, rI] = await Promise.all([
+            fetch('https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Me5WZLCzYlKw.ttf'),
+            fetch('https://fonts.gstatic.com/s/roboto/v30/KFOlCnqEu92Fr1MmWUlfBBc4.ttf'),
+            fetch('https://fonts.gstatic.com/s/roboto/v30/KFOkCnqEu92Fr1Me5WZFCzYlKw.ttf'),
+        ]);
+        const [ab1, ab2, ab3] = await Promise.all([rR.arrayBuffer(), rB.arrayBuffer(), rI.arrayBuffer()]);
+        doc.addFileToVFS('Roboto-Regular.ttf', toBase64(ab1));
+        doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+        doc.addFileToVFS('Roboto-Bold.ttf', toBase64(ab2));
+        doc.addFont('Roboto-Bold.ttf', 'Roboto', 'bold');
+        doc.addFileToVFS('Roboto-Italic.ttf', toBase64(ab3));
+        doc.addFont('Roboto-Italic.ttf', 'Roboto', 'italic');
+        _robotoLoaded = true;
+    } catch {
+        // Offline or CDN unreachable — stay on Helvetica
+    }
+}
+
+export async function generateInvoicePdf(invoice, company, bank) {
     const doc = new jsPDF('p', 'mm', 'a4');
+    await ensureRoboto(doc);
+    const FONT = _robotoLoaded ? 'Roboto' : 'helvetica';
     const pw = doc.internal.pageSize.getWidth();
     const ph = doc.internal.pageSize.getHeight();
     const m = 15;
@@ -99,15 +130,15 @@ export function generateInvoicePdf(invoice, company, bank) {
     doc.text('B', m + 6.8, y + 9.5);
 
     // Company name
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(FONT, 'bold');
     doc.setFontSize(14);
     doc.setTextColor(...BLACK);
     doc.text(company.name || 'BLACKCOFFEE', m + 17, y + 8);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(FONT, 'normal');
     doc.setFontSize(5.5);
     doc.setTextColor(...BLACK);
     doc.text('COMMUNICATION', m + 17, y + 12);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(FONT, 'bold');
     doc.setTextColor(...RED);
     doc.text('agency', m + 17 + doc.getTextWidth('COMMUNICATION '), y + 12);
 
@@ -119,18 +150,18 @@ export function generateInvoicePdf(invoice, company, bank) {
     doc.line(m, y, pw - m, y);
     y += 5;
 
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(FONT, 'bold');
     doc.setFontSize(7);
     doc.setTextColor(...BLACK);
     doc.text(`GSTIN: ${company.gstin || ''}`, m + 3, y);
 
     const invoiceLabel = invoice.type === 'proforma' ? 'PROFORMA INVOICE' : 'INVOICE';
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(FONT, 'bold');
     doc.setFontSize(16);
     doc.setTextColor(...BLACK);
     doc.text(invoiceLabel, pw / 2, y + 1, { align: 'center' });
 
-    doc.setFont('helvetica', 'italic');
+    doc.setFont(FONT, 'italic');
     doc.setFontSize(7);
     doc.setTextColor(...BLACK);
     doc.text('Original Copy', pw - m - 3, y, { align: 'right' });
@@ -145,28 +176,28 @@ export function generateInvoicePdf(invoice, company, bank) {
     const detailsTop = y;
 
     // Bill To label
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(FONT, 'bold');
     doc.setFontSize(6);
     doc.setTextColor(...BLACK);
     doc.text('BILL TO', m + 4, y + 4);
 
     let by = y + 8;
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(FONT, 'bold');
     doc.setFontSize(9);
     doc.setTextColor(...BLACK);
     doc.text(invoice.client_name || 'COMPANY NAME', m + 4, by);
     by += 5;
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(FONT, 'normal');
     doc.setFontSize(7);
     doc.setTextColor(...BLACK);
     if (invoice.client_address) { doc.text(invoice.client_address, m + 4, by); by += 4; }
     const cityState = [invoice.client_city, invoice.client_state].filter(Boolean).join(', ');
     if (cityState) { doc.text(cityState, m + 4, by); by += 4; }
     if (invoice.client_pincode) { doc.text(`${invoice.client_state || 'State'} - ${invoice.client_pincode}`, m + 4, by); by += 6; }
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(FONT, 'bold');
     doc.setTextColor(...BLACK);
     doc.text(`GSTIN: ${invoice.client_gstin || ''}`, m + 4, by); by += 4;
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(FONT, 'normal');
     doc.setTextColor(...BLACK);
     doc.text(`Contact Person: ${invoice.client_contact || ''}`, m + 4, by);
 
@@ -188,13 +219,13 @@ export function generateInvoicePdf(invoice, company, bank) {
     ];
 
     infoRows.forEach(([label, value]) => {
-        doc.setFont('helvetica', 'normal');
+        doc.setFont(FONT, 'normal');
         doc.setFontSize(7);
         doc.setTextColor(...BLACK);
         doc.text(label, infoX, iY);
         doc.setTextColor(...BLACK);
         doc.text(':', infoX + infoLabelW, iY);
-        doc.setFont('helvetica', 'bold');
+        doc.setFont(FONT, 'bold');
         doc.text(value, infoX + infoLabelW + 3, iY);
         iY += 4;
         doc.setDrawColor(...[220, 220, 220]);
@@ -203,7 +234,7 @@ export function generateInvoicePdf(invoice, company, bank) {
     });
 
     // E-way Bill
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(FONT, 'normal');
     doc.setFontSize(7);
     doc.setTextColor(...BLACK);
     doc.text('E-way Bill No.', infoX, iY);
@@ -241,6 +272,7 @@ export function generateInvoicePdf(invoice, company, bank) {
         body: tableBody,
         margin: { left: m, right: m },
         styles: {
+            font: FONT,
             fontSize: 8,
             cellPadding: 3,
             lineColor: [...BORDER],
@@ -249,6 +281,7 @@ export function generateInvoicePdf(invoice, company, bank) {
             fillColor: WHITE,
         },
         headStyles: {
+            font: FONT,
             fillColor: TABLE_HEADER,
             textColor: BLACK,
             fontStyle: 'bold',
@@ -284,12 +317,12 @@ export function generateInvoicePdf(invoice, company, bank) {
     // LEFT: Note + Tax breakdown
     let leftY = y + 2;
     if (invoice.notes) {
-        doc.setFont('helvetica', 'bold');
+        doc.setFont(FONT, 'bold');
         doc.setFontSize(6.5);
         doc.setTextColor(...RED);
         doc.text('Note: ', m + 3, leftY, { continued: false });
         const noteX = m + 3 + doc.getTextWidth('Note: ');
-        doc.setFont('helvetica', 'normal');
+        doc.setFont(FONT, 'normal');
         doc.setTextColor(...BLACK);
         doc.text(invoice.notes, noteX, leftY);
         leftY += 6;
@@ -300,7 +333,7 @@ export function generateInvoicePdf(invoice, company, bank) {
     const taxHeaders = ['Tax\nRate', 'Taxable\nAmount', `${taxType === 'IGST' ? 'IGST' : 'CGST'}\n@ ${items[0]?.tax_pct || 18}%`, 'Total\nTax'];
 
     // Tax header row
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(FONT, 'bold');
     doc.setFontSize(6);
     doc.setTextColor(...BLACK);
     doc.setDrawColor(...BORDER);
@@ -312,7 +345,7 @@ export function generateInvoicePdf(invoice, company, bank) {
     leftY += 8;
 
     // Tax data row
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(FONT, 'normal');
     doc.setFontSize(7);
     const taxData = [`${items[0]?.tax_pct || 18}%`, fmtDec(subtotal), fmtDec(taxTotal), fmtDec(taxTotal)];
     taxData.forEach((val, i) => {
@@ -330,7 +363,7 @@ export function generateInvoicePdf(invoice, company, bank) {
         doc.setFillColor(...WHITE);
         doc.rect(rightColX, rY, rightColW, rowH, 'F');
         drawBox(doc, rightColX, rY, rightColW, rowH);
-        doc.setFont('helvetica', bold ? 'bold' : 'normal');
+        doc.setFont(FONT, bold ? 'bold' : 'normal');
         doc.setFontSize(7.5);
         doc.setTextColor(...BLACK);
         doc.text(label, rightColX + 3, rY + 4.5);
@@ -352,7 +385,7 @@ export function generateInvoicePdf(invoice, company, bank) {
     // Grey TOTAL row
     doc.setFillColor(...TABLE_HEADER);
     doc.rect(rightColX, rY, rightColW, rowH + 1, 'F');
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(FONT, 'bold');
     doc.setFontSize(8);
     doc.setTextColor(...BLACK);
     doc.text('TOTAL', rightColX + 3, rY + 5);
@@ -360,7 +393,7 @@ export function generateInvoicePdf(invoice, company, bank) {
     rY += rowH + 1;
 
     // Amount in words (right, below total)
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(FONT, 'normal');
     doc.setFontSize(7);
     doc.setTextColor(...BLACK);
     const wordsText = numberToWords(Math.round(grandTotal));
@@ -376,17 +409,17 @@ export function generateInvoicePdf(invoice, company, bank) {
 
     // Bank Details (left)
     const bk = bank || {};
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(FONT, 'bold');
     doc.setFontSize(7);
     doc.setTextColor(...BLACK);
     doc.text('Bank Details:', m + 3, y);
     y += 4;
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(FONT, 'bold');
     doc.setFontSize(7.5);
     doc.setTextColor(...BLACK);
     doc.text(company.name || '', m + 3, y);
     y += 3.5;
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(FONT, 'bold');
     doc.setFontSize(7);
     doc.setTextColor(...BLACK);
     if (bk.accountNo) { doc.text(`A/c No.: ${bk.accountNo}`, m + 3, y); y += 3.5; }
@@ -396,11 +429,11 @@ export function generateInvoicePdf(invoice, company, bank) {
 
     // Signatory (right)
     const sigY = y - 16;
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(FONT, 'bold');
     doc.setFontSize(7.5);
     doc.setTextColor(...BLACK);
     doc.text(`For ${company.name || ''}`, pw - m - 3, sigY, { align: 'right' });
-    doc.setFont('helvetica', 'italic');
+    doc.setFont(FONT, 'italic');
     doc.setFontSize(7);
     doc.setTextColor(...BLACK);
     doc.text('Authorised Signatory', pw - m - 3, sigY + 14, { align: 'right' });
@@ -412,12 +445,12 @@ export function generateInvoicePdf(invoice, company, bank) {
         doc.setDrawColor(...BORDER);
         doc.line(m, y, pw - m, y);
         y += 4;
-        doc.setFont('helvetica', 'bold');
+        doc.setFont(FONT, 'bold');
         doc.setFontSize(7.5);
         doc.setTextColor(...BLACK);
         doc.text('Payment Terms:', m + 3, y);
         y += 4;
-        doc.setFont('helvetica', 'normal');
+        doc.setFont(FONT, 'normal');
         doc.setFontSize(7);
         doc.setTextColor(...BLACK);
         const termLines = doc.splitTextToSize(invoice.terms, cw - 6);
@@ -432,7 +465,7 @@ export function generateInvoicePdf(invoice, company, bank) {
     doc.line(m, footerY, pw - m, footerY);
     doc.setFontSize(5.5);
     doc.setTextColor(...BLACK);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(FONT, 'normal');
     const footerParts = [];
     const addr = buildCompanyAddress(company);
     if (addr) footerParts.push(`Registered Office: ${addr}`);

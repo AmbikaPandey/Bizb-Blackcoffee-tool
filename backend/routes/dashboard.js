@@ -15,7 +15,7 @@ router.get('/stats', authenticate, authorize('dashboard', 'view'), async (req, r
 
     const [totalClients, totalInvoices, outstandingResult, overdueInvoices, revenueResult, collectionsResult, totalRevenueResult, recentInvoices, pendingPayments, recentTransactions, activeProjects] = await Promise.all([
       Client.countDocuments(),
-      Invoice.countDocuments(),
+      Invoice.countDocuments({ type: 'tax' }),
       Invoice.aggregate([
         { $match: { type: 'tax', status: { $nin: ['Paid', 'Cancelled'] } } },
         { $group: { _id: null, total: { $sum: '$balance' } } },

@@ -145,13 +145,13 @@ export default function Clients() {
                                     <td className={`text-right font-medium ${client.outstanding > 0 ? 'balance-red' : ''}`}>
                                         {formatCurrency(client.outstanding)}
                                     </td>
-                                    <td>
+                                    <td onClick={(e) => e.stopPropagation()}>
                                         <ActionMenu actions={[
                                             { icon: <Eye size={15} />, label: 'View Details', onClick: () => navigate(`/clients/${client.id || client._id}`) },
-                                            { icon: <Pencil size={15} />, label: 'Edit', onClick: (e) => { e.stopPropagation(); openEdit(client); } },
+                                            { icon: <Pencil size={15} />, label: 'Edit', onClick: () => openEdit(client) },
                                             ...(client.latitude && client.longitude ? [{ icon: <MapPin size={15} />, label: 'Locate on Map', onClick: () => window.open(`https://www.google.com/maps?q=${client.latitude},${client.longitude}`, '_blank') }] : []),
                                             { divider: true },
-                                            { icon: <Trash2 size={15} />, label: 'Delete', danger: true, onClick: (e) => { e.stopPropagation(); setDeleteTarget(client); } },
+                                            { icon: <Trash2 size={15} />, label: 'Delete', danger: true, onClick: () => setDeleteTarget(client) },
                                         ]} />
                                     </td>
                                 </tr>

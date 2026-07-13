@@ -164,7 +164,7 @@ export default function Invoices() {
                                 <th>Invoice #</th>
                                 <th>Client</th>
                                 <th>Date</th>
-                                <th>Credit Period</th>
+                                {tab === 'tax' && <th>Credit<br />Period</th>}
                                 <th className="text-right">Amount</th>
                                 <th className="text-right">Balance</th>
                                 <th>Status</th>
@@ -175,7 +175,7 @@ export default function Invoices() {
                         <tbody>
                             {filtered.length === 0 ? (
                                 <tr>
-                                    <td colSpan="10" className="empty-cell">
+                                    <td colSpan={tab === 'tax' ? 10 : 9} className="empty-cell">
                                         No invoices found. Click "New Invoice" to create one.
                                     </td>
                                 </tr>
@@ -187,7 +187,7 @@ export default function Invoices() {
                                     <td className="font-medium">{inv.invoice_number}</td>
                                     <td className="truncate-cell">{inv.client_name}</td>
                                     <td>{formatDate(inv.invoice_date)}</td>
-                                    <td>{inv.credit_period ? `${inv.credit_period} days` : '-'}</td>
+                                    {tab === 'tax' && <td>{inv.credit_period ? `${inv.credit_period} days` : '-'}</td>}
                                     <td className="text-right">{formatCurrency(inv.grand_total)}</td>
                                     <td className={`text-right font-medium ${inv.balance > 0 ? 'balance-red' : ''}`}>
                                         {formatCurrency(inv.balance ?? inv.grand_total)}
