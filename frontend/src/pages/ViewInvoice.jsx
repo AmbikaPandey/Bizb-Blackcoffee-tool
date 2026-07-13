@@ -524,14 +524,13 @@ export default function ViewInvoice() {
                     </div>
                     <div className="view-invoice__doc-signatory">
                         <p className="view-invoice__doc-sign-for">For <strong>{company.name}</strong></p>
-                        {company.signature && (
+                        {(company.signature || true) && (
                             <img
-                                src={company.signature}
+                                src={company.signature || '/signature.png'}
                                 alt="Digital Signature"
                                 className="view-invoice__doc-sign-img"
                             />
                         )}
-                        {!company.signature && <div className="view-invoice__doc-sign-space" />}
                         <p className="view-invoice__doc-sign-label">Authorised Signatory</p>
                     </div>
                 </div>

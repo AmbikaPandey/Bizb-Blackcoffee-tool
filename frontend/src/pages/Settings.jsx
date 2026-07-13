@@ -20,7 +20,7 @@ const INIT_COMPANY = {
     name: '', gstin: '', pan: '', address_line1: '', address_line2: '',
     city: '', state: '', pincode: '', state_code: '', phone: '', email: '', logo: '', signature: '',
 };
-const INIT_BANK = { bank: '', accountNo: '', ifsc: '', upi: '' };
+const INIT_BANK = { bank: '', branch: '', accountNo: '', ifsc: '', upi: '' };
 const INIT_INVOICE = { prefix: 'BC', proforma_prefix: 'PI', receipt_prefix: 'REC', round_off: true, terms: '' };
 
 function ValidatedField({ label, field, value, disabled, onChange, onSideEffect, type = 'text', fullWidth, maxLength }) {
@@ -329,6 +329,10 @@ export default function Settings() {
                             <label>Bank Name & Branch</label>
                             <input type="text" value={bank.bank} disabled={disabled} onChange={(e) => setBank({ ...bank, bank: e.target.value })} />
                         </div>
+                        <div className="settings-card__field settings-card__field--full">
+                            <label>Branch Address</label>
+                            <input type="text" placeholder="Branch address" value={bank.branch || ''} disabled={disabled} onChange={(e) => setBank({ ...bank, branch: e.target.value })} />
+                        </div>
                         <div className="settings-card__row">
                             <ValidatedField label="Account Number" field="accountNo" value={bank.accountNo} disabled={disabled} maxLength={18}
                                 onChange={(v) => setBank((prev) => ({ ...prev, accountNo: v }))} />
@@ -337,7 +341,7 @@ export default function Settings() {
                                 onSideEffect={async (v) => {
                                     if (v.length === 11) {
                                         const info = await lookupIFSC(v);
-                                        if (info) setBank((prev) => ({ ...prev, bank: info.bank }));
+                                        if (info) setBank((prev) => ({ ...prev, bank: info.bank, branch: info.bank_address || prev.branch }));
                                     }
                                 }} />
                         </div>

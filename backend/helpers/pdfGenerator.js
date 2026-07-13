@@ -185,11 +185,11 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       const detailsTop = y;
 
       // Bill To (left)
-      doc.font('Roboto-Bold').fontSize(8).fillColor(BLACK);
-      doc.text('BILL TO', m + 6, y + 4);
+      doc.font('Roboto-Italic').fontSize(8).fillColor(BLACK);
+      doc.text('Party Details:', m + 6, y + 4);
 
       y += 17;
-      doc.font('Roboto-Bold').fontSize(11).fillColor(BLACK);
+      doc.font('Roboto-Bold').fontSize(12).fillColor(BLACK);
       doc.text(invoice.client_name || 'COMPANY NAME', m + 6, y);
       y += 16;
       doc.font('Roboto').fontSize(9).fillColor(BLACK);
@@ -201,7 +201,7 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       const cityState = [invoice.client_city, invoice.client_state].filter(Boolean).join(', ');
       if (cityState) { doc.text(cityState, m + 6, y); y += 25; }
       if (invoice.client_pincode) { doc.text(`${invoice.client_state || 'State'} - ${invoice.client_pincode}`, m + 6, y); y += 25; }
-      doc.font('Roboto-Bold').fontSize(9).fillColor(BLACK);
+      doc.font('Roboto').fontSize(9).fillColor(BLACK);
       doc.text(`GSTIN: ${invoice.client_gstin || ''}`, m + 6, y); y += 20;
       doc.font('Roboto').fontSize(9).fillColor(BLACK);
       if (invoice.client_contact) {
@@ -399,7 +399,7 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
 
       // Tax breakdown mini table
       const taxHeaders = ['Tax\nRate', 'Taxable\nAmount', `${taxType === 'IGST' ? 'IGST' : 'CGST'}\n@ ${items[0]?.tax_pct || 18}%`, 'Total\nTax'];
-      const taxRowH = 20;
+      const taxRowH = 22;
 
       // Tax header row with rounded top
       doc.save().roundedRect(taxTableX, leftY, taxTableW, taxRowH, 4).clip();
@@ -482,7 +482,7 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       }
 
       // Amount in words — single line
-      doc.font('Roboto').fontSize(7.5).fillColor(BLACK);
+      doc.font('Roboto-Bold').fontSize(9).fillColor(BLACK);
       const wordsText = numberToWords(Math.round(grandTotal));
       doc.text(wordsText, midRightX + 6, rY + 8, { width: midRightW - 12, align: 'right' });
 
@@ -503,22 +503,57 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       doc.font('Roboto-Bold').fontSize(8).fillColor(BLACK);
       doc.text(company.name || '', m + 6, y);
       y += 10;
-      doc.font('Roboto-Bold').fontSize(7).fillColor(BLACK);
-      if (bank.accountNo) { doc.text(`A/c No.: ${bank.accountNo}`, m + 6, y); y += 10; }
-      if (bank.ifsc) { doc.text(`IFSC: ${bank.ifsc}`, m + 6, y); y += 10; }
-      if (bank.bank) { doc.text(bank.bank, m + 6, y); y += 10; }
-      if (bank.upi) { doc.text(`UPI: ${bank.upi}`, m + 6, y); y += 10; }
+      doc.font('Roboto').fontSize(7).fillColor(BLACK);
+      if (bank.accountNo) {
+        doc.text('A/c No.: ', m + 6, y, { continued: true });
+        doc.font('Roboto-Bold').text(bank.accountNo);
+        y += 10;
+        doc.font('Roboto').fontSize(7).fillColor(BLACK);
+      }
+      if (bank.ifsc) {
+        doc.text('IFSC: ', m + 6, y, { continued: true });
+        doc.font('Roboto-Bold').text(bank.ifsc);
+        y += 10;
+        doc.font('Roboto').fontSize(7).fillColor(BLACK);
+      }
+      if (bank.bank) {
+        doc.text('Bank: ', m + 6, y, { continued: true });
+        doc.font('Roboto-Bold').text(bank.bank);
+        y += 10;
+        doc.font('Roboto').fontSize(7).fillColor(BLACK);
+      }
+      if (bank.branch) {
+        doc.text('Branch: ', m + 6, y, { continued: true });
+        doc.font('Roboto-Bold').text(bank.branch);
+        y += 10;
+        doc.font('Roboto').fontSize(7).fillColor(BLACK);
+      }
+      if (bank.upi) {
+        doc.text('UPI: ', m + 6, y, { continued: true });
+        doc.font('Roboto-Bold').text(bank.upi);
+        y += 10;
+        doc.font('Roboto').fontSize(7).fillColor(BLACK);
+      }
 
       // Signatory (right)
       const sigStartY = y - 40;
       doc.font('Roboto-Bold').fontSize(7.5).fillColor(BLACK);
       doc.text(`For ${company.name || ''}`, midRightX, sigStartY, { width: midRightW - 6, align: 'right' });
 
-      // Digital signature image (if provided)
+      // Digital signature image — use company.signature, fall back to assets/signature.png
+      const defaultSigPath = path.join(__dirname, '..', 'assets', 'signature.png');
+      let sigBuffer = null;
       if (company.signature) {
         try {
           const sigData = company.signature.replace(/^data:image\/[a-z+]+;base64,/, '');
-          const sigBuffer = Buffer.from(sigData, 'base64');
+          sigBuffer = Buffer.from(sigData, 'base64');
+        } catch (_) { /* ignore */ }
+      } else if (fs.existsSync(defaultSigPath)) {
+        sigBuffer = fs.readFileSync(defaultSigPath);
+      }
+
+      if (sigBuffer) {
+        try {
           const sigW = 90;
           const sigH = 30;
           doc.image(sigBuffer, midRightX + midRightW - sigW - 6, sigStartY + 8, {
