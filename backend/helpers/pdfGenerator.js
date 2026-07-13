@@ -136,9 +136,7 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
           for (let i = 0; i < invoicePages; i++) {
             const [embeddedInvoicePage] = await mergedDoc.embedPdf(invoiceDoc, [i]);
             const page = mergedDoc.addPage([595.28, 841.89]);
-            // Draw letterhead scaled to full A4
             page.drawPage(letterheadPage, { x: 0, y: 0, width: 595.28, height: 841.89 });
-            // Draw invoice content on top
             page.drawPage(embeddedInvoicePage, { x: 0, y: 0, width: 595.28, height: 841.89 });
           }
 
@@ -542,41 +540,51 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       // Signatory (right) — layout: "For Company" → signature image → "Authorised Signatory"
       const sigStartY = y - 40;
 
-      // Digital signature image — use company.signature, fall back to embedded default
+      // Digital signature — use uploaded company.signature or fall back to embedded default
+      const isPngBuffer = (buf) => buf && buf.length > 8 && buf[0] === 0x89 && buf[1] === 0x50;
+      const isJpegBuffer = (buf) => buf && buf.length > 2 && buf[0] === 0xFF && buf[1] === 0xD8;
+      const isValidImg = (buf) => isPngBuffer(buf) || isJpegBuffer(buf);
+
       let sigBuffer = null;
+
+      // Try company.signature (data URL or raw base64 from DB)
       if (company.signature) {
         try {
-          const sigData = company.signature.replace(/^data:image\/[a-z+]+;base64,/, '');
-          sigBuffer = Buffer.from(sigData, 'base64');
+          const raw = company.signature.replace(/^data:image\/[^;]+;base64,/, '');
+          const buf = Buffer.from(raw, 'base64');
+          if (isValidImg(buf)) sigBuffer = buf;
         } catch (_) { /* ignore */ }
       }
+
+      // Fall back to embedded default signature
       if (!sigBuffer) {
-        // Use embedded default signature (works on all environments including production)
-        sigBuffer = Buffer.from(DEFAULT_SIGNATURE_B64, 'base64');
+        try {
+          const buf = Buffer.from(DEFAULT_SIGNATURE_B64, 'base64');
+          if (isValidImg(buf)) sigBuffer = buf;
+        } catch (_) { /* ignore */ }
+      }
+
+      // Last resort: read from committed file
+      if (!sigBuffer) {
+        const defaultSigPath = path.join(__dirname, '..', 'assets', 'signature.png');
+        if (fs.existsSync(defaultSigPath)) sigBuffer = fs.readFileSync(defaultSigPath);
       }
 
       const sigW = 90;
       const sigH = 32;
-      const forTextY   = sigStartY;           // "For Company Name"
-      const sigImageY  = forTextY + 12;       // signature image starts below the text
-      const sigLabelY  = sigImageY + sigH + 4; // "Authorised Signatory" below image
+      const forTextY  = sigStartY;
+      const sigImageY = forTextY + 20;
+      const sigLabelY = sigImageY + sigH;
 
       doc.font('Roboto-Bold').fontSize(7.5).fillColor(BLACK);
       doc.text(`For ${company.name || ''}`, midRightX, forTextY, { width: midRightW - 6, align: 'right' });
 
-      if (sigBuffer) {
-        try {
-          // Use explicit dimensions (not fit) and mime type for cross-platform pdfKit compatibility
-          doc.image(sigBuffer, midRightX + midRightW - sigW - 6, sigImageY, {
-            width: sigW,
-            height: sigH,
-            type: 'png',
-          });
-        } catch (imgErr) {
-          // Log so we can diagnose in production — do not suppress silently
-          // eslint-disable-next-line no-console
-          console.error('Signature image render failed:', imgErr.message);
-        }
+      try {
+        // Buffer + width only (height auto-calculated from aspect ratio)
+        doc.image(sigBuffer, midRightX + midRightW - sigW - 6, sigImageY, { width: sigW });
+      } catch (imgErr) {
+        // eslint-disable-next-line no-console
+        console.error('Signature render failed:', imgErr.message);
       }
 
       doc.font('Roboto').fontSize(7).fillColor(BLACK);
@@ -589,34 +597,30 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       const footerTopY = ph - 80; // above letterhead footer area
 
       if (invoice.terms) {
-        let ptY = footerTopY - 30;
-        // Only render if there is vertical space — avoid auto-page creation
+        let ptY = footerTopY - 40;
         if (ptY > y + 20) {
           doc.font('Roboto-Bold').fontSize(7.5).fillColor(BLACK);
           doc.text('Payment Terms:', m + 6, ptY);
           ptY += 11;
           doc.font('Roboto').fontSize(7).fillColor(BLACK);
           const maxTermsH = footerTopY - ptY - 6;
-          // Clip so overflowing terms never create a new page
-          doc.save();
-          doc.rect(m + 6, ptY, cw - 12, maxTermsH).clip();
-          doc.text(invoice.terms, m + 6, ptY, { width: cw - 12, lineBreak: true });
-          doc.restore();
-          // Reset PDFKit's internal cursor to prevent auto-page after restore
-          doc.y = ptY + maxTermsH;
+          // Use height option — this prevents pdfKit from adding a new page when text overflows
+          doc.text(invoice.terms, m + 6, ptY, { width: cw - 12, height: maxTermsH, lineBreak: true });
         }
       }
 
-      // Page numbers — switch to each page, then restore cursor before end()
+      // Page numbers on every page.
+      // Render at ph-56 (not ph-46) so the cursor ends at ~ph-50, well above
+      // the bottom margin (ph-40=801.89) — prevents pdfKit appending a blank page.
       const pages = doc.bufferedPageRange();
       for (let i = 0; i < pages.count; i++) {
         doc.switchToPage(i);
         doc.font('Roboto').fontSize(5).fillColor(GRAY);
-        doc.text(`Page ${i + 1} of ${pages.count}`, m, ph - 46, { width: cw, align: 'center' });
+        doc.text(`Page ${i + 1} of ${pages.count}`, m, ph - 56, { width: cw, align: 'center' });
       }
-      // Return to last page and pin cursor to a safe y so doc.end() never appends a blank page
+      // Return to last page with cursor at a safe position before doc.end()
       doc.switchToPage(pages.count - 1);
-      doc.y = ph - 50;
+      doc.text('', m, ph - 55);
 
       doc.end();
     } catch (err) {
