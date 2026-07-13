@@ -162,8 +162,9 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
 
       // ── GSTIN + INVOICE TITLE ROW ────────────────
       // No top border — letterhead provides visual separation
-      doc.font('Roboto-Bold').fontSize(9).fillColor(BLACK);
-      doc.text(`GSTIN: ${company.gstin || ''}`, m + 6, y);
+      doc.font('Roboto').fontSize(9).fillColor(BLACK);
+      doc.text('GSTIN: ', m + 6, y, { continued: true });
+      doc.font('Roboto-Bold').text(company.gstin || '');
 
       const invoiceLabel = invoice.type === 'proforma' ? 'PROFORMA INVOICE' : 'INVOICE';
       doc.font('Roboto-Bold').fontSize(16).fillColor(BLACK);
@@ -567,6 +568,7 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
         try {
           doc.image(sigBuffer, midRightX + midRightW - sigW - 6, sigImageY, {
             fit: [sigW, sigH],
+            type: 'png',
           });
         } catch (_) { /* skip if image fails */ }
       }
@@ -583,17 +585,19 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       if (invoice.terms) {
         let ptY = footerTopY - 30;
         // Only render if there is vertical space — avoid auto-page creation
-        if (ptY > y + 10) {
+        if (ptY > y + 20) {
           doc.font('Roboto-Bold').fontSize(7.5).fillColor(BLACK);
           doc.text('Payment Terms:', m + 6, ptY);
           ptY += 11;
           doc.font('Roboto').fontSize(7).fillColor(BLACK);
-          // Clip to available height so overflowing terms don't create a new page
-          const maxTermsH = footerTopY - ptY - 4;
+          const maxTermsH = footerTopY - ptY - 6;
+          // Clip so overflowing terms never create a new page
           doc.save();
           doc.rect(m + 6, ptY, cw - 12, maxTermsH).clip();
           doc.text(invoice.terms, m + 6, ptY, { width: cw - 12, lineBreak: true });
           doc.restore();
+          // Reset PDFKit's internal cursor to prevent auto-page after restore
+          doc.y = ptY + maxTermsH;
         }
       }
 

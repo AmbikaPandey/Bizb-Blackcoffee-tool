@@ -232,18 +232,14 @@ export default function Clients() {
                             <input type="email" placeholder="client@example.com" className="form-group__input" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
                         </div>
                     </div>
-                    <div className="form-row form-row--2">
-                        <div className="form-group">
-                            <label className="form-group__label">Contact Person</label>
-                            <input type="text" placeholder="Contact name" className="form-group__input" value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })} />
-                        </div>
+                    <div className="form-group">
                         <div className="form-group">
                             <label className="form-group__label">Phone</label>
-                            <input type="tel" placeholder="9876543210 or 044-23456789" className={`form-group__input${errors.phone ? ' form-group__input--error' : ''}`} value={form.phone}
+                            <input type="tel" placeholder="9876543210" className={`form-group__input${errors.phone ? ' form-group__input--error' : ''}`} value={form.phone}
                                 onChange={(e) => {
                                     const val = transform('phone', e.target.value);
                                     setForm({ ...form, phone: val });
-                                    if (val && !validate('phone', val).valid) setErrors(p => ({ ...p, phone: 'Must be 10 digits starting with 6-9' }));
+                                    if (val && !validate('phone', val).valid) setErrors(p => ({ ...p, phone: 'Invalid phone number' }));
                                     else setErrors(p => ({ ...p, phone: '' }));
                                 }}
                             />

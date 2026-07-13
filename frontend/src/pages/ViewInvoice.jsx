@@ -539,7 +539,9 @@ export default function ViewInvoice() {
                 {invoice.terms && (
                     <div className="view-invoice__doc-terms">
                         <strong>Payment Terms:</strong>
-                        <p>{invoice.terms}</p>
+                        {invoice.terms.split('\n').map((line, i) => (
+                            <p key={i}>{line}</p>
+                        ))}
                     </div>
                 )}
 
