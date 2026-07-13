@@ -566,11 +566,17 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
 
       if (sigBuffer) {
         try {
+          // Use explicit dimensions (not fit) and mime type for cross-platform pdfKit compatibility
           doc.image(sigBuffer, midRightX + midRightW - sigW - 6, sigImageY, {
-            fit: [sigW, sigH],
+            width: sigW,
+            height: sigH,
             type: 'png',
           });
-        } catch (_) { /* skip if image fails */ }
+        } catch (imgErr) {
+          // Log so we can diagnose in production — do not suppress silently
+          // eslint-disable-next-line no-console
+          console.error('Signature image render failed:', imgErr.message);
+        }
       }
 
       doc.font('Roboto').fontSize(7).fillColor(BLACK);
@@ -601,15 +607,16 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
         }
       }
 
-      // Page numbers — switch to each page, then return to last page before end()
+      // Page numbers — switch to each page, then restore cursor before end()
       const pages = doc.bufferedPageRange();
       for (let i = 0; i < pages.count; i++) {
         doc.switchToPage(i);
         doc.font('Roboto').fontSize(5).fillColor(GRAY);
         doc.text(`Page ${i + 1} of ${pages.count}`, m, ph - 46, { width: cw, align: 'center' });
       }
-      // Return to last page so doc.end() doesn't append a blank page
+      // Return to last page and pin cursor to a safe y so doc.end() never appends a blank page
       doc.switchToPage(pages.count - 1);
+      doc.y = ph - 50;
 
       doc.end();
     } catch (err) {
