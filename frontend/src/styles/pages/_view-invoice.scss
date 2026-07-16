@@ -755,11 +755,16 @@
         box-shadow: none !important;
         border-radius: 0 !important;
         padding: 0 !important;
+        background: transparent !important;
         page-break-inside: avoid;
     }
 
+    // Hide company logo and header design when printing on pre-printed letterhead.
+    // The letterhead paper already carries the logo and background design.
+    // The PDF download path (backend mode=download) embeds the letterhead separately
+    // and is unaffected by these rules.
     .view-invoice__doc-header {
-        padding: 0.8rem 1.6rem 0.4rem !important;
+        display: none !important;
     }
 
     .view-invoice__doc-title-row {
