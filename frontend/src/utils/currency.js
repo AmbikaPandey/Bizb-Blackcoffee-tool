@@ -4,8 +4,8 @@
 export function formatCurrency(val) {
     const n = Math.max(0, Number(val || 0));
     return '₹' + n.toLocaleString('en-IN', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
     });
 }
 

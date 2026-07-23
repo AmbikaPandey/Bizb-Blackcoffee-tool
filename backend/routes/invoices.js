@@ -31,6 +31,11 @@ router.get('/', authenticate, async (req, res) => {
       invoice_number: cleanInvoiceNumber(inv.invoice_number),
       client_name: inv.client_id?.name || '',
       client_id: inv.client_id?._id || inv.client_id,
+      grand_total: Math.round(inv.grand_total || 0),
+      balance: Math.round(inv.balance || 0),
+      subtotal: Math.round(inv.subtotal || 0),
+      taxable_amount: Math.round(inv.taxable_amount || 0),
+      amount_paid: Math.round(inv.amount_paid || 0),
     }));
 
     if (search) {
@@ -121,6 +126,11 @@ router.get('/:id', authenticate, async (req, res) => {
       client_phone: invoice.client_id?.phone || '',
       client_contacts: invoice.client_id?.contacts || [],
       client_id: invoice.client_id?._id || invoice.client_id,
+      grand_total: Math.round(invoice.grand_total || 0),
+      balance: Math.round(invoice.balance || 0),
+      subtotal: Math.round(invoice.subtotal || 0),
+      taxable_amount: Math.round(invoice.taxable_amount || 0),
+      amount_paid: Math.round(invoice.amount_paid || 0),
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch invoice' });
@@ -173,6 +183,11 @@ router.post('/', authenticate, authorize('invoices', 'create'), async (req, res)
       id: populated._id, ...populated,
       client_name: populated.client_id?.name || '',
       client_id: populated.client_id?._id || populated.client_id,
+      grand_total: Math.round(populated.grand_total || 0),
+      balance: Math.round(populated.balance || 0),
+      subtotal: Math.round(populated.subtotal || 0),
+      taxable_amount: Math.round(populated.taxable_amount || 0),
+      amount_paid: Math.round(populated.amount_paid || 0),
     });
   } catch (err) {
     logger.error('Invoice create error: ' + err.message);
@@ -224,7 +239,7 @@ router.put('/:id', authenticate, authorize('invoices', 'edit'), async (req, res)
     existing.subtotal = subtotal;
     existing.taxable_amount = taxableAmount;
     existing.grand_total = grandTotal;
-    existing.balance = Math.round((grandTotal - existing.amount_paid) * 100) / 100;
+    existing.balance = Math.round(grandTotal - existing.amount_paid);
     existing.status = status || existing.status;
     existing.items = processedItems;
     await existing.save();
@@ -236,6 +251,11 @@ router.put('/:id', authenticate, authorize('invoices', 'edit'), async (req, res)
       id: populated._id, ...populated,
       client_name: populated.client_id?.name || '',
       client_id: populated.client_id?._id || populated.client_id,
+      grand_total: Math.round(populated.grand_total || 0),
+      balance: Math.round(populated.balance || 0),
+      subtotal: Math.round(populated.subtotal || 0),
+      taxable_amount: Math.round(populated.taxable_amount || 0),
+      amount_paid: Math.round(populated.amount_paid || 0),
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to update invoice' });

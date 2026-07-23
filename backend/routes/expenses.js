@@ -83,11 +83,11 @@ router.get('/stats', authenticate, authorize('expenses', 'view'), async (req, re
 
     res.json({
       totalExpenses: count,
-      totalAmount: totalResult[0]?.total || 0,
-      pendingAmount: pendingResult[0]?.total || 0,
+      totalAmount: Math.round(totalResult[0]?.total || 0),
+      pendingAmount: Math.round(pendingResult[0]?.total || 0),
       pendingCount: pendingResult[0]?.count || 0,
-      thisMonth: monthResult[0]?.total || 0,
-      unpaidReimbursements: approvedUnpaid[0]?.total || 0,
+      thisMonth: Math.round(monthResult[0]?.total || 0),
+      unpaidReimbursements: Math.round(approvedUnpaid[0]?.total || 0),
       unpaidReimbursementCount: approvedUnpaid[0]?.count || 0,
     });
   } catch (err) {

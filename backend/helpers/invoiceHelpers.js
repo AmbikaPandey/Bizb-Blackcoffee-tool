@@ -11,8 +11,8 @@ async function reconcileInvoice(invoiceId) {
     { $match: { invoice_id: invoice._id } },
     { $group: { _id: null, total: { $sum: '$amount' } } },
   ]);
-  const totalPaid = Math.round((payments[0]?.total || 0) * 100) / 100;
-  const balance = Math.round((invoice.grand_total - totalPaid) * 100) / 100;
+  const totalPaid = Math.round(payments[0]?.total || 0);
+  const balance = Math.round(invoice.grand_total - totalPaid);
 
   invoice.amount_paid = totalPaid;
   invoice.balance = balance;
@@ -54,7 +54,7 @@ function processInvoiceItems(items) {
     const lineTotal = qty * rate;
     const afterDiscount = lineTotal - lineTotal * (discPct / 100);
     const taxAmount = afterDiscount * (taxPct / 100);
-    const amount = Math.round((afterDiscount + taxAmount) * 100) / 100;
+    const amount = Math.round(afterDiscount + taxAmount);
     subtotal += afterDiscount;
     taxableAmount += taxAmount;
     return {
@@ -69,9 +69,9 @@ function processInvoiceItems(items) {
 
   return {
     processedItems,
-    subtotal: Math.round(subtotal * 100) / 100,
-    taxableAmount: Math.round(taxableAmount * 100) / 100,
-    grandTotal: Math.round((subtotal + taxableAmount) * 100) / 100,
+    subtotal: Math.round(subtotal),
+    taxableAmount: Math.round(taxableAmount),
+    grandTotal: Math.round(subtotal + taxableAmount),
   };
 }
 

@@ -31,7 +31,7 @@ router.get('/', authenticate, async (req, res) => {
 
     res.json(clients.map((c) => ({
       id: c._id, ...c,
-      outstanding: outstandingMap[String(c._id)] || 0,
+      outstanding: Math.round(outstandingMap[String(c._id)] || 0),
     })));
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch clients' });
@@ -59,10 +59,10 @@ router.get('/:id', authenticate, async (req, res) => {
     const ledger = [];
     for (const inv of invoices) {
       const num = cleanInvoiceNumber(inv.invoice_number);
-      ledger.push({ type: 'invoice', date: inv.invoice_date, reference: num, description: `Invoice #${num}`, debit: inv.grand_total, credit: 0 });
+      ledger.push({ type: 'invoice', date: inv.invoice_date, reference: num, description: `Invoice #${num}`, debit: Math.round(inv.grand_total), credit: 0 });
     }
     for (const pay of payments) {
-      ledger.push({ type: 'payment', date: pay.date, reference: pay.reference || '', description: `Payment (${pay.method})${pay.reference ? ' - ' + pay.reference : ''}`, debit: 0, credit: pay.amount });
+      ledger.push({ type: 'payment', date: pay.date, reference: pay.reference || '', description: `Payment (${pay.method})${pay.reference ? ' - ' + pay.reference : ''}`, debit: 0, credit: Math.round(pay.amount) });
     }
     ledger.sort((a, b) => String(a.date).localeCompare(String(b.date)));
     let runningBalance = 0;
@@ -71,7 +71,7 @@ router.get('/:id', authenticate, async (req, res) => {
       entry.balance = runningBalance;
     }
 
-    res.json({ id: client._id, ...client, totalInvoiced, totalPaid, outstanding, ledger });
+    res.json({ id: client._id, ...client, totalInvoiced: Math.round(totalInvoiced), totalPaid: Math.round(totalPaid), outstanding: Math.round(outstanding), ledger });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch client' });
   }

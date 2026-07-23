@@ -22,6 +22,7 @@ router.get('/', authenticate, authorize('payments', 'view'), async (req, res) =>
       invoiceNo: cleanInvoiceNumber(p.invoice_id?.invoice_number || ''),
       client_id: p.client_id?._id || p.client_id,
       invoice_id: p.invoice_id?._id || p.invoice_id,
+      amount: Math.round(p.amount || 0),
     })));
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch payments' });
@@ -40,6 +41,7 @@ router.get('/:id', authenticate, authorize('payments', 'view'), async (req, res)
       invoiceNo: cleanInvoiceNumber(payment.invoice_id?.invoice_number || ''),
       client_id: payment.client_id?._id || payment.client_id,
       invoice_id: payment.invoice_id?._id || payment.invoice_id,
+      amount: Math.round(payment.amount || 0),
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch payment' });
@@ -78,6 +80,7 @@ router.post('/', authenticate, authorize('payments', 'create'), async (req, res)
       id: populated._id, ...populated,
       client: populated.client_id?.name || '',
       invoiceNo: cleanInvoiceNumber(populated.invoice_id?.invoice_number || ''),
+      amount: Math.round(populated.amount || 0),
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to create payment' });
@@ -118,6 +121,7 @@ router.put('/:id', authenticate, authorize('payments', 'edit'), async (req, res)
       id: populated._id, ...populated,
       client: populated.client_id?.name || '',
       invoiceNo: cleanInvoiceNumber(populated.invoice_id?.invoice_number || ''),
+      amount: Math.round(populated.amount || 0),
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to update payment' });

@@ -26,8 +26,8 @@ router.get('/summary', authenticate, authorize('reports', 'view'), async (req, r
     ]);
 
     res.json({
-      totalRevenue: totalRevenueResult[0]?.total || 0,
-      pendingAmount: pendingResult[0]?.total || 0,
+      totalRevenue: Math.round(totalRevenueResult[0]?.total || 0),
+      pendingAmount: Math.round(pendingResult[0]?.total || 0),
       paidInvoices: paidCount,
       unpaidInvoices: unpaidCount,
       overdueInvoices: overdueCount,
@@ -75,10 +75,10 @@ router.get('/monthly', authenticate, authorize('reports', 'view'), async (req, r
       const exp = expenseData.find((d) => d._id === mm);
       return {
         month: name,
-        invoiced: inv?.invoiced || 0,
+        invoiced: Math.round(inv?.invoiced || 0),
         invoiceCount: inv?.count || 0,
-        collected: pay?.collected || 0,
-        expenses: exp?.expenses || 0,
+        collected: Math.round(pay?.collected || 0),
+        expenses: Math.round(exp?.expenses || 0),
       };
     });
 
@@ -129,7 +129,15 @@ router.get('/ageing', authenticate, authorize('reports', 'view'), async (req, re
     const totalOutstanding = Object.values(buckets).reduce((s, v) => s + v, 0);
     const clients = Object.values(clientMap).sort((a, b) => b.total - a.total);
 
-    res.json({ buckets, totalOutstanding, clients });
+    // Round all bucket and client values
+    for (const key of Object.keys(buckets)) buckets[key] = Math.round(buckets[key]);
+    for (const c of clients) {
+      for (const key of Object.keys(c)) {
+        if (typeof c[key] === 'number') c[key] = Math.round(c[key]);
+      }
+    }
+
+    res.json({ buckets, totalOutstanding: Math.round(totalOutstanding), clients });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch ageing report' });
   }
@@ -167,12 +175,12 @@ router.get('/gst-summary', authenticate, authorize('reports', 'view'), async (re
         date: inv.invoice_date,
         client: inv.client_id?.name || '',
         gstin: inv.client_id?.gstin || '',
-        taxable, cgst, sgst, igst,
-        total: inv.grand_total,
+        taxable: Math.round(taxable), cgst: Math.round(cgst), sgst: Math.round(sgst), igst: Math.round(igst),
+        total: Math.round(inv.grand_total),
       };
     });
 
-    res.json({ rows, totals: { taxable: totalTaxable, cgst: totalCgst, sgst: totalSgst, igst: totalIgst, total: totalAmount } });
+    res.json({ rows, totals: { taxable: Math.round(totalTaxable), cgst: Math.round(totalCgst), sgst: Math.round(totalSgst), igst: Math.round(totalIgst), total: Math.round(totalAmount) } });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch GST summary' });
   }
@@ -206,10 +214,10 @@ router.get('/client-ledger', authenticate, authorize('reports', 'view'), async (
     const entries = [];
     for (const inv of invoices) {
       const num = cleanInvoiceNumber(inv.invoice_number);
-      entries.push({ type: 'invoice', date: inv.invoice_date, reference: num, description: `Invoice #${num}`, debit: inv.grand_total, credit: 0, status: inv.status });
+      entries.push({ type: 'invoice', date: inv.invoice_date, reference: num, description: `Invoice #${num}`, debit: Math.round(inv.grand_total), credit: 0, status: inv.status });
     }
     for (const pay of payments) {
-      entries.push({ type: 'payment', date: pay.date, reference: pay.reference || '', description: `Payment (${pay.method})${pay.reference ? ' - ' + pay.reference : ''}`, debit: 0, credit: pay.amount });
+      entries.push({ type: 'payment', date: pay.date, reference: pay.reference || '', description: `Payment (${pay.method})${pay.reference ? ' - ' + pay.reference : ''}`, debit: 0, credit: Math.round(pay.amount) });
     }
     entries.sort((a, b) => a.date.localeCompare(b.date));
 
@@ -222,7 +230,7 @@ router.get('/client-ledger', authenticate, authorize('reports', 'view'), async (
     const totalInvoiced = invoices.reduce((s, inv) => s + (inv.grand_total || 0), 0);
     const outstanding = invoices.filter(inv => inv.status !== 'Paid' && inv.status !== 'Cancelled').reduce((s, inv) => s + (inv.balance || 0), 0);
 
-    res.json({ client: { name: client.name, gstin: client.gstin }, entries, totalInvoiced, outstanding, closingBalance: runningBalance });
+    res.json({ client: { name: client.name, gstin: client.gstin }, entries, totalInvoiced: Math.round(totalInvoiced), outstanding: Math.round(outstanding), closingBalance: Math.round(runningBalance) });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch client ledger' });
   }
@@ -250,16 +258,21 @@ router.get('/reimbursements', authenticate, authorize('reports', 'view'), async 
       else employeeMap[name].pending += exp.amount;
       employeeMap[name].items.push({
         id: exp._id, description: exp.description, category: exp.category,
-        amount: exp.amount, date: exp.date, status: exp.status,
+        amount: Math.round(exp.amount), date: exp.date, status: exp.status,
       });
     }
 
     const employees = Object.values(employeeMap).sort((a, b) => b.totalAmount - a.totalAmount);
+    for (const emp of employees) {
+      emp.totalAmount = Math.round(emp.totalAmount);
+      emp.approved = Math.round(emp.approved);
+      emp.pending = Math.round(emp.pending);
+    }
     const totalAmount = expenses.reduce((s, e) => s + e.amount, 0);
     const totalPending = expenses.filter((e) => e.status !== 'Reimbursed').reduce((s, e) => s + e.amount, 0);
     const totalReimbursed = expenses.filter((e) => e.status === 'Reimbursed').reduce((s, e) => s + e.amount, 0);
 
-    res.json({ employees, totals: { total: totalAmount, pending: totalPending, reimbursed: totalReimbursed, count: expenses.length } });
+    res.json({ employees, totals: { total: Math.round(totalAmount), pending: Math.round(totalPending), reimbursed: Math.round(totalReimbursed), count: expenses.length } });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch reimbursements' });
   }

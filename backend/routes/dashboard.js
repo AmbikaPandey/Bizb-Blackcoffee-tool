@@ -20,9 +20,27 @@ router.get('/stats', authenticate, authorize('dashboard', 'view'), async (req, r
         { $match: { type: 'tax', status: { $nin: ['Paid', 'Cancelled'] } } },
         { $group: { _id: null, total: { $sum: '$balance' } } },
       ]),
-      Invoice.countDocuments({ type: 'tax', status: 'Overdue' }),
+      // Count invoices that are genuinely overdue:
+      // either already marked Overdue, OR unpaid/partial with a credit_period that has elapsed
+      Invoice.countDocuments({
+        type: 'tax',
+        status: { $nin: ['Paid', 'Cancelled'] },
+        balance: { $gt: 0 },
+        $or: [
+          { status: 'Overdue' },
+          {
+            credit_period: { $ne: null },
+            $expr: {
+              $lt: [
+                { $dateAdd: { startDate: { $dateFromString: { dateString: '$invoice_date' } }, unit: 'day', amount: '$credit_period' } },
+                new Date(),
+              ],
+            },
+          },
+        ],
+      }),
       Invoice.aggregate([
-        { $match: { type: 'tax', status: 'Paid', invoice_date: { $gte: monthStart } } },
+        { $match: { type: 'tax', status: { $ne: 'Cancelled' }, invoice_date: { $gte: monthStart } } },
         { $group: { _id: null, total: { $sum: '$grand_total' } } },
       ]),
       Payment.aggregate([
@@ -30,7 +48,7 @@ router.get('/stats', authenticate, authorize('dashboard', 'view'), async (req, r
         { $group: { _id: null, total: { $sum: '$amount' } } },
       ]),
       Invoice.aggregate([
-        { $match: { type: 'tax', status: 'Paid' } },
+        { $match: { type: 'tax', status: { $ne: 'Cancelled' } } },
         { $group: { _id: null, total: { $sum: '$grand_total' } } },
       ]),
       Invoice.find({ type: 'tax' }).populate('client_id', 'name').sort({ _id: -1 }).limit(5).lean(),
@@ -42,17 +60,17 @@ router.get('/stats', authenticate, authorize('dashboard', 'view'), async (req, r
 
     res.json({
       totalClients, totalInvoices, activeProjects,
-      totalRevenue: totalRevenueResult[0]?.total || 0,
-      outstanding: outstandingResult[0]?.total || 0,
+      totalRevenue: Math.round(totalRevenueResult[0]?.total || 0),
+      outstanding: Math.round(outstandingResult[0]?.total || 0),
       overdueInvoices,
-      thisMonthRevenue: revenueResult[0]?.total || 0,
-      thisMonthCollections: collectionsResult[0]?.total || 0,
+      thisMonthRevenue: Math.round(revenueResult[0]?.total || 0),
+      thisMonthCollections: Math.round(collectionsResult[0]?.total || 0),
       recentInvoices: recentInvoices.map((inv) => ({
         id: inv._id,
         invoice_number: cleanInvoiceNumber(inv.invoice_number),
         client: inv.client_id?.name || '',
-        amount: inv.grand_total,
-        balance: inv.balance,
+        amount: Math.round(inv.grand_total),
+        balance: Math.round(inv.balance),
         status: inv.status,
         date: inv.invoice_date,
       })),
@@ -61,13 +79,13 @@ router.get('/stats', authenticate, authorize('dashboard', 'view'), async (req, r
         invoice_number: cleanInvoiceNumber(inv.invoice_number),
         client: inv.client_id?.name || '',
         creditPeriod: inv.credit_period,
-        balance: inv.balance,
+        balance: Math.round(inv.balance),
       })),
       recentTransactions: recentTransactions.map((p) => ({
         id: p._id,
         client: p.client_id?.name || '',
         invoiceNo: cleanInvoiceNumber(p.invoice_id?.invoice_number || ''),
-        amount: p.amount,
+        amount: Math.round(p.amount),
         date: p.date,
         method: p.method,
       })),
