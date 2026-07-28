@@ -190,7 +190,6 @@
             font-size: $font-sm;
             color: var(--color-text);
             background: var(--color-surface);
-            text-transform: uppercase;
             transition: all $transition-fast;
 
             &::placeholder {

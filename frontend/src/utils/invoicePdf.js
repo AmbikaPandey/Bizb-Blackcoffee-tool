@@ -133,14 +133,11 @@ export async function generateInvoicePdf(invoice, company, bank) {
     doc.setFont(FONT, 'bold');
     doc.setFontSize(14);
     doc.setTextColor(...BLACK);
-    doc.text(company.name || 'BLACKCOFFEE', m + 17, y + 8);
+    doc.text(company.name || 'Company Name', m + 17, y + 8);
     doc.setFont(FONT, 'normal');
-    doc.setFontSize(5.5);
+    doc.setFontSize(8);
     doc.setTextColor(...BLACK);
-    doc.text('COMMUNICATION', m + 17, y + 12);
-    doc.setFont(FONT, 'bold');
-    doc.setTextColor(...RED);
-    doc.text('agency', m + 17 + doc.getTextWidth('COMMUNICATION '), y + 12);
+    doc.text(company.tagline || '', m + 17, y + 12);
 
     y += 18;
 
@@ -151,7 +148,7 @@ export async function generateInvoicePdf(invoice, company, bank) {
     y += 5;
 
     doc.setFont(FONT, 'bold');
-    doc.setFontSize(7);
+    doc.setFontSize(8);
     doc.setTextColor(...BLACK);
     doc.text(`GSTIN: ${company.gstin || ''}`, m + 3, y);
 
@@ -162,7 +159,7 @@ export async function generateInvoicePdf(invoice, company, bank) {
     doc.text(invoiceLabel, pw / 2, y + 1, { align: 'center' });
 
     doc.setFont(FONT, 'italic');
-    doc.setFontSize(7);
+    doc.setFontSize(8);
     doc.setTextColor(...BLACK);
     doc.text('Original Copy', pw - m - 3, y, { align: 'right' });
 
@@ -177,18 +174,18 @@ export async function generateInvoicePdf(invoice, company, bank) {
 
     // Bill To label
     doc.setFont(FONT, 'bold');
-    doc.setFontSize(6);
+    doc.setFontSize(8);
     doc.setTextColor(...BLACK);
     doc.text('BILL TO', m + 4, y + 4);
 
     let by = y + 8;
     doc.setFont(FONT, 'bold');
-    doc.setFontSize(9);
+    doc.setFontSize(8);
     doc.setTextColor(...BLACK);
     doc.text(invoice.client_name || 'COMPANY NAME', m + 4, by);
     by += 5;
     doc.setFont(FONT, 'normal');
-    doc.setFontSize(7);
+    doc.setFontSize(8);
     doc.setTextColor(...BLACK);
     if (invoice.client_address) { doc.text(invoice.client_address, m + 4, by); by += 4; }
     const cityState = [invoice.client_city, invoice.client_state].filter(Boolean).join(', ');
@@ -220,7 +217,7 @@ export async function generateInvoicePdf(invoice, company, bank) {
 
     infoRows.forEach(([label, value]) => {
         doc.setFont(FONT, 'normal');
-        doc.setFontSize(7);
+        doc.setFontSize(8);
         doc.setTextColor(...BLACK);
         doc.text(label, infoX, iY);
         doc.setTextColor(...BLACK);
@@ -235,7 +232,7 @@ export async function generateInvoicePdf(invoice, company, bank) {
 
     // E-way Bill
     doc.setFont(FONT, 'normal');
-    doc.setFontSize(7);
+    doc.setFontSize(8);
     doc.setTextColor(...BLACK);
     doc.text('E-way Bill No.', infoX, iY);
     doc.setTextColor(...BLACK);
@@ -254,7 +251,7 @@ export async function generateInvoicePdf(invoice, company, bank) {
         const qty = parseFloat(item.qty) || 0;
         const rate = parseFloat(item.rate) || 0;
         const taxPct = parseFloat(item.tax_pct) || 0;
-        const taxAmt = (qty * rate * taxPct) / 100;
+        const taxAmt = Math.round((qty * rate * taxPct) / 100);
         return [
             i + 1,
             item.product_name || item.description || '',
@@ -285,7 +282,7 @@ export async function generateInvoicePdf(invoice, company, bank) {
             fillColor: TABLE_HEADER,
             textColor: BLACK,
             fontStyle: 'bold',
-            fontSize: 7.5,
+            fontSize: 8,
             halign: 'center',
             valign: 'middle',
         },
@@ -318,7 +315,7 @@ export async function generateInvoicePdf(invoice, company, bank) {
     let leftY = y + 2;
     if (invoice.notes) {
         doc.setFont(FONT, 'bold');
-        doc.setFontSize(6.5);
+        doc.setFontSize(8);
         doc.setTextColor(...RED);
         doc.text('Note: ', m + 3, leftY, { continued: false });
         const noteX = m + 3 + doc.getTextWidth('Note: ');
@@ -334,7 +331,7 @@ export async function generateInvoicePdf(invoice, company, bank) {
 
     // Tax header row
     doc.setFont(FONT, 'bold');
-    doc.setFontSize(6);
+    doc.setFontSize(8);
     doc.setTextColor(...BLACK);
     doc.setDrawColor(...BORDER);
     taxHeaders.forEach((h, i) => {
@@ -346,8 +343,8 @@ export async function generateInvoicePdf(invoice, company, bank) {
 
     // Tax data row
     doc.setFont(FONT, 'normal');
-    doc.setFontSize(7);
-    const taxData = [`${items[0]?.tax_pct || 18}%`, fmtDec(subtotal), fmtDec(taxTotal), fmtDec(taxTotal)];
+    doc.setFontSize(8);
+    const taxData = [`${items[0]?.tax_pct || 18}%`, fmt(Math.round(subtotal)), fmt(Math.round(taxTotal)), fmt(Math.round(taxTotal))];
     taxData.forEach((val, i) => {
         const x = m + 3 + i * taxColW;
         drawBox(doc, x, leftY, taxColW, 6);
@@ -364,7 +361,7 @@ export async function generateInvoicePdf(invoice, company, bank) {
         doc.rect(rightColX, rY, rightColW, rowH, 'F');
         drawBox(doc, rightColX, rY, rightColW, rowH);
         doc.setFont(FONT, bold ? 'bold' : 'normal');
-        doc.setFontSize(7.5);
+        doc.setFontSize(8);
         doc.setTextColor(...BLACK);
         doc.text(label, rightColX + 3, rY + 4.5);
         doc.text(value, rightColX + rightColW - 3, rY + 4.5, { align: 'right' });
@@ -374,9 +371,9 @@ export async function generateInvoicePdf(invoice, company, bank) {
     summaryRow('Subtotal', fmt(subtotal), false);
 
     if (taxType === 'IGST') {
-        summaryRow(`IGST @${items[0]?.tax_pct || 18}%`, fmt(taxTotal), false);
+        summaryRow(`IGST @${items[0]?.tax_pct || 18}%`, fmt(Math.round(taxTotal)), false);
     } else {
-        const halfTax = taxTotal / 2;
+        const halfTax = Math.round(taxTotal / 2);
         const taxPct = items[0]?.tax_pct || 18;
         summaryRow(`CGST @${taxPct / 2}%`, fmt(halfTax), false);
         summaryRow(`SGST @${taxPct / 2}%`, fmt(halfTax), false);
@@ -394,7 +391,7 @@ export async function generateInvoicePdf(invoice, company, bank) {
 
     // Amount in words (right, below total)
     doc.setFont(FONT, 'normal');
-    doc.setFontSize(7);
+    doc.setFontSize(8);
     doc.setTextColor(...BLACK);
     const wordsText = numberToWords(Math.round(grandTotal));
     doc.text(wordsText.replace('Rupees ', ''), rightColX + rightColW - 3, rY + 4, { align: 'right' });
@@ -410,17 +407,17 @@ export async function generateInvoicePdf(invoice, company, bank) {
     // Bank Details (left)
     const bk = bank || {};
     doc.setFont(FONT, 'bold');
-    doc.setFontSize(7);
+    doc.setFontSize(8);
     doc.setTextColor(...BLACK);
     doc.text('Bank Details:', m + 3, y);
     y += 4;
     doc.setFont(FONT, 'bold');
-    doc.setFontSize(7.5);
+    doc.setFontSize(8);
     doc.setTextColor(...BLACK);
     doc.text(company.name || '', m + 3, y);
     y += 3.5;
     doc.setFont(FONT, 'bold');
-    doc.setFontSize(7);
+    doc.setFontSize(8);
     doc.setTextColor(...BLACK);
     if (bk.accountNo) { doc.text(`A/c No.: ${bk.accountNo}`, m + 3, y); y += 3.5; }
     if (bk.ifsc) { doc.text(`IFSC: ${bk.ifsc}`, m + 3, y); y += 3.5; }
@@ -430,11 +427,11 @@ export async function generateInvoicePdf(invoice, company, bank) {
     // Signatory (right)
     const sigY = y - 16;
     doc.setFont(FONT, 'bold');
-    doc.setFontSize(7.5);
+    doc.setFontSize(8);
     doc.setTextColor(...BLACK);
     doc.text(`For ${company.name || ''}`, pw - m - 3, sigY, { align: 'right' });
     doc.setFont(FONT, 'italic');
-    doc.setFontSize(7);
+    doc.setFontSize(8);
     doc.setTextColor(...BLACK);
     doc.text('Authorised Signatory', pw - m - 3, sigY + 14, { align: 'right' });
 
@@ -446,12 +443,12 @@ export async function generateInvoicePdf(invoice, company, bank) {
         doc.line(m, y, pw - m, y);
         y += 4;
         doc.setFont(FONT, 'bold');
-        doc.setFontSize(7.5);
+        doc.setFontSize(8);
         doc.setTextColor(...BLACK);
         doc.text('Payment Terms:', m + 3, y);
         y += 4;
         doc.setFont(FONT, 'normal');
-        doc.setFontSize(7);
+        doc.setFontSize(8);
         doc.setTextColor(...BLACK);
         const termLines = doc.splitTextToSize(invoice.terms, cw - 6);
         doc.text(termLines, m + 3, y);
@@ -463,7 +460,7 @@ export async function generateInvoicePdf(invoice, company, bank) {
     doc.setDrawColor(...RED);
     doc.setLineWidth(0.8);
     doc.line(m, footerY, pw - m, footerY);
-    doc.setFontSize(5.5);
+    doc.setFontSize(8);
     doc.setTextColor(...BLACK);
     doc.setFont(FONT, 'normal');
     const footerParts = [];

@@ -11,7 +11,6 @@ import { useToast } from '../components/common/Toast';
 import { api } from '../services/api';
 import { lookupPincode } from '../utils/pincodeLookup';
 import { formatCurrency } from '../utils/currency';
-import { uppercaseFormData } from '../utils/formTransform';
 import { validate, transform } from '../utils/validation';
 import { lookupGST, isValidGSTIN } from '../utils/gstLookup';
 
@@ -67,11 +66,12 @@ export default function Clients() {
         if (!gstErr.valid) { toast(gstErr.error, 'error'); return; }
         setSaving(true);
         try {
-            const data = uppercaseFormData({
+            const data = {
                 ...form,
+                name: form.name ? form.name.toUpperCase() : form.name,
                 latitude: form.latitude ? Number.parseFloat(form.latitude) : null,
                 longitude: form.longitude ? Number.parseFloat(form.longitude) : null,
-            });
+            };
             if (editTarget) {
                 await api.updateClient(editTarget.id || editTarget._id, data);
                 toast('Client updated');

@@ -157,10 +157,10 @@ router.get('/gst-summary', authenticate, authorize('reports', 'view'), async (re
 
     let totalTaxable = 0, totalCgst = 0, totalSgst = 0, totalIgst = 0, totalAmount = 0;
     const rows = invoices.map((inv) => {
-      const taxable = inv.taxable_amount || 0;
-      const tax = inv.grand_total - inv.taxable_amount;
+      const taxable = inv.subtotal || 0;             // pre-tax base amount
+      const tax = inv.taxable_amount || 0;           // total GST (tax portion)
       let cgst = 0, sgst = 0, igst = 0;
-      if (inv.tax_type === 'CGST/SGST') { cgst = tax / 2; sgst = tax / 2; }
+      if (inv.tax_type === 'CGST/SGST' || inv.tax_type === 'CGST + SGST') { cgst = tax / 2; sgst = tax / 2; }
       else { igst = tax; }
 
       totalTaxable += taxable;

@@ -169,7 +169,7 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       const labelW = doc.widthOfString(invoiceLabel);
       doc.text(invoiceLabel, (pw - labelW) / 2, y - 4);
 
-      doc.font('Roboto').fontSize(7).fillColor(BLACK);
+      doc.font('Roboto').fontSize(9).fillColor(BLACK);
       doc.text('Original Copy', pw - m - 60, y, { width: 54, align: 'right' });
 
       y += 22;
@@ -187,11 +187,11 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       const detailsTop = y;
 
       // Bill To (left)
-      doc.font('Roboto-Italic').fontSize(8).fillColor(BLACK);
+      doc.font('Roboto-Italic').fontSize(9).fillColor(BLACK);
       doc.text('Party Details:', m + 6, y + 4);
 
       y += 17;
-      doc.font('Roboto-Bold').fontSize(12).fillColor(BLACK);
+      doc.font('Roboto-Bold').fontSize(10).fillColor(BLACK);
       doc.text(invoice.client_name || 'COMPANY NAME', m + 6, y);
       y += 16;
       doc.font('Roboto').fontSize(9).fillColor(BLACK);
@@ -205,7 +205,7 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       if (invoice.client_pincode) { doc.text(`${invoice.client_state || 'State'} - ${invoice.client_pincode}`, m + 6, y); y += 25; }
       doc.font('Roboto').fontSize(9).fillColor(BLACK);
       doc.text(`GSTIN: ${invoice.client_gstin || ''}`, m + 6, y); y += 20;
-      doc.font('Roboto').fontSize(9).fillColor(BLACK);
+      doc.font('Roboto-Bold').fontSize(9).fillColor(BLACK);
       if (invoice.client_contact) {
         doc.text(`Contact Person: ${invoice.client_contact}`, m + 6, y); y += 14;
       }
@@ -291,7 +291,7 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       doc.restore();
 
       // Header text — no column separators
-      doc.font('Roboto-Bold').fontSize(8).fillColor(BLACK);
+      doc.font('Roboto-Bold').fontSize(9).fillColor(BLACK);
       let hx = tableX;
       headers.forEach((h, i) => {
         const align = (i >= 4) ? 'right' : (i === 0 || i === 2 || i === 3 ? 'center' : 'left');
@@ -307,7 +307,7 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
         const qty = parseFloat(item.qty) || 0;
         const rate = parseFloat(item.rate) || 0;
         const taxPct = parseFloat(item.tax_pct) || 0;
-        const taxAmt = (qty * rate * taxPct) / 100;
+        const taxAmt = Math.round((qty * rate * taxPct) / 100);
 
         const rowData = [
           String(idx + 1),
@@ -324,8 +324,8 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
         const hasDesc = item.product_name && item.description;
         const nameText = item.product_name || item.description || '';
         const descText = hasDesc ? item.description : '';
-        const nameH = doc.heightOfString(nameText, { width: descWidth, fontSize: 7.5 });
-        const descH = hasDesc ? doc.heightOfString(descText, { width: descWidth, fontSize: 6.5 }) + 2 : 0;
+        const nameH = doc.heightOfString(nameText, { width: descWidth, fontSize: 9 });
+        const descH = hasDesc ? doc.heightOfString(descText, { width: descWidth, fontSize: 9 }) + 2 : 0;
         const rowH = Math.max(20, nameH + descH + cellPadY * 2);
 
         const bottomLimit = 130;
@@ -348,14 +348,14 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
           if (ci === 1 && hasDesc) {
             // Product name bold, then description smaller below
             const nameY = y + cellPadY;
-            doc.font('Roboto-Bold').fontSize(7.5).fillColor(BLACK);
+            doc.font('Roboto-Bold').fontSize(9).fillColor(BLACK);
             doc.text(nameText, rx + cellPadX, nameY, { width: colWidths[ci] - cellPadX * 2, align: 'left' });
-            const actualNameH = doc.heightOfString(nameText, { width: colWidths[ci] - cellPadX * 2, fontSize: 7.5 });
-            doc.font('Roboto').fontSize(6.5).fillColor('#555555');
+            const actualNameH = doc.heightOfString(nameText, { width: colWidths[ci] - cellPadX * 2, fontSize: 9 });
+            doc.font('Roboto').fontSize(9).fillColor('#555555');
             doc.text(descText, rx + cellPadX, nameY + actualNameH + 2, { width: colWidths[ci] - cellPadX * 2, align: 'left' });
             doc.fillColor(BLACK);
           } else {
-            doc.font('Roboto-Bold').fontSize(7.5).fillColor(BLACK);
+            doc.font('Roboto-Bold').fontSize(9).fillColor(BLACK);
             doc.text(cell, rx + cellPadX, textY, { width: colWidths[ci] - cellPadX * 2, align });
           }
           rx += colWidths[ci];
@@ -392,7 +392,7 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       const taxColW = taxTableW / 4;
 
       if (invoice.notes) {
-        doc.font('Roboto-Bold').fontSize(7).fillColor(RED);
+        doc.font('Roboto-Bold').fontSize(9).fillColor(RED);
         doc.text('Note: ', tableX, leftY, { continued: true, width: taxTableW });
         doc.font('Roboto').fillColor(BLACK);
         doc.text(invoice.notes, { continued: false, width: taxTableW });
@@ -401,7 +401,7 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
 
       // Tax breakdown mini table
       const taxHeaders = ['Tax\nRate', 'Taxable\nAmount', `${taxType === 'IGST' ? 'IGST' : 'CGST'}\n@ ${items[0]?.tax_pct || 18}%`, 'Total\nTax'];
-      const taxRowH = 22;
+      const taxRowH = 32;
 
       // Tax header row with rounded top
       doc.save().roundedRect(taxTableX, leftY, taxTableW, taxRowH, 4).clip();
@@ -409,7 +409,7 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       doc.restore();
 
       let txX = taxTableX;
-      doc.font('Roboto-Bold').fontSize(6.5).fillColor(BLACK);
+      doc.font('Roboto-Bold').fontSize(9).fillColor(BLACK);
       taxHeaders.forEach((h, i) => {
         doc.text(h, txX + 4, leftY + 3, { width: taxColW - 8, align: 'center', lineGap: 1 });
         if (i < taxHeaders.length - 1) {
@@ -423,8 +423,8 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       // Tax data row
       txX = taxTableX;
       doc.save().rect(taxTableX, leftY, taxTableW, 16).fill(WHITE).restore();
-      const taxData = [`${items[0]?.tax_pct || 18}%`, fmtDec(subtotal), fmtDec(taxTotal), fmtDec(taxTotal)];
-      doc.font('Roboto').fontSize(7.5).fillColor(BLACK);
+      const taxData = [`${items[0]?.tax_pct || 18}%`, fmt(Math.round(subtotal)), fmt(Math.round(taxTotal)), fmt(Math.round(taxTotal))];
+      doc.font('Roboto').fontSize(9).fillColor(BLACK);
       taxData.forEach((val, i) => {
         doc.text(val, txX + 4, leftY + 4, { width: taxColW - 8, align: 'center' });
         if (i < taxData.length - 1) {
@@ -451,24 +451,24 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
         doc.save().rect(midRightX, rY, midRightW, summaryRowH).fill(WHITE).restore();
         doc.strokeColor('#DDE3E7').lineWidth(0.4)
           .moveTo(midRightX, rY + summaryRowH).lineTo(midRightX + midRightW, rY + summaryRowH).stroke();
-        doc.font(bold ? 'Roboto-Bold' : 'Roboto').fontSize(8).fillColor(BLACK);
+        doc.font(bold ? 'Roboto-Bold' : 'Roboto').fontSize(9).fillColor(BLACK);
         doc.text(label, midRightX + 10, rY + (summaryRowH - 10) / 2 + 1);
         doc.text(value, midRightX + midRightW - 70, rY + (summaryRowH - 10) / 2 + 1, { width: 60, align: 'right' });
         rY += summaryRowH;
       }
 
-      summaryRow('Subtotal', fmt(subtotal), false);
+      summaryRow('Sub - total', fmt(subtotal), false);
       if (taxType === 'IGST') {
-        summaryRow(`IGST @${items[0]?.tax_pct || 18}%`, fmt(taxTotal), false);
+        summaryRow(`IGST @${items[0]?.tax_pct || 18}%`, fmt(Math.round(taxTotal)), false);
       } else {
-        const halfTax = taxTotal / 2;
+        const halfTax = Math.round(taxTotal / 2);
         const taxPct = items[0]?.tax_pct || 18;
         summaryRow(`CGST @${taxPct / 2}%`, fmt(halfTax), false);
         summaryRow(`SGST @${taxPct / 2}%`, fmt(halfTax), false);
       }
 
       // Grey TOTAL row with rounded bottom
-      const totalRowH = summaryRowH + 2;
+      const totalRowH = summaryRowH + 3;
       doc.save().roundedRect(midRightX, rY - 1, midRightW, totalRowH + 1, 4).clip();
       doc.rect(midRightX, rY - 1, midRightW, totalRowH + 1).fill(TABLE_HEADER);
       doc.restore();
@@ -499,42 +499,42 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       y += 6;
 
       // Bank Details (left)
-      doc.font('Roboto').fontSize(7).fillColor(BLACK);
+      doc.font('Roboto').fontSize(9).fillColor(BLACK);
       doc.text('Bank Details:', m + 6, y);
       y += 10;
-      doc.font('Roboto-Bold').fontSize(8).fillColor(BLACK);
+      doc.font('Roboto-Bold').fontSize(9).fillColor(BLACK);
       doc.text(company.name || '', m + 6, y);
       y += 10;
-      doc.font('Roboto').fontSize(7).fillColor(BLACK);
+      doc.font('Roboto').fontSize(9).fillColor(BLACK);
       if (bank.accountNo) {
         doc.text('A/c No.: ', m + 6, y, { continued: true });
         doc.font('Roboto-Bold').text(bank.accountNo);
         y += 10;
-        doc.font('Roboto').fontSize(7).fillColor(BLACK);
+        doc.font('Roboto').fontSize(9).fillColor(BLACK);
       }
       if (bank.ifsc) {
         doc.text('IFSC: ', m + 6, y, { continued: true });
         doc.font('Roboto-Bold').text(bank.ifsc);
         y += 10;
-        doc.font('Roboto').fontSize(7).fillColor(BLACK);
+        doc.font('Roboto').fontSize(9).fillColor(BLACK);
       }
       if (bank.bank) {
         doc.text('Bank: ', m + 6, y, { continued: true });
         doc.font('Roboto-Bold').text(bank.bank);
         y += 10;
-        doc.font('Roboto').fontSize(7).fillColor(BLACK);
+        doc.font('Roboto').fontSize(9).fillColor(BLACK);
       }
       if (bank.branch) {
         doc.text('Branch: ', m + 6, y, { continued: true });
         doc.font('Roboto-Bold').text(bank.branch);
         y += 10;
-        doc.font('Roboto').fontSize(7).fillColor(BLACK);
+        doc.font('Roboto').fontSize(9).fillColor(BLACK);
       }
       if (bank.upi) {
         doc.text('UPI: ', m + 6, y, { continued: true });
         doc.font('Roboto-Bold').text(bank.upi);
         y += 10;
-        doc.font('Roboto').fontSize(7).fillColor(BLACK);
+        doc.font('Roboto').fontSize(9).fillColor(BLACK);
       }
 
       // Signatory (right) — layout: "For Company" → signature image → "Authorised Signatory"
@@ -576,8 +576,7 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       const sigImageY = forTextY + 20;
       const sigLabelY = sigImageY + sigH;
 
-      doc.font('Roboto-Bold').fontSize(7.5).fillColor(BLACK);
-      doc.text(`For ${company.name || ''}`, midRightX, forTextY, { width: midRightW - 6, align: 'right' });
+      doc.font('Roboto-Bold').fontSize(9).fillColor(BLACK).text(`For ${company.name || ''}`, midRightX - 40, forTextY, { width: midRightW + 34, align: 'right' });
 
       try {
         // Buffer + width only (height auto-calculated from aspect ratio)
@@ -587,7 +586,7 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
         console.error('Signature render failed:', imgErr.message);
       }
 
-      doc.font('Roboto').fontSize(7).fillColor(BLACK);
+      doc.font('Roboto').fontSize(9).fillColor(BLACK);
       doc.text('Authorised Signatory', midRightX, sigLabelY, { width: midRightW - 6, align: 'right' });
 
       y += 6;
@@ -599,10 +598,10 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       if (invoice.terms) {
         let ptY = footerTopY - 40;
         if (ptY > y + 20) {
-          doc.font('Roboto-Bold').fontSize(7.5).fillColor(BLACK);
+          doc.font('Roboto-Bold').fontSize(9).fillColor(BLACK);
           doc.text('Payment Terms:', m + 6, ptY);
           ptY += 11;
-          doc.font('Roboto').fontSize(7).fillColor(BLACK);
+          doc.font('Roboto').fontSize(9).fillColor(BLACK);
           const maxTermsH = footerTopY - ptY - 6;
           // Use height option — this prevents pdfKit from adding a new page when text overflows
           doc.text(invoice.terms, m + 6, ptY, { width: cw - 12, height: maxTermsH, lineBreak: true });

@@ -336,8 +336,7 @@ export default function ViewInvoice() {
                                     </svg>
                                 </div>
                                 <div className="view-invoice__doc-company-text">
-                                    <strong>BLACKCOFFEE</strong>
-                                    <small>COMMUNICATION <em>agency</em></small>
+                                    <strong>{company.name || 'Company Name'}</strong>
                                 </div>
                             </>
                         )}

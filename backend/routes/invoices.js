@@ -14,7 +14,27 @@ router.get('/', authenticate, async (req, res) => {
     const { type, status, search } = req.query;
     const filter = {};
     if (type) filter.type = type;
-    if (status) filter.status = status;
+    if (status) {
+      if (status === 'Overdue') {
+        // Match invoices explicitly marked Overdue OR unpaid invoices whose credit period has elapsed
+        filter.$or = [
+          { status: 'Overdue' },
+          {
+            status: { $in: ['Draft', 'Sent', 'Partially Paid'] },
+            balance: { $gt: 0 },
+            credit_period: { $ne: null },
+            $expr: {
+              $lt: [
+                { $dateAdd: { startDate: { $dateFromString: { dateString: '$invoice_date' } }, unit: 'day', amount: '$credit_period' } },
+                new Date(),
+              ],
+            },
+          },
+        ];
+      } else {
+        filter.status = status;
+      }
+    }
     if (search) {
       filter.$or = [
         { invoice_number: { $regex: search, $options: 'i' } },

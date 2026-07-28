@@ -11,7 +11,6 @@ import { useToast } from '../components/common/Toast';
 import { api } from '../services/api';
 import { lookupPincode } from '../utils/pincodeLookup';
 import { lookupIFSC } from '../utils/ifscLookup';
-import { uppercaseFormData } from '../utils/formTransform';
 import { validate, transform } from '../utils/validation';
 import { lookupGST, isValidGSTIN, extractPanFromGstin } from '../utils/gstLookup';
 
@@ -74,7 +73,7 @@ export default function Vendors() {
         if (form.gstin && !validate('gstin', form.gstin).valid) { toast('Invalid GSTIN format', 'error'); return; }
         setSaving(true);
         try {
-            const data = uppercaseFormData(form);
+            const data = form;
             if (editTarget) {
                 await api.updateVendor(editTarget.id || editTarget._id, data);
                 toast('Vendor updated');

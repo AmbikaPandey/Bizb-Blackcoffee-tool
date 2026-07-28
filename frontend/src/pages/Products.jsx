@@ -11,7 +11,6 @@ import { useToast } from '../components/common/Toast';
 import HsnAutocomplete from '../components/common/HsnAutocomplete';
 import { api } from '../services/api';
 import { formatCurrency } from '../utils/currency';
-import { uppercaseFormData } from '../utils/formTransform';
 
 const HSN_RE = /^\d{4}(\d{2}(\d{2})?)?$/;
 const emptyForm = { name: '', vendor_id: '', category: '', hsn: '', rate: '', unit: 'NOS', gst: '18', description: '', status: 'Active' };
@@ -127,7 +126,7 @@ export default function Products() {
         if (!form.hsn || !HSN_RE.test(form.hsn)) { setHsnError('Valid HSN is required (4, 6, or 8 digits)'); toast('Valid HSN code is required', 'error'); return; }
         setSaving(true);
         try {
-            const data = uppercaseFormData({ ...form, vendor_id: form.vendor_id || null, rate: parseFloat(form.rate) || 0, gst: parseFloat(form.gst) || 0 });
+            const data = { ...form, vendor_id: form.vendor_id || null, rate: parseFloat(form.rate) || 0, gst: parseFloat(form.gst) || 0 };
             if (editTarget) {
                 await api.updateProduct(editTarget.id || editTarget._id, data);
                 toast('Product updated');

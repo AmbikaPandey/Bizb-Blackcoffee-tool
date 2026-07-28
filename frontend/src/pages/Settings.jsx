@@ -7,7 +7,6 @@ import { api } from '../services/api';
 import { lookupPincode } from '../utils/pincodeLookup';
 import { lookupIFSC } from '../utils/ifscLookup';
 import { lookupGST, isValidGSTIN, extractPanFromGstin } from '../utils/gstLookup';
-import { uppercaseFormData } from '../utils/formTransform';
 import { validate, getHint, transform } from '../utils/validation';
 
 const TABS = [
@@ -143,7 +142,7 @@ export default function Settings() {
         }
         setSaving(true);
         try {
-            await api.saveSettings({ company: uppercaseFormData(company), bank: uppercaseFormData(bank), invoice });
+            await api.saveSettings({ company, bank, invoice });
             snapshot.current = { company, bank, invoice };
             toast('Settings saved successfully');
             setEditing(false);
