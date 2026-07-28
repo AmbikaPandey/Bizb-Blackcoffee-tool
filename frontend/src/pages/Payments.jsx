@@ -19,7 +19,7 @@ export default function Payments() {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [deleteConfirm, setDeleteConfirm] = useState(null);
-    const [form, setForm] = useState({ client_id: '', invoice_id: '', amount: '', date: new Date().toISOString().slice(0, 10), method: 'Bank Transfer', reference: '', notes: '' });
+    const [form, setForm] = useState({ client_id: '', invoice_ids: [], amount: '', date: new Date().toISOString().slice(0, 10), method: 'Bank Transfer', reference: '', notes: '' });
     const [saving, setSaving] = useState(false);
 
     async function loadPayments() {
@@ -41,6 +41,16 @@ export default function Payments() {
         ? invoices.filter((inv) => inv.client_id === form.client_id && inv.status !== 'Paid' && inv.status !== 'Cancelled')
         : [];
 
+    function toggleInvoice(inv) {
+        const id = String(inv.id || inv._id);
+        const selected = form.invoice_ids.includes(id);
+        const newIds = selected ? form.invoice_ids.filter((x) => x !== id) : [...form.invoice_ids, id];
+        const total = clientInvoices
+            .filter((i) => newIds.includes(String(i.id || i._id)))
+            .reduce((sum, i) => sum + (i.balance || i.grand_total || 0), 0);
+        setForm({ ...form, invoice_ids: newIds, amount: newIds.length ? String(Math.round(total)) : '' });
+    }
+
     async function handleSubmit(e) {
         e.preventDefault();
         if (!form.client_id || !form.amount || !form.date) {
@@ -51,7 +61,7 @@ export default function Payments() {
         try {
             await api.createPayment({
                 client_id: form.client_id,
-                invoice_id: form.invoice_id || null,
+                invoice_ids: form.invoice_ids,
                 amount: parseFloat(form.amount),
                 date: form.date,
                 method: form.method,
@@ -60,7 +70,7 @@ export default function Payments() {
             });
             toast('Payment recorded');
             setShowModal(false);
-            setForm({ client_id: '', invoice_id: '', amount: '', date: new Date().toISOString().slice(0, 10), method: 'Bank Transfer', reference: '', notes: '' });
+            setForm({ client_id: '', invoice_ids: [], amount: '', date: new Date().toISOString().slice(0, 10), method: 'Bank Transfer', reference: '', notes: '' });
             await loadPayments();
         } catch (err) {
             toast(err.message || 'Failed to record payment', 'error');
@@ -137,26 +147,27 @@ export default function Payments() {
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label className="form-group__label">Client *</label>
-                        <select className="form-group__input" value={form.client_id} onChange={(e) => setForm({ ...form, client_id: e.target.value, invoice_id: '' })} required>
+                        <select className="form-group__input" value={form.client_id} onChange={(e) => setForm({ ...form, client_id: e.target.value, invoice_ids: [], amount: '' })} required>
                             <option value="">Select client</option>
                             {clients.map((c) => <option key={c.id || c._id} value={c.id || c._id}>{c.name}</option>)}
                         </select>
                     </div>
                     {clientInvoices.length > 0 && (
                         <div className="form-group">
-                            <label className="form-group__label">Link to Invoice (optional)</label>
-                            <select className="form-group__input" value={form.invoice_id} onChange={(e) => {
-                                const invId = e.target.value;
-                                const inv = clientInvoices.find((i) => (i.id || i._id) === invId);
-                                setForm({ ...form, invoice_id: invId, amount: inv ? (inv.balance || inv.grand_total) : '' });
-                            }}>
-                                <option value="">No specific invoice</option>
-                                {clientInvoices.map((inv) => (
-                                    <option key={inv.id || inv._id} value={inv.id || inv._id}>
-                                        {inv.invoice_number} — Balance: {formatCurrency(inv.balance || inv.grand_total)}
-                                    </option>
-                                ))}
-                            </select>
+                            <label className="form-group__label">Link to Invoices (optional)</label>
+                            <div className="payment-invoice-list">
+                                {clientInvoices.map((inv) => {
+                                    const id = String(inv.id || inv._id);
+                                    const checked = form.invoice_ids.includes(id);
+                                    return (
+                                        <label key={id} className={`payment-invoice-item${checked ? ' payment-invoice-item--selected' : ''}`}>
+                                            <input type="checkbox" checked={checked} onChange={() => toggleInvoice(inv)} />
+                                            <span className="payment-invoice-item__num">{inv.invoice_number}</span>
+                                            <span className="payment-invoice-item__balance">Balance: {formatCurrency(inv.balance || inv.grand_total)}</span>
+                                        </label>
+                                    );
+                                })}
+                            </div>
                         </div>
                     )}
                     <div className="form-row form-row--2">

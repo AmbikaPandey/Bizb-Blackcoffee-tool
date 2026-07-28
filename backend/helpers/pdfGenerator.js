@@ -169,7 +169,7 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       const labelW = doc.widthOfString(invoiceLabel);
       doc.text(invoiceLabel, (pw - labelW) / 2, y - 4);
 
-      doc.font('Roboto').fontSize(9).fillColor(BLACK);
+      doc.font('Roboto-Italic').fontSize(9).fillColor(BLACK);
       doc.text('Original Copy', pw - m - 60, y, { width: 54, align: 'right' });
 
       y += 22;
@@ -203,8 +203,8 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       const cityState = [invoice.client_city, invoice.client_state].filter(Boolean).join(', ');
       if (cityState) { doc.text(cityState, m + 6, y); y += 25; }
       if (invoice.client_pincode) { doc.text(`${invoice.client_state || 'State'} - ${invoice.client_pincode}`, m + 6, y); y += 25; }
-      doc.font('Roboto').fontSize(9).fillColor(BLACK);
-      doc.text(`GSTIN: ${invoice.client_gstin || ''}`, m + 6, y); y += 20;
+      doc.font('Roboto').fontSize(9).fillColor(BLACK).text('GSTIN: ', m + 6, y, { continued: true });
+      doc.font('Roboto-Bold').text(invoice.client_gstin || ''); y += 20;
       doc.font('Roboto-Bold').fontSize(9).fillColor(BLACK);
       if (invoice.client_contact) {
         doc.text(`Contact Person: ${invoice.client_contact}`, m + 6, y); y += 14;
@@ -295,7 +295,7 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       let hx = tableX;
       headers.forEach((h, i) => {
         const align = (i >= 4) ? 'right' : (i === 0 || i === 2 || i === 3 ? 'center' : 'left');
-        const textY = y + (headerH - 8) / 2;
+        const textY = y + (headerH - 12) / 2;
         doc.text(h, hx + cellPadX, textY, { width: colWidths[i] - cellPadX * 2, align });
         hx += colWidths[i];
       });
@@ -468,7 +468,7 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       }
 
       // Grey TOTAL row with rounded bottom
-      const totalRowH = summaryRowH + 3;
+      const totalRowH = summaryRowH + 5;
       doc.save().roundedRect(midRightX, rY - 1, midRightW, totalRowH + 1, 4).clip();
       doc.rect(midRightX, rY - 1, midRightW, totalRowH + 1).fill(TABLE_HEADER);
       doc.restore();
@@ -503,7 +503,7 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       doc.text('Bank Details:', m + 6, y);
       y += 10;
       doc.font('Roboto-Bold').fontSize(9).fillColor(BLACK);
-      doc.text(company.name || '', m + 6, y);
+      doc.text('BLACK COFFEE COMMUNICATION PRIVATE LIMITED' || '', m + 6, y);
       y += 10;
       doc.font('Roboto').fontSize(9).fillColor(BLACK);
       if (bank.accountNo) {
@@ -576,7 +576,15 @@ function generateInvoicePdfBuffer(invoice, company = {}, bank = {}, options = {}
       const sigImageY = forTextY + 20;
       const sigLabelY = sigImageY + sigH;
 
-      doc.font('Roboto-Bold').fontSize(9).fillColor(BLACK).text(`For ${company.name || ''}`, midRightX - 40, forTextY, { width: midRightW + 34, align: 'right' });
+      const forLabel = 'For ';
+      const companyNameText = company.name || '';
+      doc.font('Roboto-Italic').fontSize(9);
+      const forLabelW = doc.widthOfString(forLabel);
+      doc.font('Roboto-Bold').fontSize(9);
+      const companyNameW = doc.widthOfString(companyNameText);
+      const lineStartX = midRightX + midRightW - 6 - forLabelW - companyNameW;
+      doc.font('Roboto-Italic').fillColor(BLACK).text(forLabel, lineStartX, forTextY, { continued: true });
+      doc.font('Roboto-Bold').text(companyNameText, { continued: false });
 
       try {
         // Buffer + width only (height auto-calculated from aspect ratio)

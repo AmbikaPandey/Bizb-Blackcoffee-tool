@@ -7,8 +7,9 @@ async function reconcileInvoice(invoiceId) {
   const invoice = await Invoice.findById(invoiceId);
   if (!invoice) return;
 
+  // Sum payments linked via invoice_id OR via invoice_ids array
   const payments = await Payment.aggregate([
-    { $match: { invoice_id: invoice._id } },
+    { $match: { $or: [{ invoice_id: invoice._id }, { invoice_ids: invoice._id }] } },
     { $group: { _id: null, total: { $sum: '$amount' } } },
   ]);
   const totalPaid = Math.round(payments[0]?.total || 0);

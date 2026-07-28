@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const paymentSchema = new mongoose.Schema({
   client_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Client', required: true },
   invoice_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Invoice', default: null },
+  invoice_ids: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Invoice' }],
   amount: { type: Number, required: true, min: 0.01 },
   date: { type: String, required: true },
   method: { type: String, enum: ['Bank Transfer', 'Cash', 'UPI', 'Cheque', 'Card', 'Other'], default: 'Bank Transfer' },

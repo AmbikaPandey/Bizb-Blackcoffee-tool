@@ -1624,6 +1624,63 @@ tr.clickable-row {
     }
 }
 
+// ── Payment Invoice Multi-select ──────────────
+.payment-invoice-list {
+    display: flex;
+    flex-direction: column;
+    gap: $space-2;
+    max-height: 220px;
+    overflow-y: auto;
+    border: 1px solid var(--color-border);
+    border-radius: $radius-md;
+    padding: $space-2;
+    background: var(--color-surface);
+}
+
+.payment-invoice-item {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    padding: $space-2 $space-3;
+    border-radius: $radius-sm;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition:
+        background $transition-fast,
+        border-color $transition-fast;
+
+    &:hover {
+        background: var(--color-bg-hover);
+    }
+
+    &--selected {
+        background: rgba($accent, 0.06);
+        border-color: rgba($accent, 0.3);
+    }
+
+    input[type="checkbox"] {
+        accent-color: $accent;
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+        cursor: pointer;
+    }
+
+    &__num {
+        font-size: $font-sm;
+        font-weight: $weight-semibold;
+        font-family: "Roboto Mono", monospace;
+        color: var(--color-text);
+        flex: 1;
+    }
+
+    &__balance {
+        font-size: $font-xs;
+        color: var(--color-text-muted);
+        white-space: nowrap;
+    }
+}
+
 // ── Form hint text ──
 .form-hint {
     font-size: $font-xs;

@@ -15,15 +15,20 @@ router.get('/', authenticate, authorize('payments', 'view'), async (req, res) =>
     const payments = await Payment.find(filter)
       .populate('client_id', 'name')
       .populate('invoice_id', 'invoice_number grand_total')
+      .populate('invoice_ids', 'invoice_number grand_total')
       .sort({ _id: -1 }).lean();
-    res.json(payments.map((p) => ({
-      id: p._id, ...p,
-      client: p.client_id?.name || '',
-      invoiceNo: cleanInvoiceNumber(p.invoice_id?.invoice_number || ''),
-      client_id: p.client_id?._id || p.client_id,
-      invoice_id: p.invoice_id?._id || p.invoice_id,
-      amount: Math.round(p.amount || 0),
-    })));
+    res.json(payments.map((p) => {
+      const ids = p.invoice_ids?.length ? p.invoice_ids : (p.invoice_id ? [p.invoice_id] : []);
+      return {
+        id: p._id, ...p,
+        client: p.client_id?.name || '',
+        invoiceNo: ids.map((i) => cleanInvoiceNumber(i?.invoice_number || '')).filter(Boolean).join(', ') || '-',
+        invoice_ids: ids.map((i) => i?._id || i),
+        client_id: p.client_id?._id || p.client_id,
+        invoice_id: p.invoice_id?._id || p.invoice_id,
+        amount: Math.round(p.amount || 0),
+      };
+    }));
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch payments' });
   }
@@ -33,12 +38,15 @@ router.get('/:id', authenticate, authorize('payments', 'view'), async (req, res)
   try {
     const payment = await Payment.findById(req.params.id)
       .populate('client_id', 'name')
-      .populate('invoice_id', 'invoice_number grand_total').lean();
+      .populate('invoice_id', 'invoice_number grand_total')
+      .populate('invoice_ids', 'invoice_number grand_total').lean();
     if (!payment) return res.status(404).json({ error: 'Payment not found' });
+    const ids = payment.invoice_ids?.length ? payment.invoice_ids : (payment.invoice_id ? [payment.invoice_id] : []);
     res.json({
       id: payment._id, ...payment,
       client: payment.client_id?.name || '',
-      invoiceNo: cleanInvoiceNumber(payment.invoice_id?.invoice_number || ''),
+      invoiceNo: ids.map((i) => cleanInvoiceNumber(i?.invoice_number || '')).filter(Boolean).join(', ') || '-',
+      invoice_ids: ids.map((i) => i?._id || i),
       client_id: payment.client_id?._id || payment.client_id,
       invoice_id: payment.invoice_id?._id || payment.invoice_id,
       amount: Math.round(payment.amount || 0),
@@ -50,36 +58,43 @@ router.get('/:id', authenticate, authorize('payments', 'view'), async (req, res)
 
 router.post('/', authenticate, authorize('payments', 'create'), async (req, res) => {
   try {
-    const { client_id, invoice_id, amount, date, method, reference, notes } = req.body;
+    const { client_id, invoice_ids: rawIds, invoice_id, amount, date, method, reference, notes } = req.body;
+    // Support both invoice_ids (multi) and invoice_id (single legacy)
+    const invoiceIds = Array.isArray(rawIds) && rawIds.length ? rawIds : (invoice_id ? [invoice_id] : []);
+
     if (!client_id || !amount || !date) {
       return res.status(400).json({ error: 'Client, amount, and date are required' });
     }
 
-    if (invoice_id) {
-      const invoice = await Invoice.findById(invoice_id);
-      if (!invoice) return res.status(404).json({ error: 'Invoice not found' });
-      if (invoice.status === 'Cancelled') return res.status(400).json({ error: 'Cannot record payment for a cancelled invoice' });
+    for (const id of invoiceIds) {
+      const inv = await Invoice.findById(id);
+      if (!inv) return res.status(404).json({ error: `Invoice ${id} not found` });
+      if (inv.status === 'Cancelled') return res.status(400).json({ error: 'Cannot record payment for a cancelled invoice' });
     }
 
     const payment = await Payment.create({
-      client_id, invoice_id: invoice_id || null,
+      client_id,
+      invoice_id: invoiceIds[0] || null,
+      invoice_ids: invoiceIds,
       amount: parseFloat(amount),
       date, method: method || 'Bank Transfer',
       reference: reference || '', notes: notes || '',
     });
 
-    if (invoice_id) {
-      await reconcileInvoice(invoice_id);
+    for (const id of invoiceIds) {
+      await reconcileInvoice(id);
     }
     await recalcClientOutstanding(client_id);
 
     const populated = await Payment.findById(payment._id)
       .populate('client_id', 'name')
-      .populate('invoice_id', 'invoice_number grand_total').lean();
+      .populate('invoice_ids', 'invoice_number grand_total').lean();
+    const ids = populated.invoice_ids?.length ? populated.invoice_ids : [];
     res.status(201).json({
       id: populated._id, ...populated,
       client: populated.client_id?.name || '',
-      invoiceNo: cleanInvoiceNumber(populated.invoice_id?.invoice_number || ''),
+      invoiceNo: ids.map((i) => cleanInvoiceNumber(i?.invoice_number || '')).filter(Boolean).join(', ') || '-',
+      invoice_ids: ids.map((i) => i?._id || i),
       amount: Math.round(populated.amount || 0),
     });
   } catch (err) {

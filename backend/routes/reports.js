@@ -147,7 +147,7 @@ router.get('/ageing', authenticate, authorize('reports', 'view'), async (req, re
 router.get('/gst-summary', authenticate, authorize('reports', 'view'), async (req, res) => {
   try {
     const { from, to } = req.query;
-    const filter = { type: 'tax', status: { $nin: ['Draft', 'Cancelled'] } };
+    const filter = { type: 'tax', status: { $ne: 'Cancelled' } };
     if (from) filter.invoice_date = { ...(filter.invoice_date || {}), $gte: from };
     if (to) filter.invoice_date = { ...(filter.invoice_date || {}), $lte: to };
 
